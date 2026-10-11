@@ -1,0 +1,29 @@
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# SQLite Database & Storage
+data/jobs_tracker.db
+data/jobs_tracker.db-journal
+data/seen_jobs_*.json
+data/output/*
+data/resumes/*
+!data/resumes/.gitkeep
+
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

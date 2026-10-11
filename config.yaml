@@ -1,0 +1,76 @@
+target_profile:
+  default_roles:
+  - Python Developer
+  - Django Developer
+  - Senior Backend Engineer
+  - Full Stack Engineer
+  - AI Engineer
+  experience_level: Mid-Senior
+  active_cv: Jamshaid_Ali_Python_Django-5.pdf
+  candidate_name: Jamshaid Ali
+  custom_instructions: 'Focus strongly on Python, Django, FastAPI, Celery async tasks,
+    REST/GraphQL APIs, PostgreSQL, Docker, AWS, and AI agent / LLM integrations.
+
+    '
+  excluded_keywords:
+  - WordPress
+  - PHP
+  - Junior
+  - Internship
+  - Crypto Scam
+  min_match_score: 60
+  primary_stack:
+  - Python
+  - Django
+  - Redis
+  - PostgreSQL
+  - Celery
+  - AI
+  - Docker
+  - AWS
+  - FastAPI
+gulf_pipeline:
+  enabled: true
+  preferred_countries:
+  - United Arab Emirates
+  - Saudi Arabia
+  - Qatar
+  - Kuwait
+  - Bahrain
+  - Oman
+  preferred_cities:
+  - Dubai
+  - Abu Dhabi
+  - Riyadh
+  - Jeddah
+  - Doha
+  max_jobs: 10
+pakistan_pipeline:
+  enabled: true
+  preferred_cities:
+  - Lahore
+  - Islamabad
+  remote_options: true
+  max_jobs: 10
+dashboard_auth:
+  enabled: true
+  username: ''
+  password: ''
+  session_secret: ''
+  session_duration_hours: 72
+notifications:
+  enabled: true
+  email:
+    smtp_server: smtp.gmail.com
+    smtp_port: 587
+    sender_email: ''
+    sender_password: ''
+    recipient_email: ''
+scheduler:
+  mode: hourly
+  interval_minutes: 60
+  run_times:
+  - 08:00
+  - '13:00'
+  - '18:00'
+  timezone: Asia/Karachi
