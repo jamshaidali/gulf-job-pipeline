@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In &bull; TalentRadar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+    <style>
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .editorial-title { font-family: 'Newsreader', 'Playfair Display', Georgia, serif; }
+    </style>
+</head>
+<body class="bg-[#FAFAFA] text-slate-800 min-h-screen flex items-center justify-center p-4 selection:bg-[#0c383e] selection:text-white">
+
+    <div class="max-w-md w-full bg-white border border-slate-200/90 rounded-[32px] p-8 sm:p-10 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.06)] relative text-left" x-data="loginForm()">
+        
+        <!-- Brand Header -->
+        <div class="text-center mb-8">
+            <a href="/" class="inline-flex items-center gap-2 mb-4 group">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-sky-400 flex items-center justify-center text-white shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <span class="text-xl font-bold text-slate-900 tracking-tight">TalentRadar</span>
+            </a>
+            <h1 class="text-3xl font-bold text-slate-900 editorial-title">Sign in to your account</h1>
+            <p class="text-xs text-slate-500 mt-1.5">Access your Gulf &amp; Remote career pipeline</p>
+        </div>
+
+        <!-- Error Alert -->
+        <div x-show="errorMessage" x-cloak class="mb-5 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 font-semibold flex items-center gap-2">
+            <span>⚠️</span>
+            <span x-text="errorMessage"></span>
+        </div>
+
+        <!-- Form -->
+        <form @submit.prevent="submitLogin()" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Username or Email</label>
+                <input type="text" x-model="username" required autocomplete="username" 
+                       class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#0c383e] focus:ring-2 focus:ring-[#0c383e]/10 outline-none text-sm text-slate-900 placeholder-slate-400 transition"
+                       placeholder="Enter your username or email">
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Password</label>
+                    <button type="button" @click="showPassword = !showPassword" class="text-[11px] text-slate-500 hover:text-slate-800 font-medium">
+                        <span x-text="showPassword ? 'Hide' : 'Show'"></span>
+                    </button>
+                </div>
+                <div class="relative">
+                    <input :type="showPassword ? 'text' : 'password'" x-model="password" required autocomplete="current-password" 
+                           class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#0c383e] focus:ring-2 focus:ring-[#0c383e]/10 outline-none text-sm text-slate-900 placeholder-slate-400 transition"
+                           placeholder="Enter your password">
+                </div>
+            </div>
+
+            <button type="submit" :disabled="loading" 
+                    class="w-full mt-2 py-3.5 px-4 rounded-full bg-[#0c383e] hover:bg-[#154c54] text-white font-semibold text-sm transition shadow-sm hover:shadow disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer">
+                <span x-show="!loading">Unlock Dashboard &rarr;</span>
+                <span x-show="loading" class="flex items-center gap-2">
+                    <svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                    Authenticating...
+                </span>
+            </button>
+        </form>
+
+        <!-- Register Prompt -->
+        <div class="mt-6 text-center text-xs text-slate-500">
+            <span>Don't have an account yet? </span>
+            <a href="/register" class="font-bold text-[#0c383e] hover:underline">Create one for free &rarr;</a>
+        </div>
+
+        <!-- Security Badge -->
+        <div class="mt-8 pt-5 border-t border-slate-100 flex items-center justify-center gap-2 text-[11px] text-slate-400">
+            <svg class="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+            <span>NIST SP 800-63B &bull; PBKDF2 Hashed &bull; Anti-Brute Force Protection</span>
+        </div>
+    </div>
+
+    <script>
+        function loginForm() {
+            return {
+                username: '',
+                password: '',
+                showPassword: false,
+                loading: false,
+                errorMessage: '',
+                async submitLogin() {
+                    this.loading = true;
+                    this.errorMessage = '';
+                    try {
+                        const res = await fetch('/api/login', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({username: this.username, password: this.password})
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            window.location.href = '/app';
+                        } else {
+                            this.errorMessage = data.detail || 'Authentication failed.';
+                        }
+                    } catch (err) {
+                        this.errorMessage = 'Network connection error. Please try again.';
+                    }
+                    this.loading = false;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

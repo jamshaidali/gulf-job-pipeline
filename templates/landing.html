@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentRadar &bull; Get Hired 3x Faster with Your AI Career Partner</title>
+    <meta name="description" content="TalentRadar proactively matches verified tech roles across Dubai, Riyadh & Remote Pakistan, customizes your resume, and applies with AI tailored cover letters.">
+    
+    <!-- OpenGraph -->
+    <meta property="og:title" content="TalentRadar - Get Hired 3x Faster with Your AI Career Partner">
+    <meta property="og:description" content="Autonomous Job Radar, ATS CV Match Scoring, AI Cover Letter Studio & Recruiter Discovery.">
+    <meta property="og:type" content="website">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        petrol: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#0c383e',
+                            950: '#062428',
+                        },
+                        aqua: {
+                            50: '#f0fdf4',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        serif: ['Playfair Display', 'Newsreader', 'Georgia', 'serif'],
+                        display: ['Newsreader', 'Playfair Display', 'Georgia', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Google Fonts: Plus Jakarta Sans + Playfair Display & Newsreader for the Simplify editorial look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,400;1,600&family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+
+    <style>
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .editorial-title { font-family: 'Newsreader', 'Playfair Display', Georgia, serif; }
+        
+        /* Subtle Ripple Backdrop Card Pattern */
+        .ripple-pattern {
+            background-image: radial-gradient(circle at 100% 100%, rgba(255,255,255,0.2) 0, transparent 65%),
+                              radial-gradient(circle at 0% 0%, rgba(255,255,255,0.15) 0, transparent 50%);
+        }
+    </style>
+</head>
+<body class="bg-[#FAFAFA] text-slate-800 antialiased selection:bg-petrol-900 selection:text-white" x-data="landingApp()">
+
+    <!-- Top Announcement Ribbon -->
+    <div class="bg-slate-50 border-b border-slate-200/70 py-2 px-4 text-center">
+        <a href="#demo" class="inline-flex items-center gap-2 text-xs font-medium text-slate-600 hover:text-petrol-900 transition">
+            <span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="font-bold text-slate-900">New:</span>
+            <span>Over 140+ verified tech roles scouted today across UAE, Saudi Arabia &amp; Remote PK</span>
+            <span class="text-petrol-700 font-bold ml-1">&rarr;</span>
+        </a>
+    </div>
+
+    <!-- Navigation Bar (Clean Simplify Style) -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- Brand Logo -->
+            <a href="/" class="flex items-center gap-2.5 group">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-sky-400 flex items-center justify-center text-white shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <span class="text-xl font-bold text-slate-900 tracking-tight">
+                    TalentRadar
+                </span>
+            </a>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
+                <a href="#how-it-works" class="hover:text-slate-900 transition">Copilot</a>
+                <a href="#demo" class="hover:text-slate-900 transition">Job Radar</a>
+                <a href="#templates" class="hover:text-slate-900 transition">Resume Builder</a>
+                <a href="#features" class="hover:text-slate-900 transition">Features</a>
+                <a href="#pricing" class="hover:text-slate-900 transition">Pricing</a>
+            </nav>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-4">
+                <a href="/login" class="text-sm font-semibold text-slate-600 hover:text-slate-900 transition">
+                    Log in
+                </a>
+                <a href="/register" class="px-5 py-2.5 rounded-full bg-petrol-900 hover:bg-petrol-800 text-white font-semibold text-sm transition shadow-sm hover:shadow">
+                    Join now
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO SECTION (Directly matching the Simplify Style & Layout) -->
+    <section class="pt-16 pb-24 lg:pt-24 lg:pb-32 bg-white overflow-hidden relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+                
+                <!-- Left Column: High-Impact Editorial Typography & Action -->
+                <div class="lg:col-span-6 text-left space-y-6">
+                    
+                    <h1 class="text-5xl sm:text-6xl lg:text-[72px] text-slate-900 leading-[1.08] tracking-tight editorial-title">
+                        Get hired 3x faster with your <span class="italic font-normal">AI</span> job search partner.
+                    </h1>
+
+                    <p class="text-lg sm:text-xl text-slate-600 leading-relaxed max-w-xl font-normal">
+                        TalentRadar proactively matches better-fit roles across Dubai, Riyadh &amp; Remote Pakistan, customizes your resume, and applies for you.
+                    </p>
+
+                    <!-- Primary Action Button -->
+                    <div class="pt-2 flex flex-col sm:flex-row sm:items-center gap-4">
+                        <a href="/register" class="inline-flex items-center justify-center px-8 py-4 rounded-full bg-petrol-900 hover:bg-petrol-800 text-white font-semibold text-base transition shadow-sm hover:shadow-md">
+                            Try for free
+                        </a>
+                    </div>
+
+                    <!-- Social Proof Rating -->
+                    <div class="pt-4 flex items-center gap-3 text-xs sm:text-sm text-slate-600">
+                        <div class="flex text-amber-400 text-base">
+                            ★★★★★
+                        </div>
+                        <span class="font-bold text-slate-900">4.9/5</span>
+                        <span class="text-slate-400">&bull;</span>
+                        <span class="text-slate-600">Trusted by 10,000+ job seekers in Gulf &amp; Remote</span>
+                    </div>
+
+                    <!-- Target Regional Hubs Ticker -->
+                    <div class="pt-4 flex flex-wrap items-center gap-2 text-xs text-slate-500 font-medium">
+                        <span class="text-slate-400">Scouting:</span>
+                        <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">🇦🇪 UAE (Dubai &amp; Abu Dhabi)</span>
+                        <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">🇸🇦 Saudi Arabia (Riyadh)</span>
+                        <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">🇵🇰 Remote Pakistan</span>
+                    </div>
+                </div>
+
+                <!-- Right Column: The Signature Simplify Aqua Ripple & Floating Card -->
+                <div class="lg:col-span-6 flex justify-center lg:justify-end relative">
+                    
+                    <div class="relative w-full max-w-lg">
+                        
+                        <!-- Aqua Ripple Contour Background Card -->
+                        <div class="absolute -inset-2 sm:-inset-4 rounded-[40px] bg-gradient-to-tr from-cyan-400 via-sky-300 to-teal-300 p-1 transform rotate-1 shadow-xl overflow-hidden pointer-events-none">
+                            <!-- SVG Concentric Ripple Contour Lines (Matches Simplify Exactly) -->
+                            <svg class="absolute inset-0 w-full h-full opacity-35" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="380" cy="380" r="80" stroke="#0f766e" stroke-width="1.5" />
+                                <circle cx="380" cy="380" r="120" stroke="#0f766e" stroke-width="1.5" />
+                                <circle cx="380" cy="380" r="160" stroke="#0f766e" stroke-width="1.5" />
+                                <circle cx="380" cy="380" r="200" stroke="#0f766e" stroke-width="1.5" />
+                                <circle cx="380" cy="380" r="240" stroke="#0f766e" stroke-width="1.5" />
+                                <circle cx="380" cy="380" r="280" stroke="#0f766e" stroke-width="1.5" />
+                                <circle cx="380" cy="380" r="320" stroke="#0f766e" stroke-width="1.5" />
+                                <circle cx="380" cy="380" r="360" stroke="#0f766e" stroke-width="1.5" />
+                                <circle cx="380" cy="380" r="400" stroke="#0f766e" stroke-width="1.5" />
+                            </svg>
+                        </div>
+
+                        <!-- Main Floating Card (Pristine White, Clean, High-Trust) -->
+                        <div class="relative bg-white rounded-[32px] p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] border border-slate-100 z-10 text-left">
+                            
+                            <!-- Card Header -->
+                            <div class="flex items-center justify-between pb-6 border-b border-slate-100">
+                                <h3 class="editorial-title text-2xl font-bold text-slate-900 tracking-tight">
+                                    Your Daily Job Matches
+                                </h3>
+                                <span class="flex h-2.5 w-2.5 relative">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-500"></span>
+                                </span>
+                            </div>
+
+                            <!-- Job Matches List (Clean Simplify-style rows) -->
+                            <div class="mt-6 space-y-3.5">
+                                
+                                <!-- Match Item 1: Careem (Dubai) -->
+                                <div class="p-3.5 rounded-2xl bg-slate-50/70 hover:bg-slate-50 border border-slate-100 flex items-center justify-between transition group">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white font-black text-sm flex items-center justify-center shadow-sm">
+                                            C
+                                        </div>
+                                        <div>
+                                            <div class="text-[11px] text-slate-400 font-medium">Careem (Dubai) &bull; 5 mins ago</div>
+                                            <div class="text-sm font-bold text-slate-900 group-hover:text-petrol-900 transition">Senior Backend Engineer</div>
+                                        </div>
+                                    </div>
+                                    <div class="px-2.5 py-1 rounded-full bg-cyan-50 text-cyan-700 font-bold text-xs border border-cyan-100">
+                                        96%
+                                    </div>
+                                </div>
+
+                                <!-- Match Item 2: HungerStation (Riyadh) -->
+                                <div class="p-3.5 rounded-2xl bg-slate-50/70 hover:bg-slate-50 border border-slate-100 flex items-center justify-between transition group">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-10 h-10 rounded-xl bg-amber-500 text-white font-black text-sm flex items-center justify-center shadow-sm">
+                                            H
+                                        </div>
+                                        <div>
+                                            <div class="text-[11px] text-slate-400 font-medium">HungerStation (Riyadh) &bull; 15 mins ago</div>
+                                            <div class="text-sm font-bold text-slate-900 group-hover:text-petrol-900 transition">AI Platform Architect</div>
+                                        </div>
+                                    </div>
+                                    <div class="px-2.5 py-1 rounded-full bg-cyan-50 text-cyan-700 font-bold text-xs border border-cyan-100">
+                                        94%
+                                    </div>
+                                </div>
+
+                                <!-- Match Item 3: Motive / Remote Tech -->
+                                <div class="p-3.5 rounded-2xl bg-slate-50/70 hover:bg-slate-50 border border-slate-100 flex items-center justify-between transition group">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-10 h-10 rounded-xl bg-slate-900 text-white font-black text-sm flex items-center justify-center shadow-sm">
+                                            M
+                                        </div>
+                                        <div>
+                                            <div class="text-[11px] text-slate-400 font-medium">Motive &bull; 30 mins ago</div>
+                                            <div class="text-sm font-bold text-slate-900 group-hover:text-petrol-900 transition">Full Stack Lead (Remote PK)</div>
+                                        </div>
+                                    </div>
+                                    <div class="px-2.5 py-1 rounded-full bg-cyan-50 text-cyan-700 font-bold text-xs border border-cyan-100">
+                                        92%
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bottom Floating Status Pill -->
+                            <div class="mt-6 pt-2 flex items-center justify-center">
+                                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-50 border border-slate-200/80 text-xs font-medium text-slate-600">
+                                    <span class="inline-flex gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse delay-75"></span>
+                                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse delay-150"></span>
+                                    </span>
+                                    <span>Finding Top Matches in UAE &amp; Saudi Arabia</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION: How It Works (Clean 3-Step Process) -->
+    <section id="how-it-works" class="py-24 bg-[#FAFAFA] border-t border-slate-200/70">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            
+            <div class="max-w-2xl mx-auto mb-16">
+                <span class="text-xs font-bold uppercase tracking-wider text-petrol-700">How It Works</span>
+                <h2 class="editorial-title text-3xl sm:text-5xl font-bold text-slate-900 mt-2">
+                    Everything you need to land your next high-paying role.
+                </h2>
+                <p class="text-slate-600 mt-3 text-base">
+                    From resume upload to interview invitations in 3 simple steps.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+                
+                <!-- Step 1 -->
+                <div class="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 rounded-2xl bg-cyan-50 text-cyan-700 flex items-center justify-center font-bold text-lg mb-6 border border-cyan-100">
+                        01
+                    </div>
+                    <h3 class="editorial-title text-2xl font-bold text-slate-900">Upload your CV once</h3>
+                    <p class="text-sm text-slate-600 mt-3 leading-relaxed">
+                        Our engine parses your tech stack, seniority, and projects to configure your permanent candidate profile.
+                    </p>
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-500">
+                        <span class="text-emerald-500 font-bold">✓</span>
+                        <span>Auto-detects Python, React, AWS, Docker</span>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 rounded-2xl bg-cyan-50 text-cyan-700 flex items-center justify-center font-bold text-lg mb-6 border border-cyan-100">
+                        02
+                    </div>
+                    <h3 class="editorial-title text-2xl font-bold text-slate-900">Get curated high-fit jobs</h3>
+                    <p class="text-sm text-slate-600 mt-3 leading-relaxed">
+                        Our scrapers monitor top employers across Dubai, Riyadh, Qatar, and Remote Pakistan. You get real openings with an objective 0–100% ATS score.
+                    </p>
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-500">
+                        <span class="text-emerald-500 font-bold">✓</span>
+                        <span>Zero ghost jobs or expired posts</span>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-sm hover:shadow-md transition">
+                    <div class="w-12 h-12 rounded-2xl bg-cyan-50 text-cyan-700 flex items-center justify-center font-bold text-lg mb-6 border border-cyan-100">
+                        03
+                    </div>
+                    <h3 class="editorial-title text-2xl font-bold text-slate-900">Apply with tailored AI assets</h3>
+                    <p class="text-sm text-slate-600 mt-3 leading-relaxed">
+                        Generate an ATS-optimized cover letter and tailored resume bullets in 1 click. Connect directly with hiring managers on LinkedIn.
+                    </p>
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex items-center gap-2 text-xs text-slate-500">
+                        <span class="text-emerald-500 font-bold">✓</span>
+                        <span>3x more interview callbacks</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION: Interactive Live Demo Playground (Simplify Light Style) -->
+    <section id="demo" class="py-24 bg-white border-t border-slate-200/70">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            
+            <div class="max-w-2xl mx-auto mb-12">
+                <span class="text-xs font-bold uppercase tracking-wider text-petrol-700">Interactive Demo</span>
+                <h2 class="editorial-title text-3xl sm:text-5xl font-bold text-slate-900 mt-2">
+                    Test the AI match &amp; cover letter engine.
+                </h2>
+                <p class="text-slate-600 mt-3 text-base">
+                    Select a target role below to see how TalentRadar analyzes the match and crafts custom application materials in real time.
+                </p>
+            </div>
+
+            <!-- Demo Container Card -->
+            <div class="bg-slate-50/60 rounded-3xl border border-slate-200 p-6 sm:p-8 text-left shadow-sm">
+                
+                <!-- Role Selector -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Target Role:</div>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <button @click="sampleRole = 'python'" 
+                                    :class="sampleRole === 'python' ? 'bg-petrol-900 text-white shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'" 
+                                    class="px-4 py-2 rounded-full text-xs font-semibold transition">
+                                🇦🇪 Senior Python Engineer (Dubai)
+                            </button>
+                            <button @click="sampleRole = 'ai'" 
+                                    :class="sampleRole === 'ai' ? 'bg-petrol-900 text-white shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'" 
+                                    class="px-4 py-2 rounded-full text-xs font-semibold transition">
+                                🇸🇦 AI Agent Architect (Riyadh)
+                            </button>
+                            <button @click="sampleRole = 'fullstack'" 
+                                    :class="sampleRole === 'fullstack' ? 'bg-petrol-900 text-white shadow-sm' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'" 
+                                    class="px-4 py-2 rounded-full text-xs font-semibold transition">
+                                🇵🇰 Full Stack Lead (Remote PK)
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <div class="text-3xl sm:text-4xl font-bold text-cyan-700" x-text="getDemoScore()"></div>
+                        <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">ATS Match Fit</div>
+                    </div>
+                </div>
+
+                <!-- Tabs: ATS Analysis vs Cover Letter -->
+                <div class="mt-6">
+                    <div class="flex items-center gap-6 border-b border-slate-200 pb-3">
+                        <button @click="demoTab = 'analysis'" 
+                                :class="demoTab === 'analysis' ? 'text-petrol-900 border-b-2 border-petrol-900 font-bold pb-2' : 'text-slate-500 hover:text-slate-800 font-medium pb-2'" 
+                                class="text-sm transition">
+                            📊 ATS Gap Analysis &amp; Keywords
+                        </button>
+                        <button @click="demoTab = 'coverletter'" 
+                                :class="demoTab === 'coverletter' ? 'text-petrol-900 border-b-2 border-petrol-900 font-bold pb-2' : 'text-slate-500 hover:text-slate-800 font-medium pb-2'" 
+                                class="text-sm transition flex items-center gap-1.5">
+                            <span>✍️ AI Cover Letter</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-100 text-cyan-800">Ready</span>
+                        </button>
+                    </div>
+
+                    <!-- Analysis Tab -->
+                    <div x-show="demoTab === 'analysis'" class="mt-6 space-y-4">
+                        <div class="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">🎯 Recommended Keywords to Highlight:</span>
+                            <div class="flex flex-wrap gap-2">
+                                <template x-for="kw in getDemoKeywords()" :key="kw">
+                                    <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-800 text-xs font-medium" x-text="kw"></span>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">✍️ Tailored Accomplishment Bullet for Resume:</span>
+                            <p class="text-sm text-slate-700 italic leading-relaxed" x-text="getDemoBullet()"></p>
+                        </div>
+                    </div>
+
+                    <!-- Cover Letter Tab -->
+                    <div x-show="demoTab === 'coverletter'" class="mt-6">
+                        <div class="p-6 bg-white rounded-2xl border border-slate-200 font-sans text-sm text-slate-700 leading-relaxed space-y-3 whitespace-pre-line shadow-sm" x-text="getDemoCoverLetter()">
+                        </div>
+                        <div class="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <span class="text-xs text-slate-500">Customized specifically for the hiring manager and company culture</span>
+                            <button @click="copyDemoCoverLetter()" class="px-5 py-2.5 bg-petrol-900 hover:bg-petrol-800 text-white rounded-full text-xs font-semibold transition flex items-center justify-center gap-1.5">
+                                <span>📋</span>
+                                <span x-text="copiedCoverLetter ? 'Copied to Clipboard!' : 'Copy Cover Letter'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION: ATS CV Templates Vault (Attractive, High-Fidelity & Tested) -->
+    <section id="templates" class="py-24 bg-[#FAFAFA] border-t border-slate-200/70">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            
+            <div class="max-w-3xl mx-auto mb-12">
+                <span class="text-xs font-bold uppercase tracking-wider text-petrol-700">Resume Vault</span>
+                <h2 class="editorial-title text-3xl sm:text-5xl font-bold text-slate-900 mt-2">
+                    Battle-tested ATS resume templates.
+                </h2>
+                <p class="text-slate-600 mt-3 text-base sm:text-lg">
+                    Single-column layouts built to score 100% parse accuracy across Workday, Taleo, Greenhouse, and Lever.
+                </p>
+
+                <!-- Template Category Pills -->
+                <div class="mt-8 flex flex-wrap items-center justify-center gap-2 text-xs font-semibold">
+                    <span class="px-4 py-1.5 rounded-full bg-petrol-900 text-white shadow-sm">All Templates (12)</span>
+                    <span class="px-4 py-1.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer">Engineering &amp; AI</span>
+                    <span class="px-4 py-1.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer">Executive &amp; Tech Lead</span>
+                    <span class="px-4 py-1.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition cursor-pointer">Gulf &amp; Saudi Relocation</span>
+                </div>
+            </div>
+
+            <!-- Templates Grid (High-Density, Realistic & Gorgeous) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-left items-stretch">
+                
+                <!-- TEMPLATE 1: Harvard ATS Classic -->
+                <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+                    <div>
+                        <!-- Top Badge -->
+                        <div class="flex items-center justify-between mb-3.5">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                100% ATS Verified
+                            </span>
+                            <span class="text-[11px] font-semibold text-slate-400">Harvard Style</span>
+                        </div>
+
+                        <!-- Realistic Sheet Simulation -->
+                        <div class="relative bg-white rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-slate-200/80 text-[8px] leading-tight select-none overflow-hidden transition-all duration-300 group-hover:scale-[1.01] group-hover:shadow-[0_10px_25px_rgba(0,0,0,0.1)] cursor-pointer"
+                             @click="openTemplatePreview('backend')">
+                            
+                            <!-- Sheet Header -->
+                            <div class="text-center pb-2 border-b-2 border-slate-900">
+                                <div class="font-extrabold text-[12px] tracking-wider text-slate-900 uppercase">Jamshaid Ali</div>
+                                <div class="text-[8.5px] font-semibold text-slate-600 mt-0.5">Senior Backend &bull; Python / Cloud Systems Engineer</div>
+                                <div class="text-[7px] text-slate-500 mt-1 flex items-center justify-center gap-2">
+                                    <span>📍 Dubai / Remote</span>
+                                    <span>&bull;</span>
+                                    <span>✉️ jamshaid@example.com</span>
+                                    <span>&bull;</span>
+                                    <span>🔗 linkedin.com/in/jamshaid</span>
+                                </div>
+                            </div>
+
+                            <!-- Sheet Section: Summary -->
+                            <div class="mt-2.5">
+                                <div class="font-bold text-[8.5px] uppercase tracking-wide text-slate-900 border-b border-slate-300 pb-0.5 mb-1">
+                                    Professional Summary
+                                </div>
+                                <p class="text-slate-600 leading-normal">
+                                    Backend Engineer with 5+ years building distributed async microservices, high-throughput caching (Redis/Celery), and performant relational databases (PostgreSQL). Specialized in cloud APIs for high-growth tech ventures.
+                                </p>
+                            </div>
+
+                            <!-- Sheet Section: Skills -->
+                            <div class="mt-2.5">
+                                <div class="font-bold text-[8.5px] uppercase tracking-wide text-slate-900 border-b border-slate-300 pb-0.5 mb-1">
+                                    Technical Expertise
+                                </div>
+                                <div class="text-slate-700 space-y-0.5">
+                                    <div><strong class="text-slate-900">Core Languages:</strong> Python, SQL, Golang, Bash</div>
+                                    <div><strong class="text-slate-900">Frameworks:</strong> FastAPI, Django REST, Celery, SQLAlchemy</div>
+                                    <div><strong class="text-slate-900">Cloud &amp; DevOps:</strong> AWS (EC2, RDS, S3), Docker, Redis, CI/CD</div>
+                                </div>
+                            </div>
+
+                            <!-- Sheet Section: Experience -->
+                            <div class="mt-2.5">
+                                <div class="font-bold text-[8.5px] uppercase tracking-wide text-slate-900 border-b border-slate-300 pb-0.5 mb-1">
+                                    Experience
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-baseline font-bold text-slate-900">
+                                        <span>Senior Backend Engineer | Logistics Unicorn</span>
+                                        <span class="text-[7.5px] font-medium text-slate-500">2023 &ndash; Present</span>
+                                    </div>
+                                    <ul class="list-disc pl-3 mt-1 space-y-0.5 text-slate-600">
+                                        <li>Architected async worker pipeline processing <strong>45,000+ daily orders</strong> with 99.98% reliability.</li>
+                                        <li>Optimized PostgreSQL queries, reducing p95 database latency by <strong>45%</strong>.</li>
+                                        <li>Implemented Redis caching layer decreasing API response time by 38%.</li>
+                                    </ul>
+                                </div>
+                                <div class="mt-2">
+                                    <div class="flex justify-between items-baseline font-bold text-slate-900">
+                                        <span>Software Engineer | Enterprise Cloud</span>
+                                        <span class="text-[7.5px] font-medium text-slate-500">2021 &ndash; 2023</span>
+                                    </div>
+                                    <ul class="list-disc pl-3 mt-0.5 space-y-0.5 text-slate-600">
+                                        <li>Engineered microservices supporting 200,000+ active monthly users.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Sheet Section: Education -->
+                            <div class="mt-2.5 pt-1 border-t border-slate-200 flex justify-between text-slate-700">
+                                <span><strong class="text-slate-900">B.S. in Computer Science</strong> &bull; FAST-NUCES</span>
+                                <span class="text-slate-500 font-medium">FAST-NUCES (2017 &ndash; 2021)</span>
+                            </div>
+
+                            <!-- Hover Overlay -->
+                            <div class="absolute inset-0 bg-slate-900/5 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200">
+                                <span class="px-4 py-2 rounded-full bg-white text-slate-900 shadow-md font-bold text-xs flex items-center gap-1.5 border border-slate-200">
+                                    🔍 Click to Preview Full Sheet
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Title & Description -->
+                        <h3 class="editorial-title text-xl font-bold text-slate-900 mt-4">The Harvard ATS Classic</h3>
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                            The gold-standard single-column layout preferred by Fortune 500 recruiters and Workday screening bots.
+                        </p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="mt-6 flex items-center gap-2">
+                        <button @click="openTemplatePreview('backend')" class="flex-1 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold text-center transition">
+                            Preview
+                        </button>
+                        <a href="/login" class="flex-1 py-2.5 rounded-full bg-petrol-900 hover:bg-petrol-800 text-white text-xs font-semibold text-center transition">
+                            Use Template &rarr;
+                        </a>
+                    </div>
+                </div>
+
+                <!-- TEMPLATE 2: Modern AI & Full Stack (Silicon Valley Style) -->
+                <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+                    <div>
+                        <!-- Top Badge -->
+                        <div class="flex items-center justify-between mb-3.5">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                                Top Choice for AI &amp; Full Stack
+                            </span>
+                            <span class="text-[11px] font-semibold text-slate-400">Greenhouse Ready</span>
+                        </div>
+
+                        <!-- Realistic Sheet Simulation -->
+                        <div class="relative bg-white rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-slate-200/80 text-[8px] leading-tight select-none overflow-hidden transition-all duration-300 group-hover:scale-[1.01] group-hover:shadow-[0_10px_25px_rgba(0,0,0,0.1)] cursor-pointer"
+                             @click="openTemplatePreview('ai')">
+                            
+                            <!-- Modern Accent Header Box -->
+                            <div class="bg-[#0c383e] text-white p-3 rounded-xl mb-2.5">
+                                <div class="font-extrabold text-[12px] tracking-wide uppercase">Jamshaid Ali</div>
+                                <div class="text-[8.5px] font-medium text-cyan-300 mt-0.5">Full Stack &bull; AI Agent &amp; Systems Architect</div>
+                                <div class="text-[7px] text-slate-300 mt-1 flex items-center gap-2">
+                                    <span>🌐 yourdomain.com</span>
+                                    <span>&bull;</span>
+                                    <span>✉️ jamshaid@example.com</span>
+                                    <span>&bull;</span>
+                                    <span>⚡ Remote / Relocation Ready</span>
+                                </div>
+                            </div>
+
+                            <!-- Skills Badge Ribbon -->
+                            <div class="mb-2.5">
+                                <div class="font-bold text-[8.5px] uppercase tracking-wide text-slate-900 border-b border-slate-200 pb-0.5 mb-1.5">
+                                    Core Tech Stack
+                                </div>
+                                <div class="flex flex-wrap gap-1">
+                                    <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 font-semibold text-[7px]">Python</span>
+                                    <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 font-semibold text-[7px]">FastAPI</span>
+                                    <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 font-semibold text-[7px]">React / Next.js</span>
+                                    <span class="px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-800 font-semibold text-[7px]">LLM Agents</span>
+                                    <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 font-semibold text-[7px]">PostgreSQL</span>
+                                    <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 font-semibold text-[7px]">Docker</span>
+                                </div>
+                            </div>
+
+                            <!-- Key Projects Highlighted -->
+                            <div class="mb-2.5">
+                                <div class="font-bold text-[8.5px] uppercase tracking-wide text-slate-900 border-b border-slate-200 pb-0.5 mb-1">
+                                    Key Architectures &amp; Products
+                                </div>
+                                <div>
+                                    <div class="font-bold text-slate-900">TalentRadar AI &bull; Autonomous Job Pipeline</div>
+                                    <p class="text-slate-600 mt-0.5">
+                                        Multi-source scraping engine &amp; LLM resume-tailoring agent. Evaluates ATS keywords and generates customized cover letters in <strong>&lt; 3 seconds</strong>.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Experience -->
+                            <div>
+                                <div class="font-bold text-[8.5px] uppercase tracking-wide text-slate-900 border-b border-slate-200 pb-0.5 mb-1">
+                                    Engineering Experience
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-baseline font-bold text-slate-900">
+                                        <span>Full Stack Lead | Venture Studio</span>
+                                        <span class="text-[7.5px] font-medium text-slate-500">2022 &ndash; Present</span>
+                                    </div>
+                                    <ul class="list-disc pl-3 mt-1 space-y-0.5 text-slate-600">
+                                        <li>Built responsive enterprise portals handling <strong>120,000 monthly active users</strong>.</li>
+                                        <li>Deployed async workers using Celery &amp; Redis, decreasing task latency by 55%.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Education -->
+                            <div class="mt-2.5 pt-1 border-t border-slate-200 flex justify-between text-slate-700">
+                                <span><strong class="text-slate-900">B.S. Computer Science</strong></span>
+                                <span class="text-slate-500 font-medium">FAST-NUCES</span>
+                            </div>
+
+                            <!-- Hover Overlay -->
+                            <div class="absolute inset-0 bg-slate-900/5 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200">
+                                <span class="px-4 py-2 rounded-full bg-white text-slate-900 shadow-md font-bold text-xs flex items-center gap-1.5 border border-slate-200">
+                                    🔍 Click to Preview Full Sheet
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Title & Description -->
+                        <h3 class="editorial-title text-xl font-bold text-slate-900 mt-4">The Modern AI &amp; Full Stack</h3>
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                            Highlights product velocity, LLM implementations, and full-stack architecture with clean badge categorizations.
+                        </p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="mt-6 flex items-center gap-2">
+                        <button @click="openTemplatePreview('ai')" class="flex-1 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold text-center transition">
+                            Preview
+                        </button>
+                        <a href="/login" class="flex-1 py-2.5 rounded-full bg-petrol-900 hover:bg-petrol-800 text-white text-xs font-semibold text-center transition">
+                            Use Template &rarr;
+                        </a>
+                    </div>
+                </div>
+
+                <!-- TEMPLATE 3: Gulf Relocation & Executive Lead -->
+                <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+                    <div>
+                        <!-- Top Badge -->
+                        <div class="flex items-center justify-between mb-3.5">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                Gulf &amp; Saudi Relocation Ready
+                            </span>
+                            <span class="text-[11px] font-semibold text-slate-400">Visa Optimized</span>
+                        </div>
+
+                        <!-- Realistic Sheet Simulation -->
+                        <div class="relative bg-white rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-slate-200/80 text-[8px] leading-tight select-none overflow-hidden transition-all duration-300 group-hover:scale-[1.01] group-hover:shadow-[0_10px_25px_rgba(0,0,0,0.1)] cursor-pointer"
+                             @click="openTemplatePreview('gulf')">
+                            
+                            <!-- Sheet Header with Visa Pill -->
+                            <div class="pb-2 border-b-2 border-slate-900">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <div class="font-extrabold text-[12px] tracking-wider text-slate-900 uppercase">Jamshaid Ali</div>
+                                        <div class="text-[8.5px] font-semibold text-slate-700 mt-0.5">Senior Engineering Lead &bull; Distributed Systems</div>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[7px]">
+                                        Open to UAE / KSA Visa
+                                    </span>
+                                </div>
+                                <div class="text-[7px] text-slate-500 mt-1 flex items-center gap-2">
+                                    <span>Target Markets: Dubai, Abu Dhabi, Riyadh</span>
+                                    <span>&bull;</span>
+                                    <span>Notice: Immediate / 30 Days</span>
+                                </div>
+                            </div>
+
+                            <!-- Executive Summary -->
+                            <div class="mt-2.5">
+                                <div class="font-bold text-[8.5px] uppercase tracking-wide text-slate-900 border-b border-slate-300 pb-0.5 mb-1">
+                                    Executive Profile
+                                </div>
+                                <p class="text-slate-600 leading-normal">
+                                    Senior Engineering Lead with proven track record delivering mission-critical applications across cross-border agile teams. Seeking relocation to UAE / Saudi Arabia to lead scalable backend roadmaps.
+                                </p>
+                            </div>
+
+                            <!-- Leadership Achievements with Numbers -->
+                            <div class="mt-2.5">
+                                <div class="font-bold text-[8.5px] uppercase tracking-wide text-slate-900 border-b border-slate-300 pb-0.5 mb-1">
+                                    Key Leadership &amp; Financial Impact
+                                </div>
+                                <div class="space-y-1 text-slate-700">
+                                    <div>&bull; Reduced monthly AWS cloud infrastructure costs by <strong>32% ($18k/mo)</strong>.</div>
+                                    <div>&bull; Mentored and scaled an engineering squad from 4 to 14 distributed engineers.</div>
+                                    <div>&bull; Shipped compliance-certified fintech payments gateway adhering to central bank standards.</div>
+                                </div>
+                            </div>
+
+                            <!-- Core Technical Capabilities -->
+                            <div class="mt-2.5">
+                                <div class="font-bold text-[8.5px] uppercase tracking-wide text-slate-900 border-b border-slate-300 pb-0.5 mb-1">
+                                    Architectural Capabilities
+                                </div>
+                                <div class="text-slate-700">
+                                    Event-Driven Architecture, High-Concurrency APIs, PostgreSQL, Docker, Kubernetes, AWS, FastAPI, Python.
+                                </div>
+                            </div>
+
+                            <!-- Experience -->
+                            <div class="mt-2.5">
+                                <div class="font-bold text-[8.5px] uppercase tracking-wide text-slate-900 border-b border-slate-300 pb-0.5 mb-1">
+                                    Career History
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-baseline font-bold text-slate-900">
+                                        <span>Engineering Lead | Tech Innovations Hub</span>
+                                        <span class="text-[7.5px] font-medium text-slate-500">2021 &ndash; Present</span>
+                                    </div>
+                                    <div class="text-slate-600 mt-0.5">Led backend architecture supporting 3x user scale across Gulf region.</div>
+                                </div>
+                            </div>
+
+                            <!-- Hover Overlay -->
+                            <div class="absolute inset-0 bg-slate-900/5 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200">
+                                <span class="px-4 py-2 rounded-full bg-white text-slate-900 shadow-md font-bold text-xs flex items-center gap-1.5 border border-slate-200">
+                                    🔍 Click to Preview Full Sheet
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Title & Description -->
+                        <h3 class="editorial-title text-xl font-bold text-slate-900 mt-4">The Gulf Relocation Specialist</h3>
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                            Formatted specifically for visa sponsorship consideration, leadership achievements, and executive compensation in Dubai &amp; Riyadh.
+                        </p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="mt-6 flex items-center gap-2">
+                        <button @click="openTemplatePreview('gulf')" class="flex-1 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold text-center transition">
+                            Preview
+                        </button>
+                        <a href="/login" class="flex-1 py-2.5 rounded-full bg-petrol-900 hover:bg-petrol-800 text-white text-xs font-semibold text-center transition">
+                            Use Template &rarr;
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Trust Bar Below Resume Vault -->
+            <div class="mt-16 pt-8 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-center gap-3 text-xs text-slate-500 font-medium">
+                <span class="text-slate-400 font-bold uppercase tracking-wider text-[11px]">Parsed &amp; Verified with 100% Accuracy on:</span>
+                <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700">Workday</span>
+                <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700">Greenhouse</span>
+                <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700">Taleo</span>
+                <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700">Lever</span>
+                <span class="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700">SAP SuccessFactors</span>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- SECTION: Transparent Pricing -->
+    <section id="pricing" class="py-24 bg-white border-t border-slate-200/70">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            
+            <div class="max-w-2xl mx-auto mb-16">
+                <span class="text-xs font-bold uppercase tracking-wider text-petrol-700">Pricing</span>
+                <h2 class="editorial-title text-3xl sm:text-5xl font-bold text-slate-900 mt-2">
+                    Invest in your next career leap.
+                </h2>
+                <p class="text-slate-600 mt-3 text-base">
+                    Transparent packages. No long-term commitments. Cancel anytime.
+                </p>
+
+                <!-- Billing Switcher -->
+                <div class="mt-8 inline-flex items-center gap-2 bg-slate-100 p-1.5 rounded-full text-xs font-semibold">
+                    <button @click="billingCycle = 'monthly'" 
+                            :class="billingCycle === 'monthly' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'" 
+                            class="px-5 py-2 rounded-full transition">
+                        Monthly
+                    </button>
+                    <button @click="billingCycle = 'annual'" 
+                            :class="billingCycle === 'annual' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'" 
+                            class="px-5 py-2 rounded-full transition flex items-center gap-1.5">
+                        <span>Annual</span>
+                        <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">Save 25%</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pricing Cards -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto text-left">
+                
+                <!-- Plan 1: Starter Free -->
+                <div class="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Starter Free</div>
+                        <div class="text-4xl font-bold text-slate-900 mt-2">$0 <span class="text-xs text-slate-400 font-normal">/ forever</span></div>
+                        <p class="text-xs text-slate-500 mt-2">Essential tools to scout open roles.</p>
+                        
+                        <div class="my-6 border-t border-slate-100"></div>
+
+                        <ul class="space-y-3 text-xs text-slate-600">
+                            <li class="flex items-center gap-2">✓ 15 fresh jobs scanned daily</li>
+                            <li class="flex items-center gap-2">✓ Basic keyword match score</li>
+                            <li class="flex items-center gap-2">✓ Access to 1 ATS CV template</li>
+                            <li class="flex items-center gap-2 text-slate-300">✗ Automated daily email digests</li>
+                            <li class="flex items-center gap-2 text-slate-300">✗ Direct recruiter LinkedIn finder</li>
+                            <li class="flex items-center gap-2 text-slate-300">✗ AI Cover Letter Studio</li>
+                        </ul>
+                    </div>
+
+                    <a href="/register" class="mt-8 w-full py-3.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs text-center transition">
+                        Get Started Free
+                    </a>
+                </div>
+
+                <!-- Plan 2: Pro (Highlighted with Petrol Theme) -->
+                <div class="bg-petrol-900 text-white rounded-3xl p-8 shadow-xl flex flex-col justify-between relative">
+                    <span class="absolute -top-3 right-6 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-400 text-petrol-950">Most Popular</span>
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-wider text-cyan-300">Career Pro Accelerator</div>
+                        <div class="text-4xl font-bold text-white mt-2">
+                            <span x-text="billingCycle === 'monthly' ? '$19' : '$14'"></span>
+                            <span class="text-xs text-slate-300 font-normal">/ month</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-2">For engineers wanting maximum interview callbacks.</p>
+                        
+                        <div class="my-6 border-t border-petrol-800"></div>
+
+                        <ul class="space-y-3 text-xs text-slate-200">
+                            <li class="flex items-center gap-2">✓ Unlimited Gulf &amp; Pakistan scraped roles</li>
+                            <li class="flex items-center gap-2">✓ Full AI ATS CV match &amp; gap analysis</li>
+                            <li class="flex items-center gap-2">✓ AI Cover Letter Studio (Unlimited)</li>
+                            <li class="flex items-center gap-2">✓ Complete ATS CV Templates Vault</li>
+                            <li class="flex items-center gap-2">✓ Direct LinkedIn hiring manager links</li>
+                            <li class="flex items-center gap-2">✓ 3x daily automated Gmail job digests</li>
+                        </ul>
+                    </div>
+
+                    <a href="/register" class="mt-8 w-full py-3.5 rounded-full bg-cyan-400 hover:bg-cyan-300 text-petrol-950 font-bold text-xs text-center transition">
+                        Start 7-Day Free Trial &rarr;
+                    </a>
+                </div>
+
+                <!-- Plan 3: VIP -->
+                <div class="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Executive VIP</div>
+                        <div class="text-4xl font-bold text-slate-900 mt-2">
+                            <span x-text="billingCycle === 'monthly' ? '$49' : '$39'"></span>
+                            <span class="text-xs text-slate-400 font-normal">/ month</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2">White-glove application assistance and leadership intel.</p>
+                        
+                        <div class="my-6 border-t border-slate-100"></div>
+
+                        <ul class="space-y-3 text-xs text-slate-600">
+                            <li class="flex items-center gap-2">✓ Everything in Career Pro Accelerator</li>
+                            <li class="flex items-center gap-2">✓ 1-on-1 human ATS resume critique</li>
+                            <li class="flex items-center gap-2">✓ Executive compensation &amp; tax guidance (UAE/KSA)</li>
+                            <li class="flex items-center gap-2">✓ Tailored LinkedIn outreach message writer</li>
+                            <li class="flex items-center gap-2">✓ Priority Slack / WhatsApp concierge support</li>
+                        </ul>
+                    </div>
+
+                    <a href="/register" class="mt-8 w-full py-3.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs text-center transition">
+                        Join Executive VIP
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION: FAQ -->
+    <section id="faq" class="py-24 bg-[#FAFAFA] border-t border-slate-200/70">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-left">
+            <div class="text-center mb-16">
+                <span class="text-xs font-bold uppercase tracking-wider text-petrol-700">FAQ</span>
+                <h2 class="editorial-title text-3xl sm:text-5xl font-bold text-slate-900 mt-2">
+                    Frequently asked questions.
+                </h2>
+            </div>
+
+            <div class="space-y-4">
+                <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-900">How does TalentRadar know which jobs match my experience?</h3>
+                    <p class="text-sm text-slate-600 mt-2 leading-relaxed">
+                        When you upload your CV, our engine extracts your verified skills, experience level, and tech stack. Each scraped job is evaluated across key tech keywords, seniority markers, and architectural responsibilities to provide a 0–100% objective fit score.
+                    </p>
+                </div>
+
+                <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-900">Which regions and job boards are tracked?</h3>
+                    <p class="text-sm text-slate-600 mt-2 leading-relaxed">
+                        We actively track the Gulf tech market (Dubai, Abu Dhabi, Riyadh, Jeddah, Doha, Kuwait, Bahrain) as well as the Pakistan technology ecosystem (Lahore, Islamabad, Karachi) and Global Remote employers willing to hire and sponsor international talent.
+                    </p>
+                </div>
+
+                <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-900">Will the CV templates pass Applicant Tracking Systems (ATS)?</h3>
+                    <p class="text-sm text-slate-600 mt-2 leading-relaxed">
+                        Yes. Our templates strictly avoid tables, graphics, text boxes, and multi-column designs that cause Workday, Taleo, Greenhouse, and Lever to fail. They adhere to clean typography, standard headers, and chronological work history.
+                    </p>
+                </div>
+
+                <div class="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+                    <h3 class="text-base font-bold text-slate-900">Can I cancel my subscription anytime?</h3>
+                    <p class="text-sm text-slate-600 mt-2 leading-relaxed">
+                        Yes, there are no contracts or commitments. You can cancel with a single click inside your billing settings at any time.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bottom CTA Banner -->
+    <section class="py-20 bg-white border-t border-slate-200/70 text-center">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+            <h2 class="editorial-title text-4xl sm:text-5xl font-bold text-slate-900">
+                Ready to accelerate your career?
+            </h2>
+            <p class="text-slate-600 text-base sm:text-lg">
+                Join ambitious engineers accelerating their job search across Gulf and global remote markets today.
+            </p>
+            <div>
+                <a href="/register" class="inline-flex items-center justify-center px-8 py-4 rounded-full bg-petrol-900 hover:bg-petrol-800 text-white font-semibold text-base transition shadow-sm hover:shadow-md">
+                    Get started for free &rarr;
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Template Preview Modal -->
+    <div x-show="showTemplateModal" 
+         x-cloak 
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+         @keydown.escape.window="showTemplateModal = false">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative text-left overflow-hidden">
+            <button @click="showTemplateModal = false" class="absolute top-5 right-5 text-slate-400 hover:text-slate-800 text-2xl font-bold">&times;</button>
+            <div class="flex items-center gap-3 mb-4">
+                <span class="p-2 rounded-xl bg-cyan-50 text-cyan-700 text-lg">📄</span>
+                <div>
+                    <h3 class="editorial-title text-xl font-bold text-slate-900" x-text="selectedTemplate.title"></h3>
+                    <p class="text-xs text-slate-500" x-text="selectedTemplate.subtitle"></p>
+                </div>
+            </div>
+            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 text-slate-800 font-mono text-xs max-h-96 overflow-y-auto whitespace-pre-line leading-relaxed selection:bg-cyan-100 select-all" x-text="selectedTemplate.content">
+            </div>
+            <div class="mt-6 flex items-center justify-between gap-3">
+                <span class="text-xs text-slate-500">100% ATS-Compliant Plain-Text Layout</span>
+                <div class="flex items-center gap-2">
+                    <button @click="copyTemplateText()" class="px-5 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition flex items-center gap-1.5">
+                        <span>📋</span>
+                        <span x-text="copiedTemplate ? 'Copied!' : 'Copy Text'"></span>
+                    </button>
+                    <a href="/login" class="px-5 py-2.5 rounded-full bg-petrol-900 hover:bg-petrol-800 text-white text-xs font-semibold transition">
+                        Open in App &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-[#FAFAFA] border-t border-slate-200/80 py-12 text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-900">TalentRadar</span>
+                <span>&bull; &copy; 2026 All rights reserved.</span>
+            </div>
+            <div class="flex items-center gap-6 font-medium">
+                <a href="#how-it-works" class="hover:text-slate-900 transition">Copilot</a>
+                <a href="#demo" class="hover:text-slate-900 transition">Job Radar</a>
+                <a href="#templates" class="hover:text-slate-900 transition">Resume Builder</a>
+                <a href="#pricing" class="hover:text-slate-900 transition">Pricing</a>
+                <a href="/login" class="hover:text-slate-900 transition">Log in</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Alpine App Logic -->
+    <script>
+        function landingApp() {
+            return {
+                billingCycle: 'monthly',
+                sampleRole: 'python',
+                demoTab: 'analysis',
+                copiedCoverLetter: false,
+                showTemplateModal: false,
+                copiedTemplate: false,
+                selectedTemplate: {
+                    title: '',
+                    subtitle: '',
+                    content: ''
+                },
+
+                openTemplatePreview(type) {
+                    if (type === 'backend') {
+                        this.selectedTemplate = {
+                            title: 'Senior Backend Specialist (Python / High-Scale)',
+                            subtitle: 'Single-column ATS format optimized for Workday & Greenhouse',
+                            content: `JAMSHAID ALI
+Lahore, Pakistan | +92 300 1234567 | linkedin.com/in/jamshaidali | github.com/jamshaidali
+
+PROFESSIONAL SUMMARY
+Senior Backend Engineer with 5+ years of experience architecting distributed microservices, asynchronous task queues (Celery/Redis), and performant relational databases (PostgreSQL). Specialized in building low-latency APIs and cloud architectures for high-growth tech ventures.
+
+TECHNICAL EXPERTISE
+• Languages: Python, SQL, Bash, JavaScript
+• Frameworks: Django, FastAPI, Flask, Celery, SQLAlchemy
+• Databases: PostgreSQL, Redis, SQLite
+• Cloud & DevOps: Docker, AWS (EC2, S3, RDS), GitHub Actions, Linux
+• Concepts: Microservices, REST APIs, System Design, Data Structures, ATS Optimization
+
+EXPERIENCE
+Lead Backend Engineer | Tech Logistics & Mobility Hub
+2023 – Present
+• Engineered distributed async background workers handling 40,000+ daily tasks with 99.98% reliability.
+• Reduced PostgreSQL p95 query latency by 45% through composite indexing and query plan restructuring.
+• Deployed automated containerized CI/CD pipelines cutting deployment cycles from 45 to 8 minutes.
+
+Backend Engineer | Enterprise Cloud Solutions
+2021 – 2023
+• Designed RESTful APIs serving 200,000+ monthly active users using FastAPI and PostgreSQL.
+• Implemented distributed caching layer with Redis, reducing database load by 60%.
+
+EDUCATION
+B.S. in Computer Science | FAST-NUCES (2017 – 2021)`
+                        };
+                    } else if (type === 'ai') {
+                        this.selectedTemplate = {
+                            title: 'Full Stack & AI Systems Engineer',
+                            subtitle: 'Highlights LLM workflows, autonomous agents & modern web applications',
+                            content: `JAMSHAID ALI
+Full Stack & AI Engineer | Remote / Relocation Ready
+Email: jamshaid@example.com | Portfolio: yourdomain.com | GitHub: github.com/jamshaidali
+
+CORE COMPETENCIES
+• AI / LLMs: Prompt Engineering, Agentic Tool Use, Function Calling, Vector Search
+• Backend: Python, FastAPI, Django, PostgreSQL, Celery, Docker
+• Frontend: React, Next.js, TypeScript, Tailwind CSS, Alpine.js
+• Cloud: AWS, Render, Supabase, Linux Administration
+
+KEY PROJECTS
+TalentRadar AI & Autonomous Career Copilot (2025 – Present)
+• Built automated multi-source job ingestion engine across Gulf and Pakistan tech markets.
+• Integrated LLM-driven ATS resume scoring engine comparing candidate profiles to requirements.
+• Implemented instant cover letter studio generating hyper-tailored pitch letters in < 3 seconds.
+
+Full Stack SaaS Dashboard
+• Developed high-converting responsive web portal using FastAPI and Tailwind CSS.
+• Configured dual-engine database layer supporting PostgreSQL (Supabase) and SQLite with zero downtime.`
+                        };
+                    } else {
+                        this.selectedTemplate = {
+                            title: 'Gulf Tech Relocation Specialist (UAE / KSA)',
+                            subtitle: 'Formatted specifically for Dubai, Abu Dhabi & Riyadh hiring managers',
+                            content: `JAMSHAID ALI
+Senior Software Engineer (Ready for Relocation to UAE / Saudi Arabia)
+Phone: +92 300 1234567 | Email: jamshaid@example.com | LinkedIn: linkedin.com/in/jamshaidali
+Target Locations: Dubai, Abu Dhabi, Riyadh | Notice Period: Immediate / 30 Days
+
+EXECUTIVE SUMMARY
+Results-driven Lead Engineer with proven track record delivering mission-critical applications. Seeking relocation to UAE/KSA. Expertise in Python, FastAPI, cloud infrastructure, and leading cross-border agile teams.
+
+CORE CAPABILITIES
+• Architecture: Scalable Microservices, Event-Driven Architecture, High-Concurrency APIs
+• Tech Stack: Python, Django, FastAPI, PostgreSQL, Redis, Docker, Kubernetes, AWS
+• Leadership: Cross-functional collaboration, technical hiring, sprint planning
+
+SELECTED ACHIEVEMENTS
+• Scaled backend architecture to support 3x user growth within 12 months.
+• Designed and shipped enterprise compliance and security automation adhering to regional standards.
+• Reduced cloud infrastructure costs by 32% via resource rightsizing and autoscaling policies.`
+                        };
+                    }
+                    this.showTemplateModal = true;
+                },
+
+                copyTemplateText() {
+                    navigator.clipboard.writeText(this.selectedTemplate.content);
+                    this.copiedTemplate = true;
+                    setTimeout(() => { this.copiedTemplate = false; }, 2500);
+                },
+
+                getDemoScore() {
+                    if (this.sampleRole === 'python') return '96%';
+                    if (this.sampleRole === 'ai') return '94%';
+                    return '92%';
+                },
+
+                getDemoKeywords() {
+                    if (this.sampleRole === 'python') {
+                        return ['FastAPI Microservices', 'Celery Background Tasks', 'Redis Caching', 'PostgreSQL Query Optimization', 'Docker Containerization'];
+                    }
+                    if (this.sampleRole === 'ai') {
+                        return ['LLM Fine-Tuning', 'LangChain / LlamaIndex', 'Vector Databases (Pinecone/Chroma)', 'Prompt Engineering', 'FastAPI Serving'];
+                    }
+                    return ['React / Next.js', 'Django REST Framework', 'Tailwind CSS', 'GraphQL API', 'CI/CD Pipelines'];
+                },
+
+                getDemoBullet() {
+                    if (this.sampleRole === 'python') {
+                        return '"Architected high-throughput async background worker pipeline using Celery and Redis, reducing API response times by 38% across distributed services."';
+                    }
+                    if (this.sampleRole === 'ai') {
+                        return '"Engineered autonomous agent workflow leveraging OpenAI/Claude function-calling APIs with automated vector search, decreasing research latency by 55%."';
+                    }
+                    return '"Spearheaded development of full-stack responsive enterprise dashboard using React and Django, supporting 20,000+ active users with 99.9% uptime."';
+                },
+
+                getDemoCoverLetter() {
+                    if (this.sampleRole === 'python') {
+                        return `Dear Careem Hiring Team,\n\nI am writing to express my strong enthusiasm for the Senior Python / Django Backend Engineer position in Dubai. With over 5 years of experience architecting high-scale backend systems, asynchronous pipelines (Celery/Redis), and performant relational databases, I was excited to see your focus on building resilient mobility and fintech infrastructure.\n\nAt my previous role, I engineered scalable microservices handling over 40,000 daily requests, reducing database query bottlenecks by 45% through targeted indexing and connection pooling. Given your requirements for clean architecture and robust cloud deployment, I am confident I can make an immediate impact on your engineering roadmap.\n\nI welcome the opportunity to discuss how my technical expertise aligns with your team's expansion goals in the Gulf region.\n\nSincerely,\nJamshaid Ali`;
+                    }
+                    if (this.sampleRole === 'ai') {
+                        return `Dear Talent Acquisition Team,\n\nI am writing to apply for the AI / Agent Engineer role in Riyadh. Having designed autonomous agent frameworks and production LLM integrations, I am eager to contribute to your company's innovative artificial intelligence initiatives in Saudi Arabia.\n\nMy background combines robust backend engineering (FastAPI, Python) with cutting-edge vector search and agentic orchestration. I have successfully deployed production-grade agents that automate complex research and multi-step reasoning tasks while maintaining strict latency and cost boundaries.\n\nI look forward to discussing how my experience can support your mission.\n\nSincerely,\nJamshaid Ali`;
+                    }
+                    return `Dear Hiring Manager,\n\nI am excited to apply for the Full Stack Engineering Lead position. With end-to-end expertise spanning responsive React frontends and scalable Django/PostgreSQL backend services, I specialize in shipping polished products that balance intuitive user experiences with solid architecture.\n\nI have consistently led agile sprints, mentored junior engineers, and maintained high test coverage across distributed environments. I would love to bring this energy and execution speed to your engineering team.\n\nSincerely,\nJamshaid Ali`;
+                },
+
+                copyDemoCoverLetter() {
+                    navigator.clipboard.writeText(this.getDemoCoverLetter());
+                    this.copiedCoverLetter = true;
+                    setTimeout(() => { this.copiedCoverLetter = false; }, 3000);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

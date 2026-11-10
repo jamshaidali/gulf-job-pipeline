@@ -15,8 +15,11 @@ ENV/
 env/
 
 # SQLite Database & Storage
+data/*.db
+data/*.db-journal
 data/jobs_tracker.db
 data/jobs_tracker.db-journal
+data/jobs.db
 data/seen_jobs_*.json
 data/output/*
 data/resumes/*

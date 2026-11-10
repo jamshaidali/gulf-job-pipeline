@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Account &bull; TalentRadar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+    <style>
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .editorial-title { font-family: 'Newsreader', 'Playfair Display', Georgia, serif; }
+    </style>
+</head>
+<body class="bg-[#FAFAFA] text-slate-800 min-h-screen flex items-center justify-center p-4 selection:bg-[#0c383e] selection:text-white">
+
+    <div class="max-w-lg w-full bg-white border border-slate-200/90 rounded-[32px] p-8 sm:p-10 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.06)] relative text-left" x-data="registerForm()">
+        
+        <!-- Brand Header -->
+        <div class="text-center mb-8">
+            <a href="/" class="inline-flex items-center gap-2 mb-3 group">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-sky-400 flex items-center justify-center text-white shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <span class="text-xl font-bold text-slate-900 tracking-tight">TalentRadar</span>
+            </a>
+            <h1 class="text-3xl font-bold text-slate-900 editorial-title">Create your free account</h1>
+            <p class="text-xs text-slate-500 mt-1.5">Join engineers accelerating their applications in the Gulf &amp; Remote</p>
+        </div>
+
+        <!-- Benefits Highlights Ribbon -->
+        <div class="mb-6 p-4 rounded-2xl bg-slate-50 border border-slate-150 text-xs text-slate-700 space-y-1.5">
+            <div class="flex items-center gap-2">
+                <span class="text-emerald-600 font-bold">✓</span>
+                <span>Autonomous job radar across UAE, Saudi Arabia &amp; Remote</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-emerald-600 font-bold">✓</span>
+                <span>Objective 0–100% ATS resume match &amp; gap analysis</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-emerald-600 font-bold">✓</span>
+                <span>1-Click tailored AI cover letter generator</span>
+            </div>
+        </div>
+
+        <!-- Error Alert -->
+        <div x-show="errorMessage" x-cloak class="mb-5 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 font-semibold flex items-center gap-2">
+            <span>⚠️</span>
+            <span x-text="errorMessage"></span>
+        </div>
+
+        <!-- Success Alert -->
+        <div x-show="successMessage" x-cloak class="mb-5 p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 font-semibold flex items-center gap-2">
+            <span>✓</span>
+            <span x-text="successMessage"></span>
+        </div>
+
+        <!-- Form -->
+        <form @submit.prevent="submitRegister()" class="space-y-4">
+            <!-- Bot Trap Honeypot (Invisible to human users) -->
+            <div style="position: absolute; left: -9999px; top: -9999px; opacity: 0; pointer-events: none;" aria-hidden="true">
+                <input type="text" name="company_website" x-model="honeypot" tabindex="-1" autocomplete="off">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Full Name</label>
+                <input type="text" x-model="fullName" maxlength="60"
+                       class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#0c383e] focus:ring-2 focus:ring-[#0c383e]/10 outline-none text-sm text-slate-900 placeholder-slate-400 transition"
+                       placeholder="e.g. Jamshaid Ali">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Email Address <span class="text-rose-500">*</span></label>
+                    <input type="email" x-model="email" required autocomplete="email" maxlength="120"
+                           class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#0c383e] focus:ring-2 focus:ring-[#0c383e]/10 outline-none text-sm text-slate-900 placeholder-slate-400 transition"
+                           placeholder="name@example.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Username <span class="text-rose-500">*</span></label>
+                    <input type="text" x-model="username" required autocomplete="username" minlength="3" maxlength="30"
+                           class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#0c383e] focus:ring-2 focus:ring-[#0c383e]/10 outline-none text-sm text-slate-900 placeholder-slate-400 transition"
+                           placeholder="e.g. jamshaid_dev">
+                </div>
+            </div>
+
+            <!-- Password with Show/Hide -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Password <span class="text-rose-500">*</span></label>
+                    <button type="button" @click="showPassword = !showPassword" class="text-[11px] text-slate-500 hover:text-slate-800 font-medium">
+                        <span x-text="showPassword ? 'Hide' : 'Show'"></span>
+                    </button>
+                </div>
+                <div class="relative">
+                    <input :type="showPassword ? 'text' : 'password'" x-model="password" required autocomplete="new-password" minlength="8" maxlength="128"
+                           class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#0c383e] focus:ring-2 focus:ring-[#0c383e]/10 outline-none text-sm text-slate-900 placeholder-slate-400 transition"
+                           placeholder="At least 8 characters">
+                </div>
+            </div>
+
+            <!-- Confirm Password with Show/Hide -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Confirm Password <span class="text-rose-500">*</span></label>
+                    <button type="button" @click="showConfirmPassword = !showConfirmPassword" class="text-[11px] text-slate-500 hover:text-slate-800 font-medium">
+                        <span x-text="showConfirmPassword ? 'Hide' : 'Show'"></span>
+                    </button>
+                </div>
+                <div class="relative">
+                    <input :type="showConfirmPassword ? 'text' : 'password'" x-model="confirmPassword" required autocomplete="new-password" minlength="8" maxlength="128"
+                           class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-[#0c383e] focus:ring-2 focus:ring-[#0c383e]/10 outline-none text-sm text-slate-900 placeholder-slate-400 transition"
+                           placeholder="Re-enter password">
+                </div>
+            </div>
+
+            <!-- Live Password Strength Meter & Checklist -->
+            <div x-show="password.length > 0" x-cloak class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 text-xs">
+                <!-- Strength bar -->
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] text-slate-500 font-medium">Password Strength:</span>
+                    <span class="text-[11px] font-bold" :class="{
+                        'text-rose-600': strengthScore <= 1,
+                        'text-amber-600': strengthScore === 2,
+                        'text-emerald-600': strengthScore >= 3
+                    }" x-text="strengthLabel"></span>
+                </div>
+                <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                    <div class="h-full transition-all duration-300" :class="{
+                        'w-1/3 bg-rose-500': strengthScore <= 1,
+                        'w-2/3 bg-amber-500': strengthScore === 2,
+                        'w-full bg-emerald-500': strengthScore >= 3
+                    }"></div>
+                </div>
+
+                <!-- Checklist criteria -->
+                <div class="grid grid-cols-2 gap-1 pt-1 text-[11px]">
+                    <div class="flex items-center gap-1.5" :class="hasLength ? 'text-emerald-700 font-medium' : 'text-slate-400'">
+                        <span x-text="hasLength ? '✓' : '•'"></span> 8+ characters
+                    </div>
+                    <div class="flex items-center gap-1.5" :class="hasLetter ? 'text-emerald-700 font-medium' : 'text-slate-400'">
+                        <span x-text="hasLetter ? '✓' : '•'"></span> At least 1 letter
+                    </div>
+                    <div class="flex items-center gap-1.5" :class="hasNumberOrSymbol ? 'text-emerald-700 font-medium' : 'text-slate-400'">
+                        <span x-text="hasNumberOrSymbol ? '✓' : '•'"></span> Number or symbol
+                    </div>
+                    <div class="flex items-center gap-1.5" :class="passwordsMatch ? 'text-emerald-700 font-medium' : 'text-slate-400'">
+                        <span x-text="passwordsMatch ? '✓' : '•'"></span> Passwords match
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" :disabled="loading || (password.length > 0 && (!hasLength || !hasLetter || !hasNumberOrSymbol || !passwordsMatch))" 
+                    class="w-full mt-2 py-3.5 px-4 rounded-full bg-[#0c383e] hover:bg-[#154c54] text-white font-semibold text-sm transition shadow-sm hover:shadow disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer">
+                <span x-show="!loading">Create Free Account &rarr;</span>
+                <span x-show="loading" class="flex items-center gap-2">
+                    <svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                    Creating account...
+                </span>
+            </button>
+        </form>
+
+        <!-- Sign In Prompt -->
+        <div class="mt-6 text-center text-xs text-slate-500">
+            <span>Already have an account? </span>
+            <a href="/login" class="font-bold text-[#0c383e] hover:underline">Sign in &rarr;</a>
+        </div>
+
+        <!-- Security Badge -->
+        <div class="mt-8 pt-5 border-t border-slate-100 flex items-center justify-center gap-2 text-[11px] text-slate-400">
+            <svg class="w-3.5 h-3.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+            <span>NIST SP 800-63B &bull; PBKDF2 Encrypted &bull; No Credit Card Required</span>
+        </div>
+    </div>
+
+    <script>
+        function registerForm() {
+            return {
+                fullName: '',
+                email: '',
+                username: '',
+                password: '',
+                confirmPassword: '',
+                honeypot: '',
+                showPassword: false,
+                showConfirmPassword: false,
+                loading: false,
+                errorMessage: '',
+                successMessage: '',
+
+                get hasLength() {
+                    return this.password.length >= 8;
+                },
+                get hasLetter() {
+                    return /[a-zA-Z]/.test(this.password);
+                },
+                get hasNumberOrSymbol() {
+                    return /[0-9!@#$%^&*()_+\-=\[\]{}|;:,.<>?/~`]/.test(this.password);
+                },
+                get passwordsMatch() {
+                    return this.password.length > 0 && this.password === this.confirmPassword;
+                },
+                get strengthScore() {
+                    let score = 0;
+                    if (this.hasLength) score++;
+                    if (this.hasLetter) score++;
+                    if (this.hasNumberOrSymbol) score++;
+                    if (this.password.length >= 12) score++;
+                    if (score <= 1) return 1;
+                    if (score <= 2) return 2;
+                    return 3;
+                },
+                get strengthLabel() {
+                    if (this.strengthScore <= 1) return 'Weak';
+                    if (this.strengthScore === 2) return 'Fair';
+                    return 'Strong';
+                },
+
+                async submitRegister() {
+                    if (!this.passwordsMatch) {
+                        this.errorMessage = 'Passwords do not match. Please re-enter.';
+                        return;
+                    }
+                    if (!this.hasLength || !this.hasLetter || !this.hasNumberOrSymbol) {
+                        this.errorMessage = 'Please meet all password strength requirements.';
+                        return;
+                    }
+
+                    this.loading = true;
+                    this.errorMessage = '';
+                    this.successMessage = '';
+                    try {
+                        const res = await fetch('/api/register', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                username: this.username,
+                                email: this.email,
+                                password: this.password,
+                                full_name: this.fullName,
+                                honeypot: this.honeypot
+                            })
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            this.successMessage = 'Account created! Redirecting to your dashboard...';
+                            setTimeout(() => {
+                                window.location.href = '/app';
+                            }, 800);
+                        } else {
+                            this.errorMessage = data.detail || 'Registration failed. Please check your details.';
+                        }
+                    } catch (err) {
+                        this.errorMessage = 'Network connection error. Please try again.';
+                    }
+                    this.loading = false;
+                }
+            }
+        }
+    </script>
+</body>
+</html>

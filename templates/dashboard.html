@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentRadar AI &bull; Career Intelligence & Job Finding Copilot</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            200: '#c7d2fe',
+                            300: '#a5b4fc',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                            950: '#1e1b4b',
+                        },
+                        dark: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#0b0f19',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Alpine.js & Collapse Plugin -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        [x-cloak] { display: none !important; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen selection:bg-brand-500 selection:text-white" x-data="talentRadarApp()">
+
+    <!-- Toast Notifications -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+        <template x-for="t in toasts" :key="t.id">
+            <div x-show="t.visible" 
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-3 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+                 class="pointer-events-auto flex items-center gap-3 px-4.5 py-3 rounded-2xl bg-dark-900/95 text-white shadow-2xl border border-slate-700/80 text-xs sm:text-sm font-semibold max-w-md backdrop-blur-md">
+                <span class="text-lg" x-text="t.icon"></span>
+                <span class="flex-1" x-text="t.message"></span>
+            </div>
+        </template>
+    </div>
+
+    <!-- Main Application Shell -->
+    <div class="flex h-screen overflow-hidden bg-slate-50">
+
+        <!-- Left Sidebar Navigation -->
+        <aside class="w-64 bg-dark-950 text-slate-300 flex flex-col border-r border-slate-800/80 flex-shrink-0 transition-all duration-300 z-30 hidden lg:flex">
+            <!-- Sidebar Header / Brand Logo -->
+            <div class="p-5 flex items-center justify-between border-b border-slate-800/80">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-sky-400 flex items-center justify-center text-white shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-white tracking-tight flex items-center gap-1.5">
+                            TalentRadar
+                        </div>
+                        <div class="text-[10px] font-medium tracking-wider uppercase text-slate-400">Career Copilot Pro</div>
+                    </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#0c383e] text-cyan-300 border border-cyan-800/60 uppercase tracking-wider">PRO</span>
+            </div>
+
+            <!-- Primary Navigation Links -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-3.5 space-y-6">
+                <!-- Section: Live Discovery -->
+                <div>
+                    <div class="px-3 mb-2 text-[10px] font-bold tracking-wider uppercase text-slate-400">Discovery Radar</div>
+                    <nav class="space-y-1">
+                        <button @click="setNavFilter('all', 'all')" 
+                                :class="(status === 'all' && region === 'all') ? 'bg-brand-600/20 text-white border-brand-500/40' : 'text-slate-400 hover:text-white hover:bg-slate-900 border-transparent'"
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold border transition text-left">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-base">⚡</span>
+                                <span>Live Feed (All)</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300" x-text="stats.total_jobs || 0"></span>
+                        </button>
+
+                        <button @click="setNavFilter('all', 'all', 75)" 
+                                :class="minScoreFilter === 75 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'text-slate-400 hover:text-white hover:bg-slate-900 border-transparent'"
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold border transition text-left">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-base">🎯</span>
+                                <span>High Match (75%+)</span>
+                            </div>
+                            <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/20 text-emerald-400">Top Fit</span>
+                        </button>
+
+                        <button @click="setNavFilter('all', 'gulf')" 
+                                :class="(region === 'gulf' && status !== 'trash') ? 'bg-brand-600/20 text-white border-brand-500/40' : 'text-slate-400 hover:text-white hover:bg-slate-900 border-transparent'"
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold border transition text-left">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-base">🌴</span>
+                                <span>Gulf Tech Hub</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300" x-text="stats.gulf_jobs || 0"></span>
+                        </button>
+
+                        <button @click="setNavFilter('all', 'pakistan')" 
+                                :class="(region === 'pakistan' && status !== 'trash') ? 'bg-brand-600/20 text-white border-brand-500/40' : 'text-slate-400 hover:text-white hover:bg-slate-900 border-transparent'"
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold border transition text-left">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-base">🇵🇰</span>
+                                <span>Pakistan &amp; Remote</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300" x-text="stats.pakistan_jobs || 0"></span>
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Section: Application Pipeline -->
+                <div>
+                    <div class="px-3 mb-2 text-[10px] font-bold tracking-wider uppercase text-slate-400">Application Pipeline</div>
+                    <nav class="space-y-1">
+                        <button @click="setNavFilter('applied')" 
+                                :class="status === 'applied' ? 'bg-brand-600/20 text-white border-brand-500/40' : 'text-slate-400 hover:text-white hover:bg-slate-900 border-transparent'"
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold border transition text-left">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-base">🚀</span>
+                                <span>Applied</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-brand-900/60 text-brand-300" x-text="stats.applied_jobs || 0"></span>
+                        </button>
+
+                        <button @click="setNavFilter('interviewing')" 
+                                :class="status === 'interviewing' ? 'bg-purple-600/20 text-purple-300 border-purple-500/40' : 'text-slate-400 hover:text-white hover:bg-slate-900 border-transparent'"
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold border transition text-left">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-base">📞</span>
+                                <span>Interviewing</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-900/60 text-purple-300" x-text="stats.interviewing_jobs || 0"></span>
+                        </button>
+
+                        <button @click="setNavFilter('saved')" 
+                                :class="status === 'saved' ? 'bg-amber-600/20 text-amber-300 border-amber-500/40' : 'text-slate-400 hover:text-white hover:bg-slate-900 border-transparent'"
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold border transition text-left">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-base">⭐</span>
+                                <span>Saved Bookmarks</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-900/60 text-amber-300" x-text="stats.saved_jobs || 0"></span>
+                        </button>
+
+                        <button @click="setNavFilter('trash')" 
+                                :class="status === 'trash' ? 'bg-rose-600/20 text-rose-300 border-rose-500/40' : 'text-slate-400 hover:text-white hover:bg-slate-900 border-transparent'"
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold border transition text-left">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-base">🗑️</span>
+                                <span>Archive &amp; Trash</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-900/60 text-rose-300" x-text="stats.trashed_jobs || 0"></span>
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Section: Copilot & Settings -->
+                <div>
+                    <div class="px-3 mb-2 text-[10px] font-bold tracking-wider uppercase text-slate-400">Copilot &amp; Intelligence</div>
+                    <nav class="space-y-1">
+                        <button @click="settingsOpen = true" 
+                                class="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-900 transition text-left">
+                            <span class="text-base">🧠</span>
+                            <span>Target Stack &amp; CV</span>
+                        </button>
+
+                        <button @click="upgradeModalOpen = true" 
+                                class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-amber-400 hover:text-amber-300 hover:bg-amber-950/40 transition text-left">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-base">💎</span>
+                                <span>Subscription Plans</span>
+                            </div>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300 uppercase">Upgrade</span>
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Sidebar User Profile Footer -->
+            <div class="p-4 border-t border-slate-800/80 bg-dark-900/60">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-sky-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+                             x-text="currentUser.full_name ? currentUser.full_name.substring(0, 2).toUpperCase() : (currentUser.username ? currentUser.username.substring(0, 2).toUpperCase() : 'TR')">
+                        </div>
+                        <div class="min-w-0">
+                            <div class="text-xs font-bold text-white truncate" x-text="currentUser.full_name || currentUser.username || preferences.candidate_name || 'Member'"></div>
+                            <div class="text-[10px] text-cyan-400 font-semibold flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                                <span x-text="currentUser.role === 'admin' ? 'Administrator' : 'Free Member'"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="/logout" title="Sign out" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col h-screen overflow-hidden">
+
+            <!-- SaaS Top Header -->
+            <header class="h-16 bg-white border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 z-20 flex-shrink-0">
+                <!-- Left: Mobile Menu Toggle + Breadcrumb -->
+                <div class="flex items-center gap-3">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <div class="flex items-center gap-2 text-xs sm:text-sm">
+                        <span class="font-bold text-slate-400">TalentRadar</span>
+                        <span class="text-slate-300">/</span>
+                        <span class="font-extrabold text-slate-900" x-text="getNavTitle()"></span>
+                    </div>
+                </div>
+
+                <!-- Right Actions: Scan, Upgrade Button, Settings -->
+                <div class="flex items-center gap-2.5 sm:gap-3">
+                    <!-- Scan Trigger Button -->
+                    <button @click="triggerScan(region, timeFilter)" 
+                            :disabled="scanning"
+                            class="px-3.5 py-2 rounded-xl bg-dark-900 hover:bg-dark-950 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition disabled:opacity-50 cursor-pointer">
+                        <svg x-show="!scanning" class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <svg x-show="scanning" class="animate-spin w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                        <span x-text="scanning ? 'Scanning Market...' : 'Run Scan Now'"></span>
+                    </button>
+
+                    <!-- Preferences Button -->
+                    <button @click="settingsOpen = true" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition" title="CV & Permanent Stack Settings">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+
+                    <!-- Upgrade to Pro Button -->
+                    <button @click="upgradeModalOpen = true" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-700 hover:to-purple-700 text-white text-xs font-bold shadow-md shadow-brand-500/20 transition cursor-pointer">
+                        <span>⚡ Pro Perks</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Scrollable Content Viewport -->
+            <main class="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 lg:p-8 space-y-6">
+
+                <!-- KPI Metric Ribbon -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5 sm:gap-4">
+                    <!-- Metric 1: Total Opportunities -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs">
+                        <div class="flex items-center justify-between text-slate-400 mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Scored Jobs</span>
+                            <span class="text-base">⚡</span>
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight" x-text="stats.total_jobs || 0"></div>
+                        <div class="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600">
+                            <span>Fresh from Gulf &amp; PK</span>
+                        </div>
+                    </div>
+
+                    <!-- Metric 2: Top Match Fit -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs">
+                        <div class="flex items-center justify-between text-slate-400 mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">High Fit (&gt;70%)</span>
+                            <span class="text-base">🎯</span>
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-black text-indigo-600 tracking-tight" x-text="getHighMatchCount()"></div>
+                        <div class="mt-1 text-[11px] font-semibold text-indigo-700">Matched with your CV</div>
+                    </div>
+
+                    <!-- Metric 3: Pipeline (Applied & Interviewing) -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs">
+                        <div class="flex items-center justify-between text-slate-400 mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">In Pipeline</span>
+                            <span class="text-base">🚀</span>
+                        </div>
+                        <div class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight" x-text="(stats.applied_jobs || 0) + (stats.interviewing_jobs || 0)"></div>
+                        <div class="mt-1 text-[11px] font-semibold text-slate-400">
+                            <span x-text="stats.interviewing_jobs || 0"></span> Interviewing &bull; <span x-text="stats.applied_jobs || 0"></span> Applied
+                        </div>
+                    </div>
+
+                    <!-- Metric 4: Daily Email Scheduled -->
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs">
+                        <div class="flex items-center justify-between text-slate-400 mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Daily Digest</span>
+                            <span class="text-base">📬</span>
+                        </div>
+                        <div class="text-base sm:text-lg font-black text-emerald-600 tracking-tight flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                        </div>
+                        <div class="mt-1.5 text-[11px] font-semibold text-slate-400">08:00, 13:00, 18:00 PKT</div>
+                    </div>
+                </div>
+
+                <!-- Interactive Filters & Search Controls Bar -->
+                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-4">
+                    <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+                        
+                        <!-- Search Bar -->
+                        <div class="relative flex-1 max-w-lg">
+                            <input type="text" 
+                                   x-model="search" 
+                                   @input.debounce.300ms="fetchJobs()" 
+                                   placeholder="Search jobs, companies, skills, tech stack..." 
+                                   class="w-full bg-slate-50 text-slate-900 text-xs sm:text-sm pl-10 pr-9 py-2.5 rounded-xl border border-slate-200 focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/20 outline-none transition font-medium">
+                            <span class="absolute left-3.5 top-3 text-slate-400 text-xs">🔍</span>
+                            <button x-show="search" @click="search = ''; fetchJobs()" class="absolute right-3.5 top-2.5 text-slate-400 hover:text-slate-700 text-sm font-bold">&times;</button>
+                        </div>
+
+                        <!-- Filter Badges & Time Window Selector -->
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <!-- Region Filter -->
+                            <div class="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                                <button @click="region = 'all'; fetchJobs()" :class="region === 'all' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'" class="px-3 py-1.5 rounded-lg transition">All Markets</button>
+                                <button @click="region = 'gulf'; fetchJobs()" :class="region === 'gulf' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'" class="px-3 py-1.5 rounded-lg transition">🌴 Gulf</button>
+                                <button @click="region = 'pakistan'; fetchJobs()" :class="region === 'pakistan' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'" class="px-3 py-1.5 rounded-lg transition">🇵🇰 Pakistan</button>
+                            </div>
+
+                            <!-- Freshness Window -->
+                            <div class="flex items-center bg-slate-100 p-1 rounded-xl text-xs font-bold">
+                                <button @click="timeFilter = 'all'; fetchJobs()" :class="timeFilter === 'all' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1.5 rounded-lg transition">All Time</button>
+                                <button @click="timeFilter = '24h'; fetchJobs()" :class="timeFilter === '24h' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1.5 rounded-lg transition">Past 24h</button>
+                                <button @click="timeFilter = '3d'; fetchJobs()" :class="timeFilter === '3d' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1.5 rounded-lg transition">Past 3 Days</button>
+                                <button @click="timeFilter = 'week'; fetchJobs()" :class="timeFilter === 'week' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1.5 rounded-lg transition">Week</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Secondary Filter Pills: Minimum Match Score -->
+                    <div class="flex flex-wrap items-center justify-between pt-2 border-t border-slate-100 gap-3 text-xs">
+                        <div class="flex items-center gap-2 text-slate-400 font-semibold">
+                            <span>Filter by ATS Match:</span>
+                            <div class="flex items-center gap-1.5">
+                                <button @click="minScoreFilter = 0" :class="minScoreFilter === 0 ? 'bg-dark-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" class="px-2.5 py-1 rounded-lg font-bold transition">All Scores</button>
+                                <button @click="minScoreFilter = 60" :class="minScoreFilter === 60 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" class="px-2.5 py-1 rounded-lg font-bold transition">60%+ Good Match</button>
+                                <button @click="minScoreFilter = 75" :class="minScoreFilter === 75 ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" class="px-2.5 py-1 rounded-lg font-bold transition">75%+ Top Match</button>
+                            </div>
+                        </div>
+
+                        <!-- Active Count -->
+                        <div class="text-slate-400 font-semibold text-xs">
+                            Showing <span class="font-extrabold text-slate-800" x-text="filteredJobs.length"></span> opportunities
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banner when viewing Trashed Jobs -->
+                <template x-if="status === 'trash'">
+                    <div class="p-4.5 bg-rose-50 border border-rose-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-rose-900 font-medium">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">🗑️</span>
+                            <div>
+                                <strong class="font-bold text-rose-950">Viewing Archived / Trashed Postings:</strong>
+                                <span>These jobs are excluded from your main feed and will never be re-scraped or re-alerted. Click <em>"Restore"</em> on any job to move it back to active.</span>
+                            </div>
+                        </div>
+                        <button @click="status = 'all'; fetchJobs()" class="px-3.5 py-1.5 bg-white border border-rose-300 hover:bg-rose-100 text-rose-800 rounded-xl font-bold transition flex-shrink-0 cursor-pointer">
+                            &larr; Return to Active Opportunities
+                        </button>
+                    </div>
+                </template>
+
+                <!-- Loading State Skeleton -->
+                <template x-if="loading">
+                    <div class="bg-white border border-slate-200/90 rounded-3xl p-16 text-center shadow-sm">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-50 text-brand-600 mb-3 animate-spin">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                        </div>
+                        <div class="text-base font-bold text-slate-900">Scanning &amp; Scoring Opportunities...</div>
+                        <p class="text-xs text-slate-400 mt-1">Filtering matches against your active tech stack and CV</p>
+                    </div>
+                </template>
+
+                <!-- Empty State -->
+                <template x-if="!loading && filteredJobs.length === 0">
+                    <div class="bg-white border border-slate-200/90 rounded-3xl p-16 text-center shadow-sm">
+                        <div class="w-14 h-14 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center text-2xl mx-auto mb-3">🔍</div>
+                        <div class="text-base font-bold text-slate-900">No opportunities match your current filter</div>
+                        <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Try widening your time window, lowering the minimum match score, or triggering a live market scan.</p>
+                        <button @click="minScoreFilter = 0; status = 'all'; timeFilter = 'all'; search = ''; fetchJobs()" class="mt-4 px-4 py-2 bg-dark-900 hover:bg-dark-950 text-white text-xs font-bold rounded-xl transition">
+                            Reset All Filters
+                        </button>
+                    </div>
+                </template>
+
+                <!-- Job Postings List Cards -->
+                <div class="space-y-4" x-show="!loading">
+                    <template x-for="job in filteredJobs" :key="job.id">
+                        <div class="bg-white border border-slate-200/90 hover:border-brand-500/40 rounded-2xl p-5 sm:p-6 shadow-2xs hover:shadow-md transition-all duration-200">
+                            
+                            <!-- Card Header -->
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div class="flex items-start gap-3.5">
+                                    <!-- Company Monogram Avatar -->
+                                    <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-slate-100 to-slate-200 border border-slate-200 flex items-center justify-center font-black text-slate-700 text-sm flex-shrink-0"
+                                         x-text="(job.company || 'CO').substring(0, 2).toUpperCase()">
+                                    </div>
+                                    <div>
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h2 class="text-base sm:text-lg font-extrabold text-slate-900 hover:text-brand-600 transition tracking-tight" x-text="job.title"></h2>
+                                            <!-- Country Tag -->
+                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
+                                                  :class="job.country === 'Pakistan' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-cyan-50 text-cyan-800 border border-cyan-200'"
+                                                  x-text="job.country === 'Pakistan' ? '🇵🇰 Pakistan' : '🌴 Gulf Hub'">
+                                            </span>
+                                            <!-- Date Tag -->
+                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold text-slate-400 bg-slate-100"
+                                                  x-text="job.posted_ago || 'Recent'">
+                                            </span>
+                                        </div>
+                                        <div class="text-xs text-slate-600 mt-1 flex flex-wrap items-center gap-2 font-medium">
+                                            <span class="font-bold text-slate-900" x-text="job.company"></span>
+                                            <span class="text-slate-300">&bull;</span>
+                                            <span x-text="job.location"></span>
+                                            <span class="text-slate-300">&bull;</span>
+                                            <span class="text-[11px] text-slate-400" x-text="job.source || 'Web'"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Match Score Badge & Primary Apply Action -->
+                                <div class="flex items-center gap-3.5 self-stretch sm:self-auto justify-between sm:justify-end">
+                                    <!-- Match Score Gauge -->
+                                    <div class="text-right">
+                                        <div class="text-2xl font-black tracking-tight" 
+                                             :class="job.match_score >= 80 ? 'text-emerald-600' : (job.match_score >= 60 ? 'text-brand-600' : 'text-slate-600')" 
+                                             x-text="job.match_score + '%'">
+                                        </div>
+                                        <div class="text-[10px] font-bold uppercase tracking-wider"
+                                             :class="job.match_score >= 80 ? 'text-emerald-700' : (job.match_score >= 60 ? 'text-brand-700' : 'text-slate-500')" 
+                                             x-text="job.fit_verdict || 'Match'">
+                                        </div>
+                                    </div>
+
+                                    <!-- Apply CTA Button -->
+                                    <a :href="job.apply_url" target="_blank" rel="noopener noreferrer" 
+                                       class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow transition flex items-center gap-1.5 flex-shrink-0 cursor-pointer">
+                                        <span>Apply Now</span>
+                                        <span>&rarr;</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- AI Assessment Summary Banner -->
+                            <div class="mt-4 p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl flex items-start gap-2.5 text-xs text-slate-700 leading-relaxed font-medium">
+                                <span class="text-base flex-shrink-0">💡</span>
+                                <div>
+                                    <strong class="text-slate-900 font-bold">AI Match Assessment: </strong>
+                                    <span x-text="job.summary || 'Strong candidate alignment detected across target skills and experience.'"></span>
+                                </div>
+                            </div>
+
+                            <!-- Expandable Intelligence Details (JD, Recruiters, ATS Optimization) -->
+                            <div class="mt-3.5" x-data="{ openDetail: false, activeTab: 'ats' }">
+                                <div class="flex items-center justify-between">
+                                    <button @click="openDetail = !openDetail" type="button" 
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer">
+                                        <span>🔬</span>
+                                        <span x-text="openDetail ? 'Hide Deep Intelligence ▲' : 'View Deep Intelligence &amp; JD ▼'"></span>
+                                    </button>
+
+                                    <!-- Action Bar: Pipeline Status, Bookmark, Feedback, Trash -->
+                                    <div class="flex items-center gap-1.5">
+                                        <!-- Application Pipeline Status Dropdown -->
+                                        <select :value="job.status" @change="updateStatus(job.id, $event.target.value)" 
+                                                class="text-xs font-bold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 outline-none cursor-pointer">
+                                            <option value="new">Status: New</option>
+                                            <option value="applied">Status: Applied 🚀</option>
+                                            <option value="interviewing">Status: Interviewing 📞</option>
+                                            <option value="saved">Status: Saved ⭐</option>
+                                            <option value="rejected">Status: Rejected ❌</option>
+                                        </select>
+
+                                        <!-- Feedback Like / Dislike (Tunes AI) -->
+                                        <button @click="setFeedback(job.id, 'like')" :class="job.feedback_rating === 'like' ? 'text-emerald-600 bg-emerald-50 border-emerald-200' : 'text-slate-400 hover:text-slate-700 border-slate-200 bg-white'" class="p-1.5 rounded-lg border text-xs transition" title="Thumbs Up (Boost this company in scans)">👍</button>
+                                        <button @click="setFeedback(job.id, 'dislike')" :class="job.feedback_rating === 'dislike' ? 'text-rose-600 bg-rose-50 border-rose-200' : 'text-slate-400 hover:text-slate-700 border-slate-200 bg-white'" class="p-1.5 rounded-lg border text-xs transition" title="Thumbs Down (Penalize this company in scans)">👎</button>
+
+                                        <!-- Trash / Restore Button -->
+                                        <template x-if="job.status !== 'trash'">
+                                            <button @click="moveToTrash(job.id)" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 bg-white transition" title="Move to Trash / Ignore this role">
+                                                🗑️
+                                            </button>
+                                        </template>
+                                        <template x-if="job.status === 'trash'">
+                                            <button @click="restoreJob(job.id)" class="px-2.5 py-1.5 rounded-lg text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition" title="Restore back to active feed">
+                                                ♻️ Restore
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Collapsible Deep Panel -->
+                                <div x-show="openDetail" x-collapse class="mt-3.5 pt-3.5 border-t border-slate-100">
+                                    <!-- Intelligence Sub-Tabs -->
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <button @click="activeTab = 'ats'" :class="activeTab === 'ats' ? 'bg-brand-600 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" class="px-3 py-1 rounded-lg text-xs transition">ATS Keywords &amp; Tailored CV</button>
+                                        <button @click="activeTab = 'coverletter'; if (!job.coverLetter) generateCoverLetter(job)" :class="activeTab === 'coverletter' ? 'bg-brand-600 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" class="px-3 py-1 rounded-lg text-xs transition flex items-center gap-1.5">
+                                            <span>✍️ AI Cover Letter</span>
+                                            <span class="px-1 py-0.2 rounded text-[9px] bg-cyan-400 text-dark-950 font-black">AI</span>
+                                        </button>
+                                        <button @click="activeTab = 'recruiters'" :class="activeTab === 'recruiters' ? 'bg-brand-600 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" class="px-3 py-1 rounded-lg text-xs transition">
+                                            Recruiters (<span x-text="job.hiring_managers ? job.hiring_managers.length : 0"></span>)
+                                        </button>
+                                        <button @click="activeTab = 'jd'" :class="activeTab === 'jd' ? 'bg-brand-600 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" class="px-3 py-1 rounded-lg text-xs transition">Job Description (JD)</button>
+                                    </div>
+
+                                    <!-- Tab 1: ATS Optimization & Tailored Bullets -->
+                                    <div x-show="activeTab === 'ats'" class="space-y-3">
+                                        <!-- Missing Keywords -->
+                                        <div class="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <span class="text-xs font-bold text-amber-900">🎯 Recommended Keywords to add to your CV:</span>
+                                                <button @click="copyText(job.missing_keywords.join(', '), 'Keywords copied to clipboard!')" class="text-[11px] font-bold text-amber-900 hover:text-amber-950 bg-amber-200/60 px-2 py-0.5 rounded transition">Copy Keywords</button>
+                                            </div>
+                                            <div class="flex flex-wrap gap-1.5">
+                                                <template x-for="kw in (job.missing_keywords || [])" :key="kw">
+                                                    <span class="px-2 py-0.5 rounded-md bg-white border border-amber-300 text-amber-950 text-xs font-bold" x-text="kw"></span>
+                                                </template>
+                                                <span x-show="!job.missing_keywords || job.missing_keywords.length === 0" class="text-xs text-amber-800 font-medium">All major core keywords already covered in your profile!</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Tailored Bullets -->
+                                        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                                            <div class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">✍️ Recommended CV Bullet Point for this Role:</div>
+                                            <template x-for="b in (job.tailored_bullets || [])" :key="b.suggested_bullet">
+                                                <div class="text-xs text-slate-800 bg-white p-2.5 rounded-lg border border-slate-200 mb-1.5 font-medium flex items-start justify-between gap-2">
+                                                    <span x-text="'• ' + b.suggested_bullet"></span>
+                                                    <button @click="copyText(b.suggested_bullet, 'Bullet copied!')" class="text-[11px] font-bold text-brand-600 hover:text-brand-800 flex-shrink-0">Copy</button>
+                                                </div>
+                                            </template>
+                                            <span x-show="!job.tailored_bullets || job.tailored_bullets.length === 0" class="text-xs text-slate-500 italic">No tailored bullet generated for this posting.</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Tab 2: Recruiter Outreach -->
+                                    <div x-show="activeTab === 'recruiters'" class="space-y-2">
+                                        <template x-for="hm in (job.hiring_managers || [])" :key="hm.name">
+                                            <div class="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition">
+                                                <div>
+                                                    <div class="text-xs font-bold text-slate-900" x-text="hm.name"></div>
+                                                    <div class="text-[11px] text-slate-500" x-text="hm.role"></div>
+                                                </div>
+                                                <a :href="hm.linkedin_url" target="_blank" rel="noopener noreferrer" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1">
+                                                    <span>LinkedIn</span>
+                                                    <span>&rarr;</span>
+                                                </a>
+                                            </div>
+                                        </template>
+                                        <div x-show="!job.hiring_managers || job.hiring_managers.length === 0" class="p-4 text-center text-xs text-slate-500 italic bg-slate-50 rounded-xl">
+                                            No verified recruiter directly linked for this posting yet. Apply directly via the portal.
+                                        </div>
+                                    </div>
+
+                                    <!-- Tab 3: Full Job Description (JD) -->
+                                    <div x-show="activeTab === 'jd'" class="space-y-2">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Official Requirements</span>
+                                            <button @click="copyText(job.description, 'JD copied!')" class="text-xs text-brand-600 font-bold hover:underline">Copy Full Text</button>
+                                        </div>
+                                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 max-h-80 overflow-y-auto whitespace-pre-line custom-scrollbar" 
+                                             x-text="job.description || 'Full description available on application portal.'">
+                                        </div>
+                                    </div>
+
+                                    <!-- Tab 4: AI Tailored Cover Letter -->
+                                    <div x-show="activeTab === 'coverletter'" class="space-y-3">
+                                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                                            <div class="flex items-center justify-between mb-2.5">
+                                                <span class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                                                    <span>✍️</span> <span>AI-Tailored Cover Letter for this Position</span>
+                                                </span>
+                                                <div class="flex items-center gap-2">
+                                                    <button @click="generateCoverLetter(job)" class="text-[11px] font-bold text-brand-600 hover:text-brand-800 bg-brand-50 px-2.5 py-1 rounded-lg transition cursor-pointer">Regenerate 🔄</button>
+                                                    <button @click="copyText(job.coverLetter, 'Cover letter copied!')" class="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-100 px-2.5 py-1 rounded-lg transition cursor-pointer">Copy Cover Letter 📋</button>
+                                                </div>
+                                            </div>
+                                            <div x-show="job.loadingCoverLetter" class="text-xs text-brand-600 font-bold p-8 text-center animate-pulse">
+                                                Analyzing job requirements &amp; drafting tailored cover letter...
+                                            </div>
+                                            <div x-show="!job.loadingCoverLetter && job.coverLetter" class="text-xs text-slate-800 bg-white p-4 rounded-xl border border-slate-200 whitespace-pre-line leading-relaxed max-h-80 overflow-y-auto custom-scrollbar font-medium" x-text="job.coverLetter">
+                                            </div>
+                                            <div x-show="!job.loadingCoverLetter && !job.coverLetter" class="text-center p-6 bg-white rounded-xl border border-slate-200 text-xs text-slate-500">
+                                                Click "Generate Cover Letter" to craft an ATS-optimized, personalized application letter for this exact role.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Slide-Over Drawer: AI Profile & CV Settings -->
+    <div x-show="settingsOpen" x-cloak class="fixed inset-0 z-50 overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" @click="settingsOpen = false"></div>
+        <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div class="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+                <!-- Header -->
+                <div class="p-5 bg-dark-950 text-white flex items-center justify-between">
+                    <div>
+                        <div class="text-sm font-extrabold flex items-center gap-2">
+                            <span>🧠</span> <span>AI Profile &amp; CV Settings</span>
+                        </div>
+                        <div class="text-[11px] text-slate-400">Configure target stack, roles &amp; active resume</div>
+                    </div>
+                    <button @click="settingsOpen = false" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+                </div>
+
+                <!-- Form Content -->
+                <div class="flex-1 overflow-y-auto p-5 space-y-5 text-xs">
+                    <!-- Upload Resume Section -->
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-900">📄 Active Resume / CV</span>
+                            <span class="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono" x-text="preferences.active_cv || 'None'"></span>
+                        </div>
+                        <label class="border-2 border-dashed border-slate-300 hover:border-brand-500 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition bg-white">
+                            <span class="text-xl mb-1">📤</span>
+                            <span class="font-bold text-slate-800">Upload New Resume (PDF / DOCX)</span>
+                            <span class="text-[10px] text-slate-400 mt-0.5">Max 5 MB &bull; Auto-syncs skills</span>
+                            <input type="file" @change="selectedCvFile = $event.target.files[0]; handleCvUpload()" class="hidden" accept=".pdf,.docx,.txt">
+                        </label>
+                        <div x-show="uploadingCv" class="text-center font-bold text-brand-600 animate-pulse">Parsing resume &amp; syncing skills...</div>
+                    </div>
+
+                    <!-- Permanent Tech Stack -->
+                    <div class="space-y-2">
+                        <label class="font-bold text-slate-900 block">⚡ Permanent Tech Stack (Primary Skills)</label>
+                        <div class="flex gap-2">
+                            <input type="text" x-model="newStackInput" @keydown.enter.prevent="addStackItem()" placeholder="e.g. FastAPI, Docker, Celery" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-brand-500">
+                            <button @click="addStackItem()" class="px-3 py-2 bg-dark-900 text-white rounded-xl font-bold hover:bg-dark-950 transition">+ Add</button>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <template x-for="(skill, idx) in (preferences.primary_stack || [])" :key="skill">
+                                <span class="px-2.5 py-1 bg-brand-50 text-brand-900 border border-brand-200 rounded-lg font-bold flex items-center gap-1.5">
+                                    <span x-text="skill"></span>
+                                    <button @click="removeStackItem(idx)" class="text-brand-400 hover:text-brand-800">&times;</button>
+                                </span>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Target Roles -->
+                    <div class="space-y-2">
+                        <label class="font-bold text-slate-900 block">🎯 Target Job Titles</label>
+                        <div class="flex gap-2">
+                            <input type="text" x-model="newRoleInput" @keydown.enter.prevent="addRole()" placeholder="e.g. Senior Backend Engineer" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-brand-500">
+                            <button @click="addRole()" class="px-3 py-2 bg-dark-900 text-white rounded-xl font-bold hover:bg-dark-950 transition">+ Add</button>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <template x-for="(role, idx) in (preferences.default_roles || [])" :key="role">
+                                <span class="px-2.5 py-1 bg-slate-100 text-slate-800 border border-slate-200 rounded-lg font-bold flex items-center gap-1.5">
+                                    <span x-text="role"></span>
+                                    <button @click="removeRole(idx)" class="text-slate-400 hover:text-slate-700">&times;</button>
+                                </span>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Excluded Keywords -->
+                    <div class="space-y-2">
+                        <label class="font-bold text-slate-900 block">🚫 Negative / Excluded Keywords</label>
+                        <div class="flex gap-2">
+                            <input type="text" x-model="newExcludedInput" @keydown.enter.prevent="addExcluded()" placeholder="e.g. PHP, WordPress, Junior" class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-brand-500">
+                            <button @click="addExcluded()" class="px-3 py-2 bg-dark-900 text-white rounded-xl font-bold hover:bg-dark-950 transition">+ Add</button>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            <template x-for="(ex, idx) in (preferences.excluded_keywords || [])" :key="ex">
+                                <span class="px-2.5 py-1 bg-rose-50 text-rose-900 border border-rose-200 rounded-lg font-bold flex items-center gap-1.5">
+                                    <span x-text="ex"></span>
+                                    <button @click="removeExcluded(idx)" class="text-rose-400 hover:text-rose-800">&times;</button>
+                                </span>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Action -->
+                <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+                    <button @click="settingsOpen = false" class="px-4 py-2 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-white transition text-xs">Cancel</button>
+                    <button @click="savePreferencesAction(true)" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold transition text-xs flex items-center gap-1.5">
+                        <span>Save &amp; Scan Now</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: SaaS Subscription & Monetization System Preview -->
+    <div x-show="upgradeModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-dark-950/70 backdrop-blur-sm" role="dialog" aria-modal="true">
+        <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative overflow-hidden" @click.away="upgradeModalOpen = false">
+            <button @click="upgradeModalOpen = false" class="absolute top-5 right-5 text-slate-400 hover:text-slate-800 text-xl font-bold">&times;</button>
+            
+            <div class="text-center mb-6">
+                <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-brand-100 text-brand-700">TalentRadar Plans</span>
+                <h2 class="text-2xl font-black text-slate-900 mt-2">Accelerate Your International Career</h2>
+                <p class="text-xs text-slate-500 mt-1">Unlock real-time automated scouting across high-paying Gulf &amp; Pakistan tech roles</p>
+            </div>
+
+            <!-- Tier Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Free Plan -->
+                <div class="p-5 rounded-2xl border border-slate-200 bg-slate-50 flex flex-col justify-between">
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Starter Free</div>
+                        <div class="text-2xl font-black text-slate-900 mt-1">$0 <span class="text-xs text-slate-400 font-normal">/ month</span></div>
+                        <ul class="mt-4 space-y-2 text-xs text-slate-700 font-medium">
+                            <li class="flex items-center gap-2">✓ 15 fresh jobs scanned daily</li>
+                            <li class="flex items-center gap-2">✓ Basic keyword matching</li>
+                            <li class="flex items-center gap-2">✓ Local web dashboard</li>
+                            <li class="flex items-center gap-2 text-slate-400">✗ Recruiter direct LinkedIn finder</li>
+                            <li class="flex items-center gap-2 text-slate-400">✗ Automated daily Gmail alert digests</li>
+                        </ul>
+                    </div>
+                    <button class="mt-6 w-full py-2.5 rounded-xl border border-slate-300 font-bold text-xs text-slate-700 bg-white" disabled>Current Base Plan</button>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="p-5 rounded-2xl border-2 border-brand-500 bg-gradient-to-b from-brand-50/50 to-white flex flex-col justify-between relative shadow-lg shadow-brand-500/10">
+                    <span class="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-brand-600 text-white">Recommended</span>
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-wider text-brand-700">Career Pro Accelerator</div>
+                        <div class="text-2xl font-black text-slate-900 mt-1">$19 <span class="text-xs text-slate-400 font-normal">/ month</span></div>
+                        <ul class="mt-4 space-y-2 text-xs text-slate-800 font-medium">
+                            <li class="flex items-center gap-2 text-brand-900">✓ Unlimited Gulf &amp; PK opportunities</li>
+                            <li class="flex items-center gap-2 text-brand-900">✓ AI ATS CV accomplishment tailoring</li>
+                            <li class="flex items-center gap-2 text-brand-900">✓ Recruiter &amp; Hiring Manager direct LinkedIn</li>
+                            <li class="flex items-center gap-2 text-brand-900">✓ 3x daily automated Gmail digests</li>
+                            <li class="flex items-center gap-2 text-brand-900">✓ Trash &amp; Restore priority sync</li>
+                        </ul>
+                    </div>
+                    <button @click="showToast('Stripe Checkout will be connected upon cloud launch!', '💳')" class="mt-6 w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md transition cursor-pointer">
+                        Get Pro Accelerator &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center text-[11px] text-slate-400">
+                Cancel anytime &bull; 7-day money-back guarantee &bull; Secure Stripe checkout integration
+            </div>
+        </div>
+    </div>
+
+    <!-- Alpine App State Machine -->
+    <script>
+        function talentRadarApp() {
+            return {
+                jobs: [],
+                stats: {},
+                preferences: {},
+                currentUser: { username: '', full_name: '', email: '', role: 'user' },
+                loading: true,
+                scanning: false,
+                settingsOpen: false,
+                upgradeModalOpen: false,
+                mobileMenuOpen: false,
+                uploadingCv: false,
+
+                // Filter States
+                region: 'all',
+                status: 'all',
+                timeFilter: 'all',
+                minScoreFilter: 0,
+                search: '',
+
+                // Form Inputs
+                selectedCvFile: null,
+                newStackInput: '',
+                newRoleInput: '',
+                newExcludedInput: '',
+
+                // Toast system
+                toasts: [],
+
+                init() {
+                    this.fetchUser();
+                    this.fetchStats();
+                    this.fetchPreferences();
+                    this.fetchJobs();
+                },
+
+                async fetchUser() {
+                    try {
+                        const res = await fetch('/api/me');
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.currentUser = data.user || {};
+                        }
+                    } catch(e) {}
+                },
+
+                showToast(message, icon = '✨') {
+                    const id = Date.now();
+                    this.toasts.push({ id, message, icon, visible: true });
+                    setTimeout(() => {
+                        const t = this.toasts.find(x => x.id === id);
+                        if (t) t.visible = false;
+                    }, 4000);
+                },
+
+                copyText(text, toastMsg = 'Copied to clipboard!') {
+                    if (!text) return;
+                    navigator.clipboard.writeText(text);
+                    this.showToast(toastMsg, '📋');
+                },
+
+                get filteredJobs() {
+                    let res = this.jobs;
+                    if (this.minScoreFilter > 0) {
+                        res = res.filter(j => (j.match_score || 0) >= this.minScoreFilter);
+                    }
+                    return res;
+                },
+
+                getHighMatchCount() {
+                    if (!this.jobs) return 0;
+                    return this.jobs.filter(j => (j.match_score || 0) >= 70).length;
+                },
+
+                getNavTitle() {
+                    if (this.status === 'trash') return 'Archived & Trashed Opportunities';
+                    if (this.status === 'applied') return 'Applied Opportunities';
+                    if (this.status === 'interviewing') return 'Interviewing Stage';
+                    if (this.status === 'saved') return 'Saved Bookmarks';
+                    if (this.region === 'gulf') return 'Gulf Tech Region';
+                    if (this.region === 'pakistan') return 'Pakistan & Remote Tech';
+                    if (this.minScoreFilter >= 75) return 'Top Fit Opportunities (75%+)';
+                    return 'Live Opportunities Radar';
+                },
+
+                setNavFilter(status, region = 'all', minScore = 0) {
+                    this.status = status;
+                    this.region = region;
+                    this.minScoreFilter = minScore;
+                    this.fetchJobs();
+                },
+
+                async fetchStats() {
+                    try {
+                        const res = await fetch('/api/stats');
+                        if (res.status === 401) { window.location.href = '/login'; return; }
+                        this.stats = await res.json();
+                    } catch(e) {}
+                },
+
+                async fetchPreferences() {
+                    try {
+                        const res = await fetch('/api/preferences');
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.preferences = data.preferences || {};
+                        }
+                    } catch(e) {}
+                },
+
+                async fetchJobs() {
+                    this.loading = true;
+                    try {
+                        const res = await fetch(`/api/jobs?region=${this.region}&status=${this.status}&time_filter=${this.timeFilter}&search=${encodeURIComponent(this.search)}`);
+                        if (res.status === 401) { window.location.href = '/login'; return; }
+                        this.jobs = await res.json();
+                    } catch(e) {
+                        this.showToast('Error loading opportunities', '⚠️');
+                    }
+                    this.loading = false;
+                },
+
+                async updateStatus(jobId, newStatus) {
+                    await fetch(`/api/jobs/${jobId}/status`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({status: newStatus})
+                    });
+                    const job = this.jobs.find(j => j.id === jobId);
+                    if (job) job.status = newStatus;
+                    await this.fetchStats();
+                    this.showToast(`Status updated to ${newStatus.toUpperCase()}`, '🚀');
+                },
+
+                async moveToTrash(jobId) {
+                    await fetch(`/api/jobs/${jobId}/status`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({status: 'trash'})
+                    });
+                    this.jobs = this.jobs.filter(j => j.id !== jobId);
+                    await this.fetchStats();
+                    this.showToast('Moved to Trash (ignored for future scans) 🗑️', '🗑️');
+                },
+
+                async restoreJob(jobId) {
+                    await fetch(`/api/jobs/${jobId}/status`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({status: 'new'})
+                    });
+                    this.jobs = this.jobs.filter(j => j.id !== jobId);
+                    await this.fetchStats();
+                    this.showToast('Job restored to Active Feed! ♻️', '✅');
+                },
+
+                async setFeedback(jobId, rating) {
+                    await fetch(`/api/jobs/${jobId}/feedback`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({rating: rating, notes: ''})
+                    });
+                    const job = this.jobs.find(j => j.id === jobId);
+                    if (job) job.feedback_rating = rating;
+                    this.showToast(`AI trained with your preference!`, '🧠');
+                },
+
+                addStackItem() {
+                    if (!this.newStackInput.trim()) return;
+                    if (!this.preferences.primary_stack) this.preferences.primary_stack = [];
+                    this.preferences.primary_stack.push(this.newStackInput.trim());
+                    this.newStackInput = '';
+                },
+
+                removeStackItem(idx) {
+                    this.preferences.primary_stack.splice(idx, 1);
+                },
+
+                addRole() {
+                    if (!this.newRoleInput.trim()) return;
+                    if (!this.preferences.default_roles) this.preferences.default_roles = [];
+                    this.preferences.default_roles.push(this.newRoleInput.trim());
+                    this.newRoleInput = '';
+                },
+
+                removeRole(idx) {
+                    this.preferences.default_roles.splice(idx, 1);
+                },
+
+                addExcluded() {
+                    if (!this.newExcludedInput.trim()) return;
+                    if (!this.preferences.excluded_keywords) this.preferences.excluded_keywords = [];
+                    this.preferences.excluded_keywords.push(this.newExcludedInput.trim());
+                    this.newExcludedInput = '';
+                },
+
+                removeExcluded(idx) {
+                    this.preferences.excluded_keywords.splice(idx, 1);
+                },
+
+                async handleCvUpload() {
+                    if (!this.selectedCvFile) return;
+                    this.uploadingCv = true;
+                    const formData = new FormData();
+                    formData.append('file', this.selectedCvFile);
+
+                    try {
+                        const res = await fetch('/api/upload-cv', { method: 'POST', body: formData });
+                        const data = await res.json();
+                        if (res.ok) {
+                            this.showToast(data.message, '📄');
+                            this.selectedCvFile = null;
+                            await this.fetchPreferences();
+                        } else {
+                            this.showToast(data.detail || 'Upload failed', '⚠️');
+                        }
+                    } catch(e) {
+                        this.showToast('Network error during upload', '⚠️');
+                    }
+                    this.uploadingCv = false;
+                },
+
+                async savePreferencesAction(triggerScanNow = false) {
+                    try {
+                        const res = await fetch('/api/preferences', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(this.preferences)
+                        });
+                        if (res.ok) {
+                            this.showToast('Target Stack & Preferences saved!', '✅');
+                            this.settingsOpen = false;
+                            if (triggerScanNow) {
+                                await this.triggerScan('all', this.timeFilter);
+                            }
+                        }
+                    } catch(e) {
+                        this.showToast('Error saving preferences', '⚠️');
+                    }
+                },
+
+                async generateCoverLetter(job) {
+                    job.loadingCoverLetter = true;
+                    try {
+                        const res = await fetch(`/api/cover-letter/${job.id}`, { method: 'POST' });
+                        const data = await res.json();
+                        if (res.ok) {
+                            job.coverLetter = data.cover_letter;
+                            this.showToast('Cover Letter tailored for this role! ✍️', '✨');
+                        } else {
+                            this.showToast(data.detail || 'Failed to generate cover letter', '⚠️');
+                        }
+                    } catch(e) {
+                        this.showToast('Error generating cover letter', '⚠️');
+                    }
+                    job.loadingCoverLetter = false;
+                },
+
+                async triggerScan(region, timeWindow) {
+                    this.scanning = true;
+                    this.showToast('⚡ Market scan launched in background!', '⚡');
+                    try {
+                        await fetch(`/api/scan?region=${region}&time_window=${timeWindow}`, {method: 'POST'});
+                        let count = 0;
+                        const interval = setInterval(async () => {
+                            count++;
+                            await this.fetchStats();
+                            await this.fetchJobs();
+                            if (count >= 5) {
+                                clearInterval(interval);
+                                this.scanning = false;
+                                this.showToast('✅ Fresh opportunities synced!', '✅');
+                            }
+                        }, 3000);
+                    } catch(e) {
+                        this.scanning = false;
+                        this.showToast('Scan error', '⚠️');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
