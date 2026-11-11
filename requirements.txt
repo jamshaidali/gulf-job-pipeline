@@ -4,9 +4,10 @@ uvicorn[standard]>=0.30.0
 python-multipart>=0.0.12
 pydantic>=2.0.0
 
-# Document & PDF Parsing
+# Document & PDF Parsing & Generation
 pypdf>=3.17.0
 python-docx>=1.1.0
+reportlab>=4.0.0
 
 # Web Scraping & HTML
 beautifulsoup4>=4.12.0
