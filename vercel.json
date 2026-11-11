@@ -1,9 +1,37 @@
 {
-  "version": 2,
+  "services": {
+    "backend": {
+      "root": ".",
+      "entrypoint": "api/index.py"
+    },
+    "frontend": {
+      "root": "frontend"
+    }
+  },
   "rewrites": [
     {
+      "source": "/docs",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
+      "source": "/openapi.json",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
       "source": "/(.*)",
-      "destination": "/api/index.py"
+      "destination": {
+        "service": "frontend"
+      }
     }
   ]
 }
