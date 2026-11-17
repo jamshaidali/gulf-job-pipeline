@@ -1,3 +1,4 @@
+import { serializeJsonLd } from '@/lib/jsonLd';
 import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -21,7 +22,7 @@ export const dynamic = 'force-dynamic';
 
 async function getJob(id: string): Promise<Job | null> {
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/jobs/${id}`, {
+    const res = await fetch(`http://127.0.0.1:8000/api/jobs/${encodeURIComponent(id)}`, {
       cache: 'no-store',
     });
     if (!res.ok) return null;
@@ -105,7 +106,7 @@ export default async function JobDetailPage({
       {/* Google Jobs Schema.org JSON-LD */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jobPostingSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jobPostingSchema) }}
       />
 
       <Navbar />

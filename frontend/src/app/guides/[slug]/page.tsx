@@ -1,3 +1,4 @@
+import { serializeJsonLd } from '@/lib/jsonLd';
 import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -63,7 +64,7 @@ export default async function SingleGuidePage({ params }: GuidePageProps) {
     <div className="min-h-screen bg-white flex flex-col text-slate-900 selection:bg-cyan-500 selection:text-white">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
       />
       <Navbar />
 

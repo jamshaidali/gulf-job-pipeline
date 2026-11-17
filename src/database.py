@@ -1053,6 +1053,18 @@ class JobDatabase:
             conn.commit()
             return True
 
+    def update_user_password_hash(self, username: str, new_password_hash: str) -> bool:
+        """Replaces a stored password hash (e.g. legacy -> PBKDF2 upgrade) without revoking sessions."""
+        u = username.strip().lower()
+        with self._get_connection() as conn:
+            self._execute(
+                conn,
+                "UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE LOWER(username) = ?",
+                (new_password_hash, u)
+            )
+            conn.commit()
+            return True
+
     # ================= Subscription & Quota Management =================
 
     def get_user_search_quota(self, user_id: int) -> Dict[str, Any]:

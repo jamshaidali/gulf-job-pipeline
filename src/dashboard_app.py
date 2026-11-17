@@ -54,18 +54,44 @@ async def security_headers_middleware(request: Request, call_next):
     return response
 
 
+def _env_flag(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def test_endpoints_enabled() -> bool:
+    """Test-only helpers and self-service plan switching. Never enable in production."""
+    return _env_flag("ENABLE_TEST_ENDPOINTS")
+
+
 def extract_client_ip(request: Request) -> str:
-    """Safely extracts client IP checking standard reverse-proxy and CDN headers."""
-    cf_ip = request.headers.get("CF-Connecting-IP")
-    if cf_ip:
-        return cf_ip.strip()
-    real_ip = request.headers.get("X-Real-IP")
-    if real_ip:
-        return real_ip.strip()
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else "127.0.0.1"
+    """Determines the client IP for rate limiting without trusting client-controlled headers.
+
+    Proxy headers are only honoured where the hosting platform guarantees them:
+      * CLIENT_IP_HEADER=<header>  explicit override (e.g. "cf-connecting-ip" behind Cloudflare)
+      * Vercel                     "x-real-ip" (set by Vercel's edge, not forgeable by clients)
+      * Render / TRUSTED_PROXY_HOPS the right-most X-Forwarded-For entries (appended by the proxy)
+    Otherwise the TCP peer address is used.
+    """
+    peer = request.client.host if request.client else "127.0.0.1"
+
+    override = os.environ.get("CLIENT_IP_HEADER", "").strip()
+    if override:
+        val = request.headers.get(override, "").split(",")[0].strip()
+        return val or peer
+
+    if os.environ.get("VERCEL"):
+        val = request.headers.get("x-real-ip", "").strip()
+        return val or peer
+
+    try:
+        hops = int(os.environ.get("TRUSTED_PROXY_HOPS") or (1 if os.environ.get("RENDER") else 0))
+    except ValueError:
+        hops = 0
+    if hops > 0:
+        chain = [ip.strip() for ip in request.headers.get("x-forwarded-for", "").split(",") if ip.strip()]
+        if len(chain) >= hops:
+            return chain[-hops]
+    return peer
 
 
 def verify_request_origin(request: Request):
@@ -172,9 +198,22 @@ def get_current_user_profile(request: Request) -> Dict[str, Any]:
     """Retrieves full user record including integer user ID for data isolation."""
     username = get_current_user(request)
     profile = auth.get_user_profile(username)
-    if not profile:
-        profile = {"id": 1, "username": username, "full_name": username.title(), "role": "user"}
+    if not auth.enabled and not profile:
+        # Single-user mode with authentication explicitly disabled
+        return {"id": 1, "username": username, "full_name": username.title(), "role": "admin"}
+    if not profile or not profile.get("id"):
+        # Never fall back to another account's data (e.g. user 1 / admin)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account not found. Please log in again."
+        )
     return profile
+
+
+def require_admin(user_profile: Dict[str, Any] = Depends(get_current_user_profile)) -> Dict[str, Any]:
+    if (user_profile.get("role") or "user") != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Administrator access required.")
+    return user_profile
 
 
 def get_optional_user_profile(request: Request) -> Optional[Dict[str, Any]]:
@@ -186,8 +225,8 @@ def get_optional_user_profile(request: Request) -> Optional[Dict[str, Any]]:
     if not username:
         return None
     profile = auth.get_user_profile(username)
-    if not profile:
-        profile = {"id": 1, "username": username, "full_name": username.title(), "role": "user"}
+    if not profile or not profile.get("id"):
+        return None
     return profile
 
 
@@ -538,7 +577,8 @@ async def update_status(job_id: str, payload: StatusUpdate, user_profile: Dict[s
 
 
 @app.delete("/api/jobs/{job_id}")
-async def delete_job_api(job_id: str, user: str = Depends(get_current_user)):
+async def delete_job_api(job_id: str, admin_profile: Dict[str, Any] = Depends(require_admin)):
+    """Permanently deletes a job for ALL users. Admin only; regular users should move jobs to trash."""
     success = db.delete_job_permanently(job_id)
     if not success:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -745,7 +785,19 @@ async def trigger_test_alert(
 ):
     """Dispatches a test high-match alert email immediately to verify email delivery."""
     user_id = user_profile.get("id") or 1
-    custom_recipient = payload.get("email") if payload else None
+    custom_recipient = (payload.get("email") or "").strip() if payload else ""
+    if custom_recipient:
+        # Only allow addresses already tied to this account, so the endpoint can't be used to spam others
+        own_addresses = {
+            (user_profile.get("email") or "").strip().lower(),
+            (db.get_user_notification_settings(user_id).get("alert_email") or "").strip().lower(),
+        } - {""}
+        if custom_recipient.lower() not in own_addresses:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Test alerts can only be sent to your account email or your saved alert email."
+            )
+    custom_recipient = custom_recipient or None
     
     from src.alert_service import send_high_match_alert
     res = send_high_match_alert(user_id=user_id, test_mode=True, custom_recipient=custom_recipient)
@@ -977,7 +1029,17 @@ async def upgrade_subscription(
     payload: Optional[Dict[str, Any]] = None,
     user_profile: Dict[str, Any] = Depends(get_current_user_profile)
 ):
-    """Upgrades current user to Pro tier, unlocking unlimited searches and all job opportunities."""
+    """Upgrades current user to Pro tier, unlocking unlimited searches and all job opportunities.
+
+    There is no payment integration yet, so self-service upgrades are only possible when
+    ENABLE_TEST_ENDPOINTS is set (local/demo/testing). In production, admins grant Pro via
+    POST /api/admin/users/{user_id}/role.
+    """
+    if not test_endpoints_enabled():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Online upgrades are not available yet. Please contact support to activate TalentRadar Pro."
+        )
     user_id = user_profile.get("id") or 1
     db.update_user_role(user_id, "pro")
     updated = db.get_user_by_id(user_id)
@@ -1000,7 +1062,9 @@ async def upgrade_subscription(
 
 @app.post("/api/subscription/reset-quota")
 async def reset_search_quota(user_profile: Dict[str, Any] = Depends(get_current_user_profile)):
-    """Resets the search counter back to 0 for testing or renewals."""
+    """Resets the search counter back to 0 for testing or renewals (test mode only)."""
+    if not test_endpoints_enabled():
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Quota resets are not available.")
     user_id = user_profile.get("id") or 1
     db.reset_user_searches(user_id)
     return {"status": "success", "message": "Search quota reset to 0/10."}
@@ -1024,6 +1088,27 @@ async def downgrade_subscription(user_profile: Dict[str, Any] = Depends(get_curr
         })
     return {"status": "success", "message": "Switched to Free tier.", "user": updated}
 
+
+
+class RoleUpdatePayload(BaseModel):
+    role: str = Field(..., pattern=r"^(user|pro|admin)$")
+
+
+@app.post("/api/admin/users/{user_id}/role")
+async def admin_set_user_role(
+    user_id: int,
+    payload: RoleUpdatePayload,
+    request: Request,
+    admin_profile: Dict[str, Any] = Depends(require_admin)
+):
+    """Admin-only: set a user's plan/role (user, pro, admin)."""
+    verify_request_origin(request)
+    target = db.get_user_by_id(user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.update_user_role(user_id, payload.role)
+    auth.revoke_user_sessions(target["username"])  # force re-login so the new role applies cleanly
+    return {"status": "success", "user_id": user_id, "role": payload.role}
 
 
 @app.get("/landing", response_class=HTMLResponse)
@@ -1054,7 +1139,12 @@ async def serve_app(request: Request):
 
 @app.post("/api/test/reset-rate-limit")
 async def reset_test_rate_limit():
-    """Resets in-memory authentication rate limit counters and resets test users for automated test suites."""
+    """Resets in-memory authentication rate limit counters and resets test users for automated test suites.
+
+    Only available when ENABLE_TEST_ENDPOINTS is set; returns 404 otherwise.
+    """
+    if not test_endpoints_enabled():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found")
     auth.ip_attempts.clear()
     auth.account_attempts.clear()
     auth.registration_attempts.clear()
