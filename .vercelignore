@@ -4,7 +4,6 @@ frontend/test-downloads/
 frontend/test-results/
 .venv/
 venv/
-tests/
 __pycache__/
 *.pyc
 data/seen_jobs_*.json
