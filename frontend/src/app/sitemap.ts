@@ -1,78 +1,61 @@
 import { MetadataRoute } from 'next';
+import { careerGuides } from '@/data/careerGuides';
 
-export const dynamic = 'force-dynamic';
+export default function sitemap(): MetadataRoute.Sitemap {
+  const baseUrl = 'https://gulf-job-pipeline.vercel.app';
+  const now = new Date();
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://talentradar.ai';
-
-  const routes: MetadataRoute.Sitemap = [
+  const coreRoutes: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'daily',
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/jobs`,
-      lastModified: new Date(),
-      changeFrequency: 'hourly',
+      url: `${baseUrl}/builder`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.95,
+    },
+    {
+      url: `${baseUrl}/ats-scanner`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.95,
+    },
+    {
+      url: `${baseUrl}/templates`,
+      lastModified: now,
+      changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/guides`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/guides/how-pakistanis-land-uae-tech-jobs`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/guides/saudi-arabia-vision-2030-hiring-guide`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/guides/ats-cv-optimization-checklist-gulf`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/login`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.3,
+      priority: 0.85,
     },
     {
       url: `${baseUrl}/register`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: 'monthly',
-      priority: 0.8,
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/login`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.5,
     },
   ];
 
-  try {
-    const res = await fetch('http://127.0.0.1:8000/api/jobs?limit=200', {
-      cache: 'no-store',
-    });
-    if (res.ok) {
-      const jobs = await res.json();
-      const jobUrls: MetadataRoute.Sitemap = jobs.map((j: { id: string; posted_date?: string }) => ({
-        url: `${baseUrl}/jobs/${j.id}`,
-        lastModified: j.posted_date ? new Date(j.posted_date) : new Date(),
-        changeFrequency: 'weekly',
-        priority: 0.7,
-      }));
-      return [...routes, ...jobUrls];
-    }
-  } catch {
-    // If backend is unreachable during build, fallback to core routes
-  }
+  const guideRoutes: MetadataRoute.Sitemap = careerGuides.map((guide) => ({
+    url: `${baseUrl}/guides/${guide.slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly',
+    priority: 0.8,
+  }));
 
-  return routes;
+  return [...coreRoutes, ...guideRoutes];
 }

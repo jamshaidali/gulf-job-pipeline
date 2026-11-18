@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Zap, ArrowRight, Lock, User, Mail, AlertCircle } from 'lucide-react';
+import { Zap, ArrowRight, Lock, User, Mail, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +34,22 @@ export default function RegisterPage() {
 
       const data = await res.json();
       if (res.ok) {
-        router.push('/app');
+        let redirectTarget = '/builder';
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(
+            'tr_auth_user',
+            JSON.stringify({
+              username: data?.user?.username || username,
+              full_name: data?.user?.full_name || fullName || username,
+            })
+          );
+          const params = new URLSearchParams(window.location.search);
+          const r = params.get('redirect');
+          if (r && r.startsWith('/')) {
+            redirectTarget = r;
+          }
+        }
+        router.push(redirectTarget);
       } else {
         setError(data.detail || 'Registration failed. Please check your credentials.');
       }
@@ -45,24 +61,24 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-md text-center">
         <Link href="/" className="inline-flex items-center gap-2 group mb-4">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-sky-400 flex items-center justify-center text-white shadow-sm">
             <Zap className="w-5 h-5 fill-white" />
           </div>
           <span className="text-2xl font-extrabold text-slate-900 tracking-tight">TalentRadar</span>
         </Link>
-        <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">
           Create your account
-        </h2>
+        </h1>
         <p className="mt-1 text-xs text-slate-500">
           Get real-time job radar, ATS tailoring, and 1-click recruiter reach
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow-xl border border-slate-200/80 sm:rounded-3xl sm:px-10">
+      <div className="mt-6 sm:mt-8 mx-auto w-full max-w-md">
+        <div className="bg-white py-7 sm:py-8 px-5 sm:px-10 shadow-xl border border-slate-200/80 rounded-3xl">
           {error && (
             <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -123,19 +139,31 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Password
+                </label>
+                <span className="text-[11px] font-semibold text-slate-400">Min. 6 characters</span>
+              </div>
               <div className="relative">
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
+                  minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full px-3.5 py-2.5 pl-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 font-medium focus:bg-white focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/20 outline-none transition"
+                  className="w-full px-3.5 py-2.5 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 font-medium focus:bg-white focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/20 outline-none transition"
                 />
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 rounded cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 

@@ -16,33 +16,33 @@ export default function Footer() {
               <span className="text-xl font-extrabold text-white tracking-tight">TalentRadar</span>
             </div>
             <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
-              Autonomous career intelligence and job finding copilot. Real-time radar across verified engineering roles in Dubai, Abu Dhabi, Riyadh, and Remote Pakistan.
+              Autonomous AI resume builder and ATS diagnostic copilot. Craft striking, recruiter-approved CVs engineered to pass enterprise ATS filters and win interviews.
             </p>
             <div className="flex items-center gap-2 pt-2 text-xs font-semibold text-slate-300">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>100% Verified Tech Roles Scouted Daily</span>
+              <span>100% Free Public Launch &bull; All 105+ Templates Unlocked</span>
             </div>
           </div>
 
           {/* Quick Links */}
           <div className="space-y-3">
-            <div className="text-xs font-bold text-white uppercase tracking-wider">Product</div>
+            <div className="text-xs font-bold text-white uppercase tracking-wider">CV Products</div>
             <ul className="space-y-2 text-xs">
-              <li><Link href="/jobs" className="hover:text-white transition">Live Job Radar</Link></li>
-              <li><Link href="/#pricing" className="hover:text-white transition">Pricing & Plans</Link></li>
-              <li><Link href="/#how-it-works" className="hover:text-white transition">ATS Tailoring Engine</Link></li>
-              <li><Link href="/app" className="hover:text-white transition">Kanban CRM Pipeline</Link></li>
+              <li><Link href="/builder" className="hover:text-white transition">Live AI Resume Builder</Link></li>
+              <li><Link href="/ats-scanner" className="hover:text-white transition">Free ATS Resume Scanner</Link></li>
+              <li><Link href="/templates" className="hover:text-white transition">105+ Resume Templates</Link></li>
+              <li><Link href="/#pricing" className="hover:text-white transition">Launch Offer ($0 Free)</Link></li>
             </ul>
           </div>
 
-          {/* Regional Hubs */}
+          {/* Resources & Guides */}
           <div className="space-y-3">
-            <div className="text-xs font-bold text-white uppercase tracking-wider">Regional Hubs</div>
+            <div className="text-xs font-bold text-white uppercase tracking-wider">Career Resources</div>
             <ul className="space-y-2 text-xs">
-              <li><Link href="/jobs?region=gulf" className="hover:text-white transition">Dubai & UAE Tech Jobs</Link></li>
-              <li><Link href="/jobs?region=gulf" className="hover:text-white transition">Riyadh & Saudi Arabia</Link></li>
-              <li><Link href="/jobs?region=pakistan" className="hover:text-white transition">Pakistan & Lahore Tech Hub</Link></li>
-              <li><Link href="/jobs?timeFilter=24h" className="hover:text-white transition">Jobs Posted in Past 24h</Link></li>
+              <li><Link href="/guides/software-ai-engineer-resume-guide" className="hover:text-white transition">Engineering &amp; AI Resume Guide</Link></li>
+              <li><Link href="/guides/executive-product-leadership-resume-blueprint" className="hover:text-white transition">Executive &amp; Product CV Blueprint</Link></li>
+              <li><Link href="/guides/ats-resume-optimization-checklist-2026" className="hover:text-white transition">ATS CV Optimization Checklist</Link></li>
+              <li><Link href="/#faq" className="hover:text-white transition">Frequently Asked Questions</Link></li>
             </ul>
           </div>
         </div>
@@ -52,7 +52,7 @@ export default function Footer() {
             &copy; 2026 TalentRadar AI. All rights reserved.
           </div>
           <div className="flex items-center gap-6">
-            <span>Built with Next.js 14 & FastAPI</span>
+            <span>Built with Next.js 16 &amp; FastAPI</span>
             <span>GDPR &amp; Multi-Tenant Isolated</span>
           </div>
         </div>

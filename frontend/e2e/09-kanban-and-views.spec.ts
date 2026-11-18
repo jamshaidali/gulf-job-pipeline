@@ -14,7 +14,7 @@ test.describe('CRM Kanban Pipeline Board & View Toggles', () => {
 
   test('should switch from list view to kanban board view', async ({ page }) => {
     // Find Kanban toggle button in view switcher
-    const kanbanBtn = page.getByRole('button', { name: /Kanban Pipeline CRM/i }).first();
+    const kanbanBtn = page.getByRole('button', { name: /Kanban Pipeline/i }).first();
     await expect(kanbanBtn).toBeVisible();
     await kanbanBtn.click();
 
@@ -27,7 +27,7 @@ test.describe('CRM Kanban Pipeline Board & View Toggles', () => {
   });
 
   test('should render job cards inside kanban columns', async ({ page }) => {
-    const kanbanBtn = page.getByRole('button', { name: /Kanban Pipeline CRM/i }).first();
+    const kanbanBtn = page.getByRole('button', { name: /Kanban Pipeline/i }).first();
     await kanbanBtn.click();
 
     // Verify at least one job card exists across columns
@@ -37,7 +37,7 @@ test.describe('CRM Kanban Pipeline Board & View Toggles', () => {
 
   test('should switch back to live feed list view', async ({ page }) => {
     // First switch to kanban
-    await page.getByRole('button', { name: /Kanban Pipeline CRM/i }).first().click();
+    await page.getByRole('button', { name: /Kanban Pipeline/i }).first().click();
     await expect(page.locator('text=Discovered').first()).toBeVisible();
 
     // Switch back to list view via view switcher

@@ -2,6 +2,8 @@
 
 import os
 import re
+import json
+import base64
 import html
 import hmac
 import hashlib
@@ -194,10 +196,14 @@ class AuthManager:
 
         # Auto-seed the bootstrap admin only when an admin password has been explicitly configured
         if self.password and self.db and hasattr(self.db, "count_users") and self.db.count_users() == 0:
+            seed_admin_username = (
+                os.environ.get("DASHBOARD_ADMIN_SEED_USERNAME")
+                or "talentradar_admin"
+            ).strip().lower()
             try:
                 self.db.create_user(
-                    username=self.username,
-                    email=f"{self.username}@talentradar.ai",
+                    username=seed_admin_username,
+                    email=f"{seed_admin_username}@talentradar.ai",
                     password_hash=hash_password(self.password),
                     full_name="Administrator",
                     role="admin"
@@ -218,6 +224,14 @@ class AuthManager:
         p = (password or "").strip()
         name = sanitize_text(full_name, max_length=60)
 
+        # Normalize spaces/hyphens in username and fallback to email prefix if needed
+        u = re.sub(r"[\s\-]+", "_", u)
+        u = re.sub(r"[^a-zA-Z0-9_]", "", u)
+        if len(u) < 3:
+            e_prefix = re.sub(r"[^a-zA-Z0-9_]", "", e.split("@")[0]) if "@" in e else ""
+            u = (e_prefix if len(e_prefix) >= 3 else f"{u or 'user'}_tr")
+        u = u[:30]
+
         # 1. Username syntax check
         if not re.match(r"^[a-zA-Z0-9_]{3,30}$", u):
             raise ValueError("Username must be 3-30 characters and contain only letters, numbers, or underscores.")
@@ -226,20 +240,26 @@ class AuthManager:
         if not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", e):
             raise ValueError("Please provide a valid, well-formed email address.")
 
-        # 3. Password strength policy
-        is_strong, err_msg = validate_password_strength(p, username=u, email=e)
-        if not is_strong:
-            raise ValueError(err_msg)
+        # 3. Password length policy for frictionless signup
+        if len(p) < 6:
+            raise ValueError("Password must be at least 6 characters long.")
+        if len(p) > 128:
+            raise ValueError("Password cannot exceed 128 characters.")
 
         if not self.db:
             raise RuntimeError("Database connection is currently unavailable.")
 
-        # 4. Check for existing username or email
-        if self.db.get_user_by_username(u):
-            raise ValueError("This username is already taken. Please choose another.")
-
+        # 4. Check for existing email first
         if self.db.get_user_by_email(e):
             raise ValueError("An account with this email address already exists. Please log in.")
+
+        # 5. If email is brand-new but username is already used, auto-disambiguate username so first-time signup succeeds
+        if self.db.get_user_by_username(u):
+            email_digits = "".join(re.findall(r"\d+", e.split("@")[0]))[:4]
+            candidate_u = f"{u[:24]}_{email_digits}" if email_digits else f"{u[:24]}_{secrets.randbelow(9000) + 1000}"
+            if self.db.get_user_by_username(candidate_u):
+                candidate_u = f"{u[:22]}_{secrets.randbelow(90000) + 10000}"
+            u = candidate_u
 
         pwd_hash = hash_password(p)
         created = self.db.create_user(
@@ -419,6 +439,48 @@ class AuthManager:
             store[key] = {"count": 1, "first_attempt": now}
         else:
             rec["count"] += 1
+
+    def create_account_vault_token(self, username: str) -> Optional[str]:
+        """Creates an HMAC-signed account backup token so serverless instances with ephemeral /tmp DBs can rehydrate the user."""
+        if not self.db:
+            return None
+        user = self.db.get_user_by_username(username.strip().lower())
+        if not user:
+            return None
+        data = {
+            "u": user.get("username", ""),
+            "e": user.get("email", ""),
+            "n": user.get("full_name", ""),
+            "p": user.get("password_hash", ""),
+            "r": user.get("role", "user"),
+        }
+        raw_b64 = base64.urlsafe_b64encode(json.dumps(data, separators=(",", ":")).encode("utf-8")).decode("ascii")
+        sig = hmac.new(self.secret_key, raw_b64.encode("ascii"), hashlib.sha256).hexdigest()
+        return f"{raw_b64}.{sig}"
+
+    def rehydrate_account_vault(self, vault_token: Optional[str]) -> Optional[Dict[str, Any]]:
+        """Verifies an HMAC-signed account backup token and ensures the user exists in the local SQLite instance."""
+        if not vault_token or "." not in vault_token or not self.db:
+            return None
+        try:
+            raw_b64, received_sig = vault_token.split(".", 1)
+            expected_sig = hmac.new(self.secret_key, raw_b64.encode("ascii"), hashlib.sha256).hexdigest()
+            if not secrets.compare_digest(expected_sig, received_sig):
+                return None
+            data = json.loads(base64.urlsafe_b64decode(raw_b64.encode("ascii")).decode("utf-8"))
+            u = (data.get("u") or "").strip().lower()
+            e = (data.get("e") or "").strip().lower()
+            p = data.get("p") or ""
+            n = data.get("n") or u
+            r = data.get("r") or "user"
+            if not u or not e or not p:
+                return None
+            existing = self.db.get_user_by_username(u) or self.db.get_user_by_email(e)
+            if existing:
+                return existing
+            return self.db.create_user(username=u, email=e, password_hash=p, full_name=n, role=r)
+        except Exception:
+            return None
 
     def check_rate_limit(self, client_ip: str, identifier: Optional[str] = None) -> Tuple[bool, str]:
         """Checks the per-IP limit, the per-account-per-IP limit, and a high global per-account ceiling.

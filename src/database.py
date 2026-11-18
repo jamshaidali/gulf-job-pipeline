@@ -1,6 +1,7 @@
 """Dual Database Engine: PostgreSQL (Supabase Cloud) with SQLite Fallback (Local Dev)."""
 
 import os
+import shutil
 import sqlite3
 import json
 import re
@@ -38,7 +39,25 @@ class JobDatabase:
 
         self.db_path = Path(db_path)
         if not self.is_postgres:
-            self.db_path.parent.mkdir(parents=True, exist_ok=True)
+            is_readonly_env = bool(os.environ.get("VERCEL"))
+            if not is_readonly_env:
+                try:
+                    self.db_path.parent.mkdir(parents=True, exist_ok=True)
+                    if not os.access(str(self.db_path.parent), os.W_OK):
+                        is_readonly_env = True
+                    elif self.db_path.exists() and not os.access(str(self.db_path), os.W_OK):
+                        is_readonly_env = True
+                except OSError:
+                    is_readonly_env = True
+
+            if is_readonly_env:
+                tmp_db_path = Path("/tmp") / self.db_path.name
+                if not tmp_db_path.exists() and self.db_path.exists():
+                    try:
+                        shutil.copy2(self.db_path, tmp_db_path)
+                    except OSError:
+                        pass
+                self.db_path = tmp_db_path
 
         self._init_db()
 

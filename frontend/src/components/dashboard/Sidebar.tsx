@@ -311,6 +311,22 @@ export default function Sidebar({
           </div>
 
           <nav className="space-y-1.5">
+            <Link
+              href="/ats-scanner"
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-cyan-500/10 via-sky-500/5 to-transparent border border-cyan-500/30 text-cyan-300 hover:bg-cyan-950/40 transition text-left cursor-pointer group"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="text-base">🎯</span>
+                <div>
+                  <div className="font-bold text-cyan-200">ATS Resume Scanner</div>
+                  <div className="text-[10px] text-cyan-400/80">Scan CV Against Any JD</div>
+                </div>
+              </div>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                NEW
+              </span>
+            </Link>
+
             <button
               onClick={onOpenSettings}
               className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-900/70 border border-slate-800/80 transition text-left cursor-pointer group"

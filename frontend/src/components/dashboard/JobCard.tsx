@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Job } from '@/types';
 import { generateCoverLetter, downloadTailoredCv } from '@/lib/api';
 import { 
@@ -507,6 +508,23 @@ ${job.summary || 'Strong technical and architectural alignment.'}
           {/* Sub-Tab 1: ATS Keywords & Bullets */}
           {activeTab === 'ats' && (
             <div className="space-y-3">
+              {/* Full ATS Scanner Shortcut Banner */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3.5 bg-gradient-to-r from-cyan-50 via-sky-50 to-indigo-50 border border-cyan-200/90 rounded-xl shadow-2xs">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-cyan-600 flex-shrink-0" />
+                  <span className="text-xs font-extrabold text-slate-800">
+                    Want a deep-dive ATS diagnostics report with hard/soft skills &amp; formatting audit?
+                  </span>
+                </div>
+                <Link
+                  href="/ats-scanner"
+                  className="inline-flex items-center gap-1 text-xs font-black text-cyan-800 hover:text-cyan-950 bg-white border border-cyan-300 px-3 py-1.5 rounded-lg transition shadow-2xs self-start sm:self-auto cursor-pointer"
+                >
+                  <span>Open Full ATS Scanner</span>
+                  <ExternalLink className="w-3 h-3 text-cyan-600" />
+                </Link>
+              </div>
+
               {/* High-Impact Keywords */}
               <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-2">
                 <div className="flex items-center justify-between">

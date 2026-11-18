@@ -5,82 +5,40 @@ import type { Metadata } from 'next';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { BookOpen, Sparkles, ArrowRight, Clock, MapPin, CheckCircle, ShieldCheck, FileText, Globe } from 'lucide-react';
+import { careerGuides } from '@/data/careerGuides';
 
 export const metadata: Metadata = {
-  title: 'Gulf & Pakistan Career Guides | TalentRadar AI',
-  description: 'Authoritative career guides, visa roadmaps, salary benchmarks, and ATS resume strategies for Pakistani professionals targeting jobs in the UAE, Saudi Arabia, and remote international markets.',
+  title: 'Career & ATS Resume Guides | TalentRadar AI',
+  description: 'Authoritative career guides, ATS resume optimization playbooks, and Google X-Y-Z bullet strategies for software engineers, product managers, and executives.',
   keywords: [
-    'Dubai tech jobs for Pakistanis',
-    'Saudi Arabia Vision 2030 hiring guide',
-    'UAE green visa tech professionals',
-    'Gulf ATS resume checklist',
-    'Pakistan software engineer salary Dubai'
+    'ATS resume optimization checklist',
+    'Software engineer resume guide',
+    'Executive resume blueprint',
+    'Google XYZ resume formula',
+    'How to beat Workday and Taleo ATS'
   ],
+  alternates: {
+    canonical: '/guides',
+  },
   openGraph: {
-    title: 'Gulf & Pakistan Career Guides | TalentRadar AI',
-    description: 'Expert guides on landing high-paying jobs in the UAE and Saudi Arabia from Pakistan.',
+    title: 'Career & ATS Resume Guides | TalentRadar AI',
+    description: 'Expert guides on crafting ATS-optimized resumes and landing high-paying tech & executive interviews.',
+    url: 'https://gulf-job-pipeline.vercel.app/guides',
+    siteName: 'TalentRadar',
     type: 'website',
   }
 };
-
-export const careerGuides = [
-  {
-    slug: 'how-pakistanis-land-uae-tech-jobs',
-    title: 'How Pakistani Tech & Finance Professionals Land High-Paying Jobs in the UAE (Dubai & Abu Dhabi)',
-    excerpt: 'Complete 2026 playbook: In-demand roles, AED 15k–45k salary benchmarks, Green Visa pathways, ATS resume keyword optimization, and avoiding common recruiter rejection traps.',
-    market: 'UAE 🇦🇪 & Pakistan 🇵🇰',
-    category: 'Relocation & Visa',
-    readingTime: '8 min read',
-    publishedAt: 'October 2026',
-    highlights: [
-      'Top 10 highest-demand tech and finance skills in Dubai',
-      'Realistic tax-free salary benchmarks across Junior to Lead roles',
-      'Step-by-step visa sponsorship and visit-to-employment transfer',
-      'Why standard Pakistani CVs get filtered out by Gulf ATS bots'
-    ]
-  },
-  {
-    slug: 'saudi-arabia-vision-2030-hiring-guide',
-    title: 'Saudi Arabia Vision 2030 Career & Relocation Guide for Tech & Engineering Expats',
-    excerpt: 'How Saudi Arabia’s massive digital transformation in Riyadh and NEOM is opening thousands of lucrative opportunities for international talent, with Iqama sponsorship and premium allowances.',
-    market: 'Saudi Arabia 🇸🇦',
-    category: 'Market Trends',
-    readingTime: '7 min read',
-    publishedAt: 'October 2026',
-    highlights: [
-      'The Riyadh Regional Headquarters (RHQ) mandate impact on hiring',
-      'Saudization quotas: Which technical positions are expat-friendly',
-      'Iqama sponsorship, housing allowances, and schooling benefits',
-      'How to connect with Saudi government and enterprise hiring leads'
-    ]
-  },
-  {
-    slug: 'ats-cv-optimization-checklist-gulf',
-    title: 'The 2026 ATS Resume Optimization Checklist for Gulf Recruiters (Taleo, Workday & Greenhouse)',
-    excerpt: 'Why 75% of qualified applicants are silently filtered out by applicant tracking systems in the Gulf, and how to format your CV with AI-tailored accomplishment bullets to score 85%+ match rates.',
-    market: 'Global & GCC 🌴',
-    category: 'ATS & CV Strategy',
-    readingTime: '6 min read',
-    publishedAt: 'October 2026',
-    highlights: [
-      'Exact font, layout, and margin rules that pass Workday and Taleo',
-      'How to extract high-yield JD keywords and embed them naturally',
-      'The STAR metric formula: Transforming duty statements into quantified wins',
-      'Common dealbreakers that trigger immediate automated disqualification'
-    ]
-  }
-];
 
 export default function GuidesPage() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: 'Gulf & Pakistan Career Guides',
-    description: 'Career advice and relocation blueprints for Pakistan and Gulf professionals.',
+    name: 'Career & ATS Resume Guides',
+    description: 'Resume optimization and interview blueprints for modern professionals.',
     publisher: {
       '@type': 'Organization',
       name: 'TalentRadar AI',
-      url: 'https://talentradar.ai'
+      url: 'https://gulf-job-pipeline.vercel.app'
     }
   };
 
@@ -98,15 +56,15 @@ export default function GuidesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-950/80 border border-cyan-700/60 text-cyan-300 text-xs font-black tracking-wider uppercase shadow-inner">
             <BookOpen className="w-4 h-4 text-cyan-400" />
-            <span>Career Blueprints &amp; Market Insights</span>
+            <span>Career Blueprints &amp; ATS Research</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white max-w-3xl mx-auto leading-tight">
-            Proven Strategies to Land High-Paying Roles in the <span className="text-cyan-400">Gulf Region</span>
+            Proven Strategies to Craft an <span className="text-cyan-400">Interview-Winning Resume</span>
           </h1>
 
           <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            Exclusively researched for professionals in Pakistan seeking career advancement in the UAE, Saudi Arabia, and international remote positions.
+            Data-backed playbooks on passing enterprise Applicant Tracking Systems, quantifying impact with the Google X-Y-Z formula, and tailoring your CV for top roles.
           </p>
         </div>
       </section>
@@ -181,17 +139,17 @@ export default function GuidesPage() {
         <div className="mt-16 p-8 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center md:text-left">
             <h3 className="text-xl sm:text-2xl font-black tracking-tight">
-              Ready to test your ATS match against live Gulf jobs?
+              Ready to test your resume against any job description?
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-              Upload your CV and let TalentRadar scout 46+ verified opportunities across Dubai, Riyadh, and Pakistan, with 1-click tailored resume export.
+              Upload your CV or paste a job description to get an instant ATS match score, missing keyword checklist, and 1-click tailored resume export.
             </p>
           </div>
           <Link
-            href="/register"
+            href="/ats-scanner"
             className="px-6 py-3.5 rounded-full bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-xs sm:text-sm shadow-md transition flex items-center gap-2 flex-shrink-0"
           >
-            <span>Scan Jobs Free</span>
+            <span>Run Free ATS Scan</span>
             <ArrowRight className="w-4 h-4 text-slate-950" />
           </Link>
         </div>

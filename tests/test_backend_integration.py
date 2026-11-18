@@ -144,7 +144,7 @@ def run_all_backend_integration_tests():
     print("  [PASS] Downgrade to Free restored quota and gating.")
 
     # 9. Notification Settings
-    print("\n[9/9] Testing Automated Alert Settings...")
+    print("\n[9/10] Testing Automated Alert Settings...")
     notif_res = client.get("/api/notifications/settings", cookies=admin_cookie)
     assert notif_res.status_code == 200
     
@@ -157,8 +157,48 @@ def run_all_backend_integration_tests():
     assert update_res.json()["settings"]["min_match_score"] == 85
     print("  [PASS] Automated notification alert settings verified.")
 
+    # 10. ATS Resume Scanner Endpoints
+    print("\n[10/10] Testing ATS Resume Scanner & Diagnostic Engine Endpoints...")
+    sample_res = client.get("/api/ats/sample")
+    assert sample_res.status_code == 200
+    sample_data = sample_res.json()["data"]
+    assert "sample_cv" in sample_data and "job_description" in sample_data
+
+    # Test JSON scan
+    scan_res = client.post("/api/ats/scan", json={
+        "cv_text": sample_data["sample_cv"],
+        "job_description": sample_data["job_description"],
+        "job_title": sample_data["job_title"],
+        "company": sample_data["company"]
+    })
+    assert scan_res.status_code == 200
+    ats_results = scan_res.json()["results"]
+    assert ats_results["overall_score"] >= 65, f"Expected good score, got {ats_results['overall_score']}"
+    assert len(ats_results["skills_analysis"]["matched_hard_skills"]) >= 3
+    assert len(ats_results["tailored_kit"]["bullets"]) == 4
+    assert ats_results["sections_audit"]["contact_info"]["passed"] is True
+
+    # Test Multipart upload scan
+    import io
+    txt_cv = b"Candidate Name\ntest@email.com +971501112233 linkedin.com/in/test\nSkills: Python, FastAPI, Docker, AWS.\nExperience: Engineered scalable services boosting performance by 40%."
+    files = {"file": ("resume.txt", io.BytesIO(txt_cv), "text/plain")}
+    upload_res = client.post(
+        "/api/ats/scan-upload",
+        files=files,
+        data={
+            "job_description": "We are seeking a Python and AWS backend engineer with Docker and Kubernetes skills.",
+            "job_title": "Python Developer",
+            "company": "Gulf Cloud Co"
+        }
+    )
+    assert upload_res.status_code == 200
+    upload_results = upload_res.json()["results"]
+    assert "Python" in upload_results["skills_analysis"]["matched_hard_skills"]
+    assert "Kubernetes" in upload_results["skills_analysis"]["missing_hard_skills"]
+    print("  [PASS] ATS Scanner JSON, file upload, skills gap, and tailored kit verified.")
+
     print("\n=======================================================")
-    print("✅ ALL 9 BACKEND API INTEGRATION TESTS PASSED 100%!")
+    print("✅ ALL 10 BACKEND API INTEGRATION TESTS PASSED 100%!")
     print("=======================================================\n")
 
 

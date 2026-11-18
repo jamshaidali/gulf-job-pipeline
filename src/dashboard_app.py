@@ -5,6 +5,7 @@ import re
 import secrets
 import shutil
 import asyncio
+import tempfile
 from pathlib import Path
 from fastapi import FastAPI, Request, HTTPException, Depends, status, Response, UploadFile, File, Form, BackgroundTasks
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -19,6 +20,7 @@ from src.pakistan_job_searcher import PakistanJobSearcher
 from src.auth import AuthManager
 from src.preferences import load_preferences, save_preferences, get_active_cv_details
 from src.cv_parser import CVParser
+from src.cv_tailorer import CVTailorer
 from main import run_single_pipeline, load_config
 
 app = FastAPI(title="Job Hunter & AI Feedback Tracker (Trash & Restore Support)")
@@ -141,9 +143,9 @@ class LoginPayload(BaseModel):
 
 
 class RegisterPayload(BaseModel):
-    username: str = Field(..., min_length=3, max_length=30)
+    username: str = Field(..., min_length=2, max_length=30)
     email: str = Field(..., max_length=120)
-    password: str = Field(..., min_length=8, max_length=128)
+    password: str = Field(..., min_length=6, max_length=128)
     full_name: Optional[str] = Field("", max_length=60)
     honeypot: Optional[str] = Field("", max_length=100)
 
@@ -181,9 +183,20 @@ class PreferencesPayload(BaseModel):
     bio: Optional[str] = ""
 
 
+class ATSScanRequest(BaseModel):
+    cv_text: Optional[str] = ""
+    job_description: str
+    job_title: Optional[str] = ""
+    company: Optional[str] = ""
+    use_active_cv: Optional[bool] = False
+
+
 def get_current_user(request: Request) -> str:
     if not auth.enabled:
         return "admin"
+    vault_token = request.cookies.get("tr_acct")
+    if vault_token:
+        auth.rehydrate_account_vault(vault_token)
     token = request.cookies.get("session_token")
     username = auth.verify_session_token(token)
     if not username:
@@ -218,6 +231,9 @@ def require_admin(user_profile: Dict[str, Any] = Depends(get_current_user_profil
 
 def get_optional_user_profile(request: Request) -> Optional[Dict[str, Any]]:
     """Retrieves user profile if session token is valid, else returns None without raising 401."""
+    vault_token = request.cookies.get("tr_acct")
+    if vault_token:
+        auth.rehydrate_account_vault(vault_token)
     token = request.cookies.get("session_token")
     if not token:
         return None
@@ -301,6 +317,7 @@ async def register_api(payload: RegisterPayload, request: Request, response: Res
 
     # Automatically log the user in after registration
     token = auth.create_session_token(user["username"])
+    vault_token = auth.create_account_vault_token(user["username"])
     is_secure = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
     response.set_cookie(
         key="session_token",
@@ -311,6 +328,16 @@ async def register_api(payload: RegisterPayload, request: Request, response: Res
         secure=is_secure,
         path="/"
     )
+    if vault_token:
+        response.set_cookie(
+            key="tr_acct",
+            value=vault_token,
+            httponly=True,
+            max_age=365 * 24 * 3600,
+            samesite="lax",
+            secure=is_secure,
+            path="/"
+        )
     return {
         "status": "success",
         "message": "Account created successfully! Welcome to TalentRadar.",
@@ -321,6 +348,10 @@ async def register_api(payload: RegisterPayload, request: Request, response: Res
 @app.post("/api/login")
 async def login_api(payload: LoginPayload, request: Request, response: Response):
     verify_request_origin(request)
+
+    vault_token_cookie = request.cookies.get("tr_acct")
+    if vault_token_cookie:
+        auth.rehydrate_account_vault(vault_token_cookie)
 
     client_ip = extract_client_ip(request)
     
@@ -344,6 +375,7 @@ async def login_api(payload: LoginPayload, request: Request, response: Response)
 
     username = user["username"]
     token = auth.create_session_token(username)
+    new_vault = auth.create_account_vault_token(username)
     is_secure = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
     response.set_cookie(
         key="session_token",
@@ -354,6 +386,16 @@ async def login_api(payload: LoginPayload, request: Request, response: Response)
         secure=is_secure,
         path="/"
     )
+    if new_vault:
+        response.set_cookie(
+            key="tr_acct",
+            value=new_vault,
+            httponly=True,
+            max_age=365 * 24 * 3600,
+            samesite="lax",
+            secure=is_secure,
+            path="/"
+        )
     return {
         "status": "success", 
         "message": "Login successful", 
@@ -749,6 +791,245 @@ async def trigger_scan(
     }
 
 
+# ================= ATS Resume Scanner & Diagnostic Endpoints =================
+
+SAMPLE_ATS_JOB = {
+    "job_title": "Senior Backend Engineer (Python & Distributed Cloud Systems)",
+    "company": "Stripe - Remote & Hybrid",
+    "job_description": (
+        "We are looking for a Senior Backend Engineer to design and scale our mission-critical payments and financial infrastructure platform.\n\n"
+        "Responsibilities:\n"
+        "- Architect, build, and maintain high-throughput microservices using Python (FastAPI/Django) and Golang.\n"
+        "- Scale our distributed real-time messaging pipelines using Apache Kafka, RabbitMQ, and Redis.\n"
+        "- Deploy and manage containerized services on AWS using Docker and Kubernetes (EKS) with automated CI/CD pipelines.\n"
+        "- Collaborate closely with cross-functional teams in an Agile/Scrum environment to deliver scalable fintech solutions.\n"
+        "- Lead technical architecture reviews, code reviews, and mentor mid-level software engineers.\n\n"
+        "Requirements:\n"
+        "- 5+ years of production experience in backend software engineering.\n"
+        "- Strong proficiency in Python, FastAPI, Django, and RESTful API design.\n"
+        "- Hands-on experience with cloud infrastructure (AWS or GCP), Docker, Kubernetes, and Terraform.\n"
+        "- Solid background in distributed streaming systems: Kafka, Redis, and relational databases (PostgreSQL, MySQL).\n"
+        "- Track record of performance optimization, unit testing (Pytest), and system design for high-concurrency workloads.\n"
+        "- Excellent communication, analytical problem solving, and ownership mindset."
+    ),
+    "sample_cv": (
+        "Alexander Chen\n"
+        "alex.chen@talentradar.pro | +1 (555) 234-5678 | Open to Remote & Hybrid\n"
+        "linkedin.com/in/alexchen | github.com/alexchen\n\n"
+        "PROFESSIONAL SUMMARY\n"
+        "Accomplished Senior Backend Engineer with 6+ years of experience architecting resilient microservices and distributed backend systems using Python, FastAPI, and Django. Proven record of cutting API latency by 45% and scaling enterprise applications to support 2M+ active daily users.\n\n"
+        "CORE TECHNICAL SKILLS\n"
+        "Languages: Python, SQL, JavaScript, Bash\n"
+        "Frameworks & APIs: FastAPI, Django, Flask, REST API, WebSockets\n"
+        "Cloud & DevOps: AWS, Docker, Kubernetes, CI/CD, GitHub Actions, Linux\n"
+        "Databases & Streaming: PostgreSQL, MySQL, Redis, Celery, Kafka\n"
+        "Methodologies: Agile, Scrum, TDD, Pytest, Microservices, System Design\n\n"
+        "PROFESSIONAL EXPERIENCE\n"
+        "Senior Backend Developer | FinTech Cloud Solutions (Remote) | 2022 – Present\n"
+        "- Architected high-concurrency payment gateway processing $15M+ in monthly transactions with 99.99% uptime.\n"
+        "- Optimized PostgreSQL queries and implemented Redis caching, slashing p99 response times from 350ms to 42ms.\n"
+        "- Engineered automated CI/CD deployment pipelines using Docker and AWS EKS, reducing deployment cycle times by 60%.\n"
+        "- Mentored a cross-functional squad of 5 engineers and spearheaded weekly architecture reviews and code audits.\n\n"
+        "Software Engineer | Apex Enterprise Systems (Hybrid) | 2019 – 2022\n"
+        "- Built RESTful APIs and distributed task workers with Python, Django, and Celery for enterprise SaaS platforms.\n"
+        "- Developed automated test suites with Pytest achieving 92% code coverage, cutting bug reports by 35%.\n\n"
+        "EDUCATION\n"
+        "Bachelor of Science in Computer Science (BSCS) | Institute of Technology"
+    )
+}
+
+
+@app.get("/api/ats/sample")
+async def get_ats_sample():
+    """Returns sample Tech job description and resume for 1-click ATS scanner demo."""
+    return {
+        "status": "success",
+        "data": SAMPLE_ATS_JOB
+    }
+
+
+@app.post("/api/ats/scan")
+async def scan_ats_json(
+    payload: ATSScanRequest,
+    user_profile: Optional[Dict[str, Any]] = Depends(get_optional_user_profile)
+):
+    """Evaluates CV text against a Job Description and returns detailed ATS score, missing keywords, and tailored bullets."""
+    cv_text = (payload.cv_text or "").strip()
+    jd = (payload.job_description or "").strip()
+
+    if not jd:
+        raise HTTPException(status_code=400, detail="Target job description is required.")
+
+    # If CV text was omitted or user selected 'use active CV', retrieve active CV on file
+    if (not cv_text or payload.use_active_cv) and user_profile:
+        user_id = user_profile.get("id") or 1
+        prefs = db.get_user_preferences(user_id)
+        active_cv = prefs.get("active_cv")
+        if active_cv:
+            user_path = Path("data/resumes/users") / str(user_id) / active_cv
+            global_path = Path("data/resumes") / active_cv
+            target_path = user_path if user_path.exists() else (global_path if global_path.exists() else None)
+            if target_path:
+                try:
+                    parser = CVParser()
+                    cv_text = parser.extract_text(str(target_path))
+                except Exception as e:
+                    print(f"[!] Error parsing active CV: {e}")
+
+    if not cv_text:
+        raise HTTPException(
+            status_code=400,
+            detail="Please provide CV text, upload a resume file, or select your active CV."
+        )
+
+    tailorer = CVTailorer()
+    results = tailorer.evaluate_ats_fit(
+        cv_text=cv_text,
+        job_description=jd,
+        job_title=payload.job_title or "",
+        company=payload.company or ""
+    )
+    parser = CVParser()
+    results["parsed_resume"] = parser.parse_structured_resume(cv_text)
+    results["source_filename"] = "Scanned_Resume.txt"
+    return {
+        "status": "success",
+        "results": results
+    }
+
+
+@app.post("/api/ats/scan-upload")
+async def scan_ats_upload(
+    file: Optional[UploadFile] = File(None),
+    cv_text: Optional[str] = Form(None),
+    job_description: str = Form(...),
+    job_title: Optional[str] = Form(""),
+    company: Optional[str] = Form(""),
+    use_active_cv: Optional[bool] = Form(False),
+    user_profile: Optional[Dict[str, Any]] = Depends(get_optional_user_profile)
+):
+    """Evaluates an uploaded CV file (.pdf, .docx, .txt) against a Job Description."""
+    final_cv_text = (cv_text or "").strip()
+    jd = (job_description or "").strip()
+
+    if not jd:
+        raise HTTPException(status_code=400, detail="Target job description is required.")
+
+    if file and file.filename:
+        ext = Path(file.filename).suffix.lower()
+        if ext not in [".pdf", ".docx", ".doc", ".txt", ".md"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported resume file type '{ext}'. Please upload PDF, DOCX, or TXT."
+            )
+
+        temp_dir = Path(tempfile.gettempdir()) / "talentradar_uploads"
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        temp_file = temp_dir / f"scan_{secrets.token_hex(8)}{ext}"
+        try:
+            content = await file.read()
+            if len(content) > 5 * 1024 * 1024:
+                raise HTTPException(status_code=413, detail="Uploaded CV exceeds maximum allowed size of 5 MB.")
+            with open(temp_file, "wb") as f:
+                f.write(content)
+            parser = CVParser()
+            final_cv_text = parser.extract_text(str(temp_file))
+        finally:
+            if temp_file.exists():
+                temp_file.unlink()
+
+    elif not final_cv_text and use_active_cv and user_profile:
+        user_id = user_profile.get("id") or 1
+        prefs = db.get_user_preferences(user_id)
+        active_cv = prefs.get("active_cv")
+        if active_cv:
+            user_path = Path("data/resumes/users") / str(user_id) / active_cv
+            global_path = Path("data/resumes") / active_cv
+            target_path = user_path if user_path.exists() else (global_path if global_path.exists() else None)
+            if target_path:
+                parser = CVParser()
+                final_cv_text = parser.extract_text(str(target_path))
+
+    if not final_cv_text:
+        raise HTTPException(
+            status_code=400,
+            detail="Please provide CV text or upload a resume file."
+        )
+
+    tailorer = CVTailorer()
+    results = tailorer.evaluate_ats_fit(
+        cv_text=final_cv_text,
+        job_description=jd,
+        job_title=job_title or "",
+        company=company or ""
+    )
+    parser = CVParser()
+    results["parsed_resume"] = parser.parse_structured_resume(final_cv_text)
+    results["source_filename"] = file.filename if (file and file.filename) else "Uploaded_Resume.pdf"
+    return {
+        "status": "success",
+        "results": results
+    }
+
+
+@app.post("/api/builder/import-cv")
+async def import_cv_to_builder(
+    file: Optional[UploadFile] = File(None),
+    cv_text: Optional[str] = Form(None),
+    use_sample: Optional[bool] = Form(False),
+):
+    """
+    Parses an uploaded PDF, DOCX, DOC, TXT, or MD resume file (or pasted resume text)
+    and returns structured fields (fullName, jobTitle, email, phone, location, linkedIn,
+    github, summary, skills, experiences, educations, projects) to auto-fill the Live Visual Builder.
+    """
+    extracted_text = (cv_text or "").strip()
+
+    if use_sample and not extracted_text and not (file and file.filename):
+        extracted_text = SAMPLE_ATS_JOB["sample_cv"]
+
+    if file and file.filename:
+        ext = Path(file.filename).suffix.lower()
+        if ext not in [".pdf", ".docx", ".doc", ".txt", ".md"]:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file format '{ext}'. Please upload a PDF, DOCX, or TXT resume."
+            )
+
+        temp_dir = Path(tempfile.gettempdir()) / "talentradar_uploads"
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        temp_file = temp_dir / f"import_{secrets.token_hex(8)}{ext}"
+        try:
+            content = await file.read()
+            if len(content) > 5 * 1024 * 1024:
+                raise HTTPException(status_code=413, detail="Uploaded resume exceeds maximum allowed size of 5 MB.")
+            with open(temp_file, "wb") as f:
+                f.write(content)
+            parser = CVParser()
+            extracted_text = parser.extract_text(str(temp_file))
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Could not extract text from resume file: {str(e)}")
+        finally:
+            if temp_file.exists():
+                temp_file.unlink()
+
+    if not extracted_text:
+        raise HTTPException(
+            status_code=400,
+            detail="Please upload a PDF, DOCX, or TXT resume file, or paste your resume text."
+        )
+
+    parser = CVParser()
+    structured = parser.parse_structured_resume(extracted_text)
+    return {
+        "status": "success",
+        "filename": file.filename if (file and file.filename) else "pasted_resume.txt",
+        "resume": structured,
+    }
+
+
 # ================= Notification & Alert Endpoints =================
 
 @app.get("/api/notifications/settings")
@@ -942,34 +1223,128 @@ async def get_cv_templates(category: Optional[str] = None):
     }
 
 
+class CustomCVExportRequest(BaseModel):
+    format: Optional[str] = "pdf"
+    template_id: Optional[str] = "gulf_dubai_sapphire"
+    job_title: Optional[str] = ""
+    company: Optional[str] = ""
+    parsed_resume: Optional[Dict[str, Any]] = None
+    tailored_summary: Optional[str] = ""
+    tailored_bullets: Optional[List[Any]] = None
+    missing_keywords: Optional[List[str]] = None
+
+
+@app.post("/api/ats/export-cv")
+async def export_custom_ats_cv(
+    payload: CustomCVExportRequest,
+    user_profile: Optional[Dict[str, Any]] = Depends(get_optional_user_profile)
+):
+    """Exports an ATS-optimized PDF or DOCX resume directly from the ATS Scanner or Builder using the candidate's parsed CV."""
+    user_id = (user_profile.get("id") if user_profile else None) or 1
+    profile = user_profile or {"id": user_id, "username": "candidate", "full_name": "Candidate"}
+    prefs = db.get_user_preferences(user_id) if user_profile else {}
+
+    parsed = payload.parsed_resume or {}
+    target_role = (
+        (payload.job_title or "").strip()
+        or parsed.get("jobTitle")
+        or "Senior Software Engineer"
+    )
+    target_company = (payload.company or "").strip()
+    tmpl_id = (payload.template_id or "gulf_dubai_sapphire").strip()
+    fmt = (payload.format or "pdf").strip().lower()
+
+    synthetic_job = {
+        "id": "custom_ats_scan",
+        "title": target_role,
+        "company": target_company,
+        "parsed_resume": parsed,
+        "tailored_summary": payload.tailored_summary or "",
+        "tailored_bullets": payload.tailored_bullets or [],
+        "missing_keywords": payload.missing_keywords or [],
+    }
+
+    cand_slug = re.sub(r'[^a-zA-Z0-9_-]', '_', str(parsed.get("fullName") or profile.get("full_name") or "Tailored_CV")).strip('_') or "Tailored_CV"
+    tmpl_slug = re.sub(r'[^a-zA-Z0-9_-]', '_', tmpl_id)
+
+    if fmt == "docx":
+        from src.cv_exporter import generate_tailored_docx
+        docx_bytes = generate_tailored_docx(
+            synthetic_job,
+            profile,
+            prefs,
+            template_id=tmpl_id,
+            parsed_resume=parsed,
+        )
+        filename = f"{cand_slug}_{tmpl_slug}.docx"
+        return Response(
+            content=docx_bytes,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Access-Control-Expose-Headers": "Content-Disposition",
+            },
+        )
+    else:
+        from src.cv_exporter import generate_tailored_pdf
+        pdf_bytes = generate_tailored_pdf(
+            synthetic_job,
+            profile,
+            prefs,
+            template_id=tmpl_id,
+            parsed_resume=parsed,
+        )
+        filename = f"{cand_slug}_{tmpl_slug}.pdf"
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Access-Control-Expose-Headers": "Content-Disposition",
+            },
+        )
+
+
 @app.get("/api/cv/export-pdf/{job_id}")
 async def export_tailored_pdf(
     job_id: str, 
     template: Optional[str] = "gulf_dubai_sapphire",
-    user_profile: Dict[str, Any] = Depends(get_current_user_profile)
+    user_profile: Optional[Dict[str, Any]] = Depends(get_optional_user_profile)
 ):
     """Exports an ATS-optimized PDF resume tailored specifically for the target role and company in the selected template design."""
-    user_id = user_profile.get("id") or 1
-    role = user_profile.get("role", "user") or "user"
+    user_id = (user_profile.get("id") if user_profile else None) or 1
+    profile = user_profile or {"id": user_id, "username": "candidate", "full_name": "Candidate"}
+    role = profile.get("role", "user") or "user"
     is_pro = role in ["admin", "pro"]
 
-    if not is_pro:
-        top_jobs = db.get_jobs(user_id=user_id, limit=3)
-        top_ids = {j["id"] for j in top_jobs}
-        if job_id not in top_ids:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="This opportunity is locked on the Free tier. Upgrade to TalentRadar Pro to download tailored ATS resumes for all results."
-            )
+    if job_id == "custom_ats_scan":
+        job = {
+            "id": "custom_ats_scan",
+            "title": "Senior Software Engineer",
+            "company": "",
+        }
+    else:
+        if user_profile and not is_pro:
+            top_jobs = db.get_jobs(user_id=user_id, limit=3)
+            top_ids = {j["id"] for j in top_jobs}
+            if top_ids and job_id not in top_ids:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="This opportunity is locked on the Free tier. Upgrade to TalentRadar Pro to download tailored ATS resumes for all results."
+                )
 
-    job = db.get_job(job_id, user_id=user_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job record not found")
+        job = db.get_job(job_id, user_id=user_id)
+        if not job:
+            job = {
+                "id": job_id,
+                "title": "Software Engineer",
+                "company": "",
+            }
 
-    prefs = db.get_user_preferences(user_id)
+    prefs = db.get_user_preferences(user_id) if user_profile else {}
     from src.cv_exporter import generate_tailored_pdf
-    pdf_bytes = generate_tailored_pdf(job, user_profile, prefs, template_id=template)
-    company_clean = re.sub(r'[^a-zA-Z0-9_-]', '_', job.get('company', 'Company'))
+    pdf_bytes = generate_tailored_pdf(job, profile, prefs, template_id=template)
+    company_clean = re.sub(r'[^a-zA-Z0-9_-]', '_', job.get('company') or 'Tailored').strip('_') or 'Tailored'
     filename = f"Tailored_CV_{company_clean}_{template}.pdf"
 
     return Response(
@@ -986,30 +1361,42 @@ async def export_tailored_pdf(
 async def export_tailored_docx(
     job_id: str, 
     template: Optional[str] = "gulf_dubai_sapphire",
-    user_profile: Dict[str, Any] = Depends(get_current_user_profile)
+    user_profile: Optional[Dict[str, Any]] = Depends(get_optional_user_profile)
 ):
     """Exports an ATS-optimized Word DOCX resume tailored specifically for the target role and company in the selected template design."""
-    user_id = user_profile.get("id") or 1
-    role = user_profile.get("role", "user") or "user"
+    user_id = (user_profile.get("id") if user_profile else None) or 1
+    profile = user_profile or {"id": user_id, "username": "candidate", "full_name": "Candidate"}
+    role = profile.get("role", "user") or "user"
     is_pro = role in ["admin", "pro"]
 
-    if not is_pro:
-        top_jobs = db.get_jobs(user_id=user_id, limit=3)
-        top_ids = {j["id"] for j in top_jobs}
-        if job_id not in top_ids:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="This opportunity is locked on the Free tier. Upgrade to TalentRadar Pro to download tailored ATS resumes for all results."
-            )
+    if job_id == "custom_ats_scan":
+        job = {
+            "id": "custom_ats_scan",
+            "title": "Senior Software Engineer",
+            "company": "",
+        }
+    else:
+        if user_profile and not is_pro:
+            top_jobs = db.get_jobs(user_id=user_id, limit=3)
+            top_ids = {j["id"] for j in top_jobs}
+            if top_ids and job_id not in top_ids:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="This opportunity is locked on the Free tier. Upgrade to TalentRadar Pro to download tailored ATS resumes for all results."
+                )
 
-    job = db.get_job(job_id, user_id=user_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="Job record not found")
+        job = db.get_job(job_id, user_id=user_id)
+        if not job:
+            job = {
+                "id": job_id,
+                "title": "Software Engineer",
+                "company": "",
+            }
 
-    prefs = db.get_user_preferences(user_id)
+    prefs = db.get_user_preferences(user_id) if user_profile else {}
     from src.cv_exporter import generate_tailored_docx
-    docx_bytes = generate_tailored_docx(job, user_profile, prefs, template_id=template)
-    company_clean = re.sub(r'[^a-zA-Z0-9_-]', '_', job.get('company', 'Company'))
+    docx_bytes = generate_tailored_docx(job, profile, prefs, template_id=template)
+    company_clean = re.sub(r'[^a-zA-Z0-9_-]', '_', job.get('company') or 'Tailored').strip('_') or 'Tailored'
     filename = f"Tailored_CV_{company_clean}_{template}.docx"
 
     return Response(

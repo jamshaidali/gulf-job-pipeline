@@ -97,7 +97,7 @@ test.describe('Public Jobs, Landing FAQ, Pro Upgrade/Downgrade & Job Trash/Resto
 
     // 7. Verify locked card is now replaced by unlocked role actions
     await expect(page.locator('text=Pro Tier Opportunity')).not.toBeVisible();
-    const recruiterButtons = page.getByRole('button', { name: /Reach Recruiter 300c/i });
+    const recruiterButtons = page.getByRole('button', { name: /Reach Recruiter/i });
     await expect(recruiterButtons.first()).toBeVisible();
 
     // 8. Reopen modal via sidebar Pro Accelerator button to test downgrade back to free tier

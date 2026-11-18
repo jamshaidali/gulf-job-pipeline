@@ -5,7 +5,9 @@ import {
   UserProfile, 
   RecruiterOutreachResponse,
   NotificationSettings,
-  CVTemplatesResponse
+  CVTemplatesResponse,
+  ATSScanResults,
+  ATSSampleData
 } from '@/types';
 
 export async function fetchCurrentUser(): Promise<UserProfile | null> {
@@ -216,6 +218,145 @@ export async function downloadTailoredCv(
   a.click();
   window.URL.revokeObjectURL(url);
   document.body.removeChild(a);
+}
+
+export async function exportCustomAtsCv(payload: {
+  format: 'pdf' | 'docx';
+  template_id: string;
+  job_title?: string;
+  company?: string;
+  parsed_resume?: ImportedStructuredResume | null;
+  tailored_summary?: string;
+  tailored_bullets?: Array<{ focus?: string; bullet?: string; suggested_bullet?: string }>;
+  missing_keywords?: string[];
+}): Promise<void> {
+  const res = await fetch('/api/ats/export-cv', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to export tailored ${payload.format.toUpperCase()}`);
+  }
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const disposition = res.headers.get('Content-Disposition');
+  let filename = `Tailored_CV_${payload.template_id}.${payload.format}`;
+  if (disposition && disposition.includes('filename=')) {
+    const match = disposition.match(/filename="?([^"]+)"?/);
+    if (match && match[1]) filename = match[1];
+  }
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}
+
+export async function fetchATSSample(): Promise<ATSSampleData> {
+  const res = await fetch('/api/ats/sample');
+  if (!res.ok) throw new Error('Failed to load sample ATS data');
+  const data = await res.json();
+  return data.data;
+}
+
+export async function scanATS(payload: {
+  cv_text?: string;
+  job_description: string;
+  job_title?: string;
+  company?: string;
+  use_active_cv?: boolean;
+}): Promise<ATSScanResults> {
+  const res = await fetch('/api/ats/scan', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'ATS scan request failed.');
+  }
+  const data = await res.json();
+  return data.results;
+}
+
+export async function scanATSUpload(formData: FormData): Promise<ATSScanResults> {
+  const res = await fetch('/api/ats/scan-upload', {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'ATS scan upload failed.');
+  }
+  const data = await res.json();
+  return data.results;
+}
+
+export interface ImportedStructuredResume {
+  fullName: string;
+  jobTitle: string;
+  email: string;
+  phone: string;
+  location: string;
+  linkedIn: string;
+  github: string;
+  summary: string;
+  skills: string[];
+  experiences: Array<{
+    id: string;
+    company: string;
+    position: string;
+    location: string;
+    startDate: string;
+    endDate: string;
+    bullets: string[];
+  }>;
+  educations: Array<{
+    id: string;
+    institution: string;
+    degree: string;
+    year: string;
+    honors: string;
+  }>;
+  projects: Array<{
+    id: string;
+    title: string;
+    description: string;
+    techStack: string;
+  }>;
+}
+
+export async function importCvToBuilder(options: {
+  file?: File;
+  cvText?: string;
+  useSample?: boolean;
+}): Promise<{ filename: string; resume: ImportedStructuredResume }> {
+  const formData = new FormData();
+  if (options.file) {
+    formData.append('file', options.file);
+  }
+  if (options.cvText) {
+    formData.append('cv_text', options.cvText);
+  }
+  if (options.useSample) {
+    formData.append('use_sample', 'true');
+  }
+
+  const res = await fetch('/api/builder/import-cv', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || 'Failed to parse and import resume.');
+  }
+
+  return res.json();
 }
 
 

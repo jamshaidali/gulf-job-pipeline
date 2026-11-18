@@ -5,10 +5,10 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: ['/', '/jobs', '/jobs/*'],
+        allow: ['/', '/builder', '/ats-scanner', '/templates', '/guides', '/guides/*', '/login', '/register'],
         disallow: ['/app', '/api/*'],
       },
     ],
-    sitemap: 'https://talentradar.ai/sitemap.xml',
+    sitemap: 'https://gulf-job-pipeline.vercel.app/sitemap.xml',
   };
 }
