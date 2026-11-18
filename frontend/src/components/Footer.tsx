@@ -20,7 +20,7 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-2 pt-2 text-xs font-semibold text-slate-300">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>100% Free Public Launch &bull; All 105+ Templates Unlocked</span>
+              <span>Free to use &bull; Create a free account to unlock all 105+ templates</span>
             </div>
           </div>
 

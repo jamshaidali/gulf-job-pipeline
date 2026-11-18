@@ -506,6 +506,8 @@ export default function ResumeBuilderPage() {
     }
   };
 
+  const [collapsedRoles, setCollapsedRoles] = useState<Set<string>>(new Set());
+
   const handleStartFromScratch = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('tr_builder_imported_cv');
@@ -878,7 +880,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
 
           {/* Real-Time ATS Score Pill */}
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] sm:text-xs font-bold text-slate-700 shrink-0">
-            <span className="text-slate-400 font-medium">ATS Health:</span>
+            <span className="text-slate-500 font-medium" title="Formatting and structure score of this resume (separate from the job-description match in the ATS Scanner)">ATS Health:</span>
             <span className={`font-black ${atsScore >= 90 ? 'text-emerald-700' : 'text-amber-700'}`}>
               {atsScore}%
             </span>
@@ -887,34 +889,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
         </div>
 
         {/* Styling Toolbar */}
-        <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 text-[11px] sm:text-xs w-full xl:w-auto justify-start sm:justify-end">
-          {/* Template Switcher (Desktop Wide Bar — Mobile/Tablet uses the Showcase Card & Preview Bar below) */}
-          <div className="hidden xl:flex items-center gap-1 bg-slate-100 p-1 rounded-full border border-slate-200">
-            <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-              Templates:
-            </span>
-            {BUILDER_TEMPLATES.map((tpl) => {
-              const isSelected = template === tpl.id;
-              return (
-                <button
-                  key={tpl.id}
-                  type="button"
-                  onClick={() => handleSelectTemplate(tpl.id, tpl.name)}
-                  className={`px-3 py-1 rounded-full font-bold transition cursor-pointer flex items-center gap-1 ${
-                    isSelected
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {!isAuthenticated && !isSelected && (
-                    <Lock className="w-3 h-3 text-amber-600 shrink-0" />
-                  )}
-                  <span>{tpl.shortName}</span>
-                </button>
-              );
-            })}
-          </div>
-
+        <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 text-xs sm:text-[13px] w-full xl:w-auto justify-start sm:justify-end">
           {/* Color Palettes */}
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-full border border-slate-200">
             {[
@@ -928,16 +903,17 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 key={c.color}
                 onClick={() => setAccentColor(c.color)}
                 style={{ backgroundColor: c.color }}
-                className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full transition-transform cursor-pointer ${
+                className={`w-5 h-5 rounded-full transition-transform cursor-pointer ${
                   accentColor === c.color ? 'scale-125 ring-2 ring-slate-900 ring-offset-1' : 'opacity-80 hover:opacity-100'
                 }`}
                 title={c.label}
+                aria-label={`Accent color ${c.label}`}
               />
             ))}
           </div>
 
           {/* Font Family Switcher */}
-          <div className="hidden md:flex items-center gap-0.5 bg-slate-100 p-1 rounded-full border border-slate-200 text-[10px]">
+          <div className="hidden md:flex items-center gap-0.5 bg-slate-100 p-1 rounded-full border border-slate-200 text-xs">
             <Type className="w-3 h-3 text-slate-400 ml-1.5 mr-0.5 shrink-0" />
             {(
               [
@@ -950,7 +926,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 key={f.id}
                 type="button"
                 onClick={() => setFontFamily(f.id)}
-                className={`px-2 py-0.5 rounded-full font-bold transition cursor-pointer ${
+                className={`px-2.5 py-1 rounded-full font-semibold transition cursor-pointer ${
                   fontFamily === f.id
                     ? 'bg-white text-slate-900 shadow-2xs'
                     : 'text-slate-500 hover:text-slate-800'
@@ -968,42 +944,18 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
               setImportError(null);
               setIsImportModalOpen(true);
             }}
-            className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition shadow-xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white hover:bg-slate-50 text-slate-700 font-semibold transition border border-slate-300 cursor-pointer disabled:opacity-60"
           >
-            <Upload className="w-3.5 h-3.5 text-emerald-100 shrink-0" />
+            <Upload className="w-3.5 h-3.5 text-slate-500 shrink-0" />
             <span>Import PDF / DOCX</span>
-          </button>
-
-          {/* Start From Scratch / Reset Button */}
-          <button
-            type="button"
-            onClick={handleStartFromScratch}
-            className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold transition border border-rose-200 cursor-pointer"
-            title="Clear uploaded CV and start from scratch"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-            <span>Start From Scratch</span>
           </button>
 
           {/* Export Actions */}
           <button
             type="button"
-            onClick={() => {
-              setGalleryExportError(null);
-              setIsGalleryModalOpen(true);
-            }}
-            className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-bold transition border border-indigo-200 cursor-pointer"
-            title="Browse all 105+ resume templates and export PDF or Word (.docx)"
-          >
-            <Layers className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-            <span>105+ Designs</span>
-          </button>
-
-          <button
-            type="button"
             onClick={handlePrint}
             disabled={isDownloadingPdf}
-            className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-slate-900 hover:bg-black text-white font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
+            className="inline-flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-slate-900 hover:bg-black text-white font-semibold transition shadow-xs cursor-pointer disabled:opacity-60"
           >
             {!isAuthenticated ? (
               <Lock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
@@ -1017,20 +969,20 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
             type="button"
             onClick={handleDownloadDocx}
             disabled={isDownloadingPdf}
-            className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold transition border border-slate-200 cursor-pointer disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white hover:bg-slate-50 text-slate-700 font-semibold transition border border-slate-300 cursor-pointer disabled:opacity-60"
             title="Download Microsoft Word (.docx)"
           >
             {!isAuthenticated ? (
-              <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
             ) : (
-              <FileText className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+              <FileText className="w-3.5 h-3.5 text-slate-500 shrink-0" />
             )}
             <span>Word (.docx)</span>
           </button>
 
           <button
             onClick={handleExportPlainText}
-            className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition border border-slate-200 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white hover:bg-slate-50 text-slate-700 font-semibold transition border border-slate-300 cursor-pointer disabled:opacity-60"
             title="Copy ATS Plain Text"
           >
             <Copy className="w-3.5 h-3.5 text-slate-500 shrink-0" />
@@ -1039,9 +991,9 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
 
           <Link
             href="/ats-scanner"
-            className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-full bg-cyan-50 hover:bg-cyan-100 text-cyan-900 font-bold transition border border-cyan-200"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-white hover:bg-slate-50 text-slate-700 font-semibold transition border border-slate-300 cursor-pointer disabled:opacity-60"
           >
-            <Sparkles className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
+            <Sparkles className="w-3.5 h-3.5 text-slate-500 shrink-0" />
             <span>ATS Diagnostic</span>
           </Link>
 
@@ -1069,10 +1021,10 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                   name: 'All 105+ ATS Resume Templates',
                 })
               }
-              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold transition border border-amber-300 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-cyan-800 hover:bg-cyan-50 font-semibold transition cursor-pointer underline-offset-2 hover:underline"
             >
-              <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-              <span>Sign Up to Unlock Templates</span>
+              <User className="w-3.5 h-3.5 shrink-0" />
+              <span>Sign up free to unlock all templates</span>
             </button>
           )}
         </div>
@@ -1143,22 +1095,21 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
           </div>
 
           {/* IMPORT EXISTING RESUME BANNER (PDF / DOCX / TXT AUTO-FILL) */}
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/60 to-cyan-50/70 border border-emerald-200/90 space-y-3">
+          <div className={`rounded-2xl border border-slate-200 bg-slate-50/80 ${lastImportedFile ? "p-3" : "p-4"} space-y-3`}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
                   <FileUp className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
-                    <span>Import Existing PDF / Word Resume</span>
-                    <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[9px] font-black uppercase">
-                      Auto-Fill
-                    </span>
+                  <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                    <span className="text-sm">Import Existing PDF / Word Resume</span>
                   </div>
-                  <p className="text-[11px] text-slate-600 leading-snug mt-0.5">
-                    Upload your old PDF or DOCX resume to automatically populate Name, Experience, Education, and Skills.
-                  </p>
+                  {!lastImportedFile && (
+                    <p className="text-xs text-slate-600 leading-snug mt-0.5">
+                      Upload your old PDF or DOCX resume to automatically populate Name, Experience, Education, and Skills.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -1313,153 +1264,6 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
               </div>
             </div>
           )}
-
-          {/* CHOOSE RESUME TEMPLATE SHOWCASE (ACCOUNT-GATED WHEN LOGGED OUT) */}
-          <div className="p-4 rounded-2xl bg-slate-50/90 border border-slate-200/90 space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-slate-900 text-cyan-400 flex items-center justify-center shrink-0 shadow-2xs">
-                  <Layers className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
-                    <span>Choose Resume Template</span>
-                    <span className="px-1.5 py-0.5 rounded-full bg-cyan-100 text-cyan-800 text-[9px] font-black uppercase">
-                      5 Live Layouts &bull; 105+ Designs
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 leading-snug">
-                    {isAuthenticated
-                      ? 'All ATS-verified resume templates are unlocked on your account.'
-                      : 'Select any template below — creating a free account is required to apply templates.'}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setGalleryExportError(null);
-                  setIsGalleryModalOpen(true);
-                }}
-                className="text-[11px] font-extrabold text-cyan-700 hover:text-cyan-900 flex items-center gap-1 cursor-pointer"
-              >
-                <span>Browse All 105+ &rarr;</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {BUILDER_TEMPLATES.map((tpl) => {
-                const isSelected = template === tpl.id;
-                return (
-                  <button
-                    key={tpl.id}
-                    type="button"
-                    onClick={() => handleSelectTemplate(tpl.id, tpl.name)}
-                    className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between gap-2 cursor-pointer group ${
-                      isSelected
-                        ? 'bg-white border-cyan-600 ring-2 ring-cyan-500/20 shadow-xs'
-                        : 'bg-white hover:bg-slate-50/80 border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    {/* Mini Visual Wireframe Preview */}
-                    <div className="w-full h-14 rounded-lg bg-slate-50 border border-slate-200/80 p-1.5 flex flex-col justify-between overflow-hidden relative">
-                      <div className="flex items-center justify-between gap-1">
-                        <div
-                          className="h-2 w-12 rounded-xs"
-                          style={{ backgroundColor: tpl.accent }}
-                        />
-                        <span className="text-[8px] font-black px-1 py-0.2 rounded bg-emerald-100 text-emerald-800">
-                          {tpl.atsScore}
-                        </span>
-                      </div>
-                      {tpl.id === 'tech_two_column' ? (
-                        <div className="grid grid-cols-3 gap-1 pt-1">
-                          <div className="col-span-2 space-y-1">
-                            <div className="h-1 bg-slate-300 rounded-xs w-full" />
-                            <div className="h-1 bg-slate-200 rounded-xs w-5/6" />
-                            <div className="h-1 bg-slate-200 rounded-xs w-4/6" />
-                          </div>
-                          <div className="col-span-1 space-y-1 border-l border-slate-200 pl-1">
-                            <div className="h-1 bg-slate-300 rounded-xs w-full" />
-                            <div className="h-1 bg-slate-200 rounded-xs w-3/4" />
-                          </div>
-                        </div>
-                      ) : tpl.id === 'executive' ? (
-                        <div className="space-y-1 pt-0.5">
-                          <div
-                            className="h-2.5 w-full rounded-xs opacity-85"
-                            style={{ backgroundColor: tpl.accent }}
-                          />
-                          <div className="h-1 bg-slate-300 rounded-xs w-full" />
-                          <div className="h-1 bg-slate-200 rounded-xs w-4/5" />
-                        </div>
-                      ) : (
-                        <div className="space-y-1 pt-1">
-                          <div className="h-1 bg-slate-300 rounded-xs w-full" />
-                          <div className="h-1 bg-slate-200 rounded-xs w-11/12" />
-                          <div className="h-1 bg-slate-200 rounded-xs w-3/4" />
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-[11px] font-extrabold text-slate-900 truncate">
-                          {tpl.shortName}
-                        </span>
-                        {isSelected ? (
-                          <span className="text-[9px] font-black text-cyan-700 bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200">
-                            Active
-                          </span>
-                        ) : !isAuthenticated ? (
-                          <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                            <Lock className="w-2.5 h-2.5 text-amber-600" />
-                            <span>Sign Up</span>
-                          </span>
-                        ) : (
-                          <span className="text-[9px] font-bold text-slate-400 group-hover:text-slate-700">
-                            Use &rarr;
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[9px] text-slate-400 font-medium block truncate">
-                        {tpl.tag}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-
-              {/* 6th Card: Browse All 105+ Designs */}
-              <button
-                type="button"
-                onClick={() => {
-                  setGalleryExportError(null);
-                  setIsGalleryModalOpen(true);
-                }}
-                className="p-2.5 rounded-xl border border-dashed border-cyan-300 bg-cyan-50/40 hover:bg-cyan-50 text-left transition flex flex-col justify-between gap-2 cursor-pointer group"
-              >
-                <div className="w-full h-14 rounded-lg bg-white/80 border border-cyan-200/80 flex flex-col items-center justify-center text-cyan-700">
-                  <Sparkles className="w-4 h-4 mb-0.5" />
-                  <span className="text-[9px] font-black uppercase tracking-wider">+100 More</span>
-                </div>
-                <div>
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="text-[11px] font-extrabold text-cyan-950 truncate">
-                      105+ Templates
-                    </span>
-                    {!isAuthenticated && (
-                      <Lock className="w-3 h-3 text-amber-600 shrink-0" />
-                    )}
-                  </div>
-                  <span className="text-[9px] text-cyan-700 font-bold block truncate">
-                    Explore Full Gallery &rarr;
-                  </span>
-                </div>
-              </button>
-            </div>
-          </div>
 
           {/* Section Navigation Tabs */}
           <div className="flex flex-wrap gap-1.5 bg-slate-50 p-1.5 rounded-2xl border border-slate-200 text-xs font-bold">
@@ -1643,10 +1447,32 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 </button>
               </div>
 
-              {experiences.map((exp, expIdx) => (
+              {experiences.map((exp, expIdx) => {
+                const isCollapsed = collapsedRoles.has(exp.id);
+                return (
                 <div key={exp.id} className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                    <span className="font-black text-slate-900 text-sm">Role #{expIdx + 1}</span>
+                  <div className={`flex items-center justify-between gap-2 ${isCollapsed ? '' : 'pb-2 border-b border-slate-200'}`}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCollapsedRoles((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(exp.id)) next.delete(exp.id);
+                          else next.add(exp.id);
+                          return next;
+                        })
+                      }
+                      aria-expanded={!isCollapsed}
+                      className="flex items-center gap-2 min-w-0 text-left cursor-pointer flex-1"
+                    >
+                      <ChevronDown className={`w-4 h-4 text-slate-500 shrink-0 transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+                      <span className="font-bold text-slate-900 text-sm shrink-0">Role #{expIdx + 1}</span>
+                      {isCollapsed && (
+                        <span className="text-xs text-slate-500 truncate">
+                          {exp.position} · {exp.company}
+                        </span>
+                      )}
+                    </button>
                     <button
                       onClick={() => setExperiences(experiences.filter((_, idx) => idx !== expIdx))}
                       className="text-red-500 hover:text-red-700 transition cursor-pointer p-1"
@@ -1656,9 +1482,10 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                     </button>
                   </div>
 
+                  {!isCollapsed && (<>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-600">Company</label>
+                      <label className="text-xs font-semibold text-slate-700">Company</label>
                       <input
                         type="text"
                         value={exp.company}
@@ -1667,11 +1494,11 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                           updated[expIdx].company = e.target.value;
                           setExperiences(updated);
                         }}
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white"
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-sm"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-600">Position Title</label>
+                      <label className="text-xs font-semibold text-slate-700">Position Title</label>
                       <input
                         type="text"
                         value={exp.position}
@@ -1680,14 +1507,14 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                           updated[expIdx].position = e.target.value;
                           setExperiences(updated);
                         }}
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white"
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-sm"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-600">Start Year</label>
+                      <label className="text-xs font-semibold text-slate-700">Start Year</label>
                       <input
                         type="text"
                         value={exp.startDate}
@@ -1696,11 +1523,11 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                           updated[expIdx].startDate = e.target.value;
                           setExperiences(updated);
                         }}
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white"
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-sm"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-600">End Year</label>
+                      <label className="text-xs font-semibold text-slate-700">End Year</label>
                       <input
                         type="text"
                         value={exp.endDate}
@@ -1709,11 +1536,11 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                           updated[expIdx].endDate = e.target.value;
                           setExperiences(updated);
                         }}
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white"
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-sm"
                       />
                     </div>
                     <div className="col-span-2 sm:col-span-1">
-                      <label className="text-[10px] font-bold text-slate-600">Location</label>
+                      <label className="text-xs font-semibold text-slate-700">Location</label>
                       <input
                         type="text"
                         value={exp.location}
@@ -1722,7 +1549,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                           updated[expIdx].location = e.target.value;
                           setExperiences(updated);
                         }}
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white"
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-sm"
                       />
                     </div>
                   </div>
@@ -1731,36 +1558,49 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                   <div className="space-y-2 pt-2">
                     <label className="text-[11px] font-bold text-slate-800 block">Achievement Bullets</label>
                     {exp.bullets.map((bullet, bIdx) => (
-                      <div key={bIdx} className="space-y-1">
-                        <div className="flex items-start gap-1.5">
-                          <textarea
-                            rows={2}
-                            value={bullet}
-                            onChange={(e) => {
-                              const updated = [...experiences];
-                              updated[expIdx].bullets[bIdx] = e.target.value;
-                              setExperiences(updated);
-                            }}
-                            className="flex-1 p-2 rounded-lg border border-slate-200 bg-white text-xs font-medium leading-normal"
-                          />
+                      <div key={bIdx} className="group relative">
+                        <textarea
+                          rows={2}
+                          value={bullet}
+                          aria-label={`Bullet ${bIdx + 1}`}
+                          ref={(el) => {
+                            if (el) {
+                              el.style.height = 'auto';
+                              el.style.height = `${el.scrollHeight}px`;
+                            }
+                          }}
+                          onInput={(e) => {
+                            const el = e.currentTarget;
+                            el.style.height = 'auto';
+                            el.style.height = `${el.scrollHeight}px`;
+                          }}
+                          onChange={(e) => {
+                            const updated = [...experiences];
+                            updated[expIdx].bullets[bIdx] = e.target.value;
+                            setExperiences(updated);
+                          }}
+                          className="w-full p-2.5 pr-9 rounded-lg border border-slate-300 bg-white text-sm leading-relaxed resize-none overflow-hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = [...experiences];
+                            updated[expIdx].bullets = updated[expIdx].bullets.filter((_, i) => i !== bIdx);
+                            setExperiences(updated);
+                          }}
+                          className="absolute top-2 right-2 p-1.5 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                          title="Delete bullet"
+                          aria-label={`Delete bullet ${bIdx + 1}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                        <div className="flex justify-end mt-1 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                           <button
-                            onClick={() => {
-                              const updated = [...experiences];
-                              updated[expIdx].bullets = updated[expIdx].bullets.filter((_, i) => i !== bIdx);
-                              setExperiences(updated);
-                            }}
-                            className="text-slate-400 hover:text-red-500 p-1"
-                          >
-                            &times;
-                          </button>
-                        </div>
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className="text-slate-400 font-mono">Bullet {bIdx + 1}</span>
-                          <button
+                            type="button"
                             onClick={() => handleEnhanceBullet(expIdx, bIdx)}
-                            className="text-cyan-700 hover:text-cyan-900 font-bold flex items-center gap-1 cursor-pointer bg-cyan-50 px-2 py-0.5 rounded-full border border-cyan-200 transition"
+                            className="text-xs text-cyan-700 hover:text-cyan-900 font-semibold flex items-center gap-1 cursor-pointer px-2 py-1 rounded-md hover:bg-cyan-50 transition"
                           >
-                            <Sparkles className="w-2.5 h-2.5 text-cyan-600" />
+                            <Sparkles className="w-3 h-3" />
                             <span>AI Quantify (X-Y-Z)</span>
                           </button>
                         </div>
@@ -1773,14 +1613,16 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                         updated[expIdx].bullets.push('Accomplished [X] as measured by [Y] by doing [Z].');
                         setExperiences(updated);
                       }}
-                      className="text-[11px] font-bold text-cyan-700 hover:text-cyan-900 flex items-center gap-1 mt-1 cursor-pointer"
+                      className="text-xs font-semibold text-cyan-700 hover:text-cyan-900 flex items-center gap-1 mt-1 cursor-pointer"
                     >
                       <Plus className="w-3 h-3" />
                       <span>Add Bullet Point</span>
                     </button>
                   </div>
+                  </>)}
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -1901,7 +1743,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                     )}
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-600">Institution / University</label>
+                    <label className="text-xs font-semibold text-slate-700">Institution / University</label>
                     <input
                       type="text"
                       value={edu.institution}
@@ -1910,12 +1752,12 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                         updated[idx].institution = e.target.value;
                         setEducations(updated);
                       }}
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white"
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-sm"
                     />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] font-bold text-slate-600">Degree &amp; Major</label>
+                      <label className="text-xs font-semibold text-slate-700">Degree &amp; Major</label>
                       <input
                         type="text"
                         value={edu.degree}
@@ -1924,11 +1766,11 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                           updated[idx].degree = e.target.value;
                           setEducations(updated);
                         }}
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white"
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-sm"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-600">Graduation Year</label>
+                      <label className="text-xs font-semibold text-slate-700">Graduation Year</label>
                       <input
                         type="text"
                         value={edu.year}
@@ -1937,12 +1779,12 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                           updated[idx].year = e.target.value;
                           setEducations(updated);
                         }}
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white"
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-sm"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold text-slate-600">Honors / GPA</label>
+                    <label className="text-xs font-semibold text-slate-700">Honors / GPA</label>
                     <input
                       type="text"
                       value={edu.honors}
@@ -1951,7 +1793,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                         updated[idx].honors = e.target.value;
                         setEducations(updated);
                       }}
-                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white"
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-sm"
                     />
                   </div>
                 </div>
@@ -2010,7 +1852,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                       </button>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-600">Project Title</label>
+                      <label className="text-xs font-semibold text-slate-700">Project Title</label>
                       <input
                         type="text"
                         value={proj.title}
@@ -2019,11 +1861,11 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                           updated[idx].title = e.target.value;
                           setProjects(updated);
                         }}
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white"
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-sm"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-600">Tech Stack / Tools</label>
+                      <label className="text-xs font-semibold text-slate-700">Tech Stack / Tools</label>
                       <input
                         type="text"
                         value={proj.techStack}
@@ -2033,11 +1875,11 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                           setProjects(updated);
                         }}
                         placeholder="e.g. Python, FastAPI, PostgreSQL, Docker"
-                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white"
+                        className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-sm"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-600">Impact &amp; Description</label>
+                      <label className="text-xs font-semibold text-slate-700">Impact &amp; Description</label>
                       <textarea
                         rows={3}
                         value={proj.description}
@@ -2054,10 +1896,157 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
               )}
             </div>
           )}
+          {/* CHOOSE RESUME TEMPLATE SHOWCASE (ACCOUNT-GATED WHEN LOGGED OUT) */}
+          <div className="p-4 rounded-2xl bg-slate-50/90 border border-slate-200/90 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-slate-900 text-cyan-400 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                    <span>Choose Resume Template</span>
+                    <span className="px-1.5 py-0.5 rounded-full bg-cyan-100 text-cyan-800 text-[9px] font-black uppercase">
+                      5 Live Layouts &bull; 105+ Designs
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 leading-snug">
+                    {isAuthenticated
+                      ? 'All ATS-verified resume templates are unlocked on your account.'
+                      : 'Select any template below — creating a free account is required to apply templates.'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setGalleryExportError(null);
+                  setIsGalleryModalOpen(true);
+                }}
+                className="text-[11px] font-extrabold text-cyan-700 hover:text-cyan-900 flex items-center gap-1 cursor-pointer"
+              >
+                <span>Browse All 105+ &rarr;</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {BUILDER_TEMPLATES.map((tpl) => {
+                const isSelected = template === tpl.id;
+                return (
+                  <button
+                    key={tpl.id}
+                    type="button"
+                    onClick={() => handleSelectTemplate(tpl.id, tpl.name)}
+                    className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between gap-2 cursor-pointer group ${
+                      isSelected
+                        ? 'bg-white border-cyan-600 ring-2 ring-cyan-500/20 shadow-xs'
+                        : 'bg-white hover:bg-slate-50/80 border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    {/* Mini Visual Wireframe Preview */}
+                    <div className="w-full h-14 rounded-lg bg-slate-50 border border-slate-200/80 p-1.5 flex flex-col justify-between overflow-hidden relative">
+                      <div className="flex items-center justify-between gap-1">
+                        <div
+                          className="h-2 w-12 rounded-xs"
+                          style={{ backgroundColor: tpl.accent }}
+                        />
+                        <span className="text-[8px] font-black px-1 py-0.2 rounded bg-emerald-100 text-emerald-800">
+                          {tpl.atsScore}
+                        </span>
+                      </div>
+                      {tpl.id === 'tech_two_column' ? (
+                        <div className="grid grid-cols-3 gap-1 pt-1">
+                          <div className="col-span-2 space-y-1">
+                            <div className="h-1 bg-slate-300 rounded-xs w-full" />
+                            <div className="h-1 bg-slate-200 rounded-xs w-5/6" />
+                            <div className="h-1 bg-slate-200 rounded-xs w-4/6" />
+                          </div>
+                          <div className="col-span-1 space-y-1 border-l border-slate-200 pl-1">
+                            <div className="h-1 bg-slate-300 rounded-xs w-full" />
+                            <div className="h-1 bg-slate-200 rounded-xs w-3/4" />
+                          </div>
+                        </div>
+                      ) : tpl.id === 'executive' ? (
+                        <div className="space-y-1 pt-0.5">
+                          <div
+                            className="h-2.5 w-full rounded-xs opacity-85"
+                            style={{ backgroundColor: tpl.accent }}
+                          />
+                          <div className="h-1 bg-slate-300 rounded-xs w-full" />
+                          <div className="h-1 bg-slate-200 rounded-xs w-4/5" />
+                        </div>
+                      ) : (
+                        <div className="space-y-1 pt-1">
+                          <div className="h-1 bg-slate-300 rounded-xs w-full" />
+                          <div className="h-1 bg-slate-200 rounded-xs w-11/12" />
+                          <div className="h-1 bg-slate-200 rounded-xs w-3/4" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[11px] font-extrabold text-slate-900 truncate">
+                          {tpl.shortName}
+                        </span>
+                        {isSelected ? (
+                          <span className="text-[9px] font-black text-cyan-700 bg-cyan-50 px-1.5 py-0.5 rounded border border-cyan-200">
+                            Active
+                          </span>
+                        ) : !isAuthenticated ? (
+                          <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                            <Lock className="w-2.5 h-2.5 text-amber-600" />
+                            <span>Sign Up</span>
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-bold text-slate-400 group-hover:text-slate-700">
+                            Use &rarr;
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[9px] text-slate-400 font-medium block truncate">
+                        {tpl.tag}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+
+              {/* 6th Card: Browse All 105+ Designs */}
+              <button
+                type="button"
+                onClick={() => {
+                  setGalleryExportError(null);
+                  setIsGalleryModalOpen(true);
+                }}
+                className="p-2.5 rounded-xl border border-dashed border-cyan-300 bg-cyan-50/40 hover:bg-cyan-50 text-left transition flex flex-col justify-between gap-2 cursor-pointer group"
+              >
+                <div className="w-full h-14 rounded-lg bg-white/80 border border-cyan-200/80 flex flex-col items-center justify-center text-cyan-700">
+                  <Sparkles className="w-4 h-4 mb-0.5" />
+                  <span className="text-[9px] font-black uppercase tracking-wider">+100 More</span>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[11px] font-extrabold text-cyan-950 truncate">
+                      105+ Templates
+                    </span>
+                    {!isAuthenticated && (
+                      <Lock className="w-3 h-3 text-amber-600 shrink-0" />
+                    )}
+                  </div>
+                  <span className="text-[9px] text-cyan-700 font-bold block truncate">
+                    Explore Full Gallery &rarr;
+                  </span>
+                </div>
+              </button>
+            </div>
+          </div>
+
         </div>
 
         {/* RIGHT COLUMN: Live Document Canvas (Width 7 cols) */}
-        <div className="lg:col-span-7 flex flex-col items-center lg:sticky lg:top-20 space-y-3 min-w-0 w-full">
+        <div className="lg:col-span-7 flex flex-col items-center lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto space-y-3 min-w-0 w-full">
           {/* Quick Template Switcher Bar Above Live A4 Preview */}
           <div className="w-full max-w-[850px] bg-white rounded-2xl border border-slate-200 px-3 sm:px-4 py-2.5 shadow-2xs flex flex-wrap items-center justify-between gap-2 no-print">
             <div className="flex items-center justify-between w-full sm:w-auto gap-2 text-xs">
