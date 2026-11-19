@@ -55,8 +55,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${plusJakarta.variable} h-full antialiased overflow-x-hidden`}>
-      <body className="min-h-full flex flex-col font-sans overflow-x-hidden selection:bg-indigo-600 selection:text-white">
+    <html lang="en" className={`${plusJakarta.variable} h-full antialiased overflow-x-clip`}>
+      <body className="min-h-full flex flex-col font-sans overflow-x-clip selection:bg-indigo-600 selection:text-white">
         {children}
       </body>
     </html>

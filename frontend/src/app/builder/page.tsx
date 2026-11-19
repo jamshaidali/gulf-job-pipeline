@@ -121,6 +121,46 @@ interface ProjectEntry {
   techStack: string;
 }
 
+/** Textarea that always fits its content (re-measured on edit, resize and font load). */
+function AutoGrowTextarea({
+  value,
+  onChange,
+  ariaLabel,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  ariaLabel: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement | null>(null);
+  const fit = React.useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, []);
+  useEffect(() => {
+    fit();
+  }, [value, fit]);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    document.fonts?.ready.then(fit).catch(() => {});
+    return () => ro.disconnect();
+  }, [fit]);
+  return (
+    <textarea
+      ref={ref}
+      rows={2}
+      value={value}
+      aria-label={ariaLabel}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full p-2.5 pr-9 rounded-lg border border-slate-300 bg-white text-sm leading-relaxed resize-none overflow-hidden"
+    />
+  );
+}
+
 export default function ResumeBuilderPage() {
   // Resume Content State
   const [fullName, setFullName] = useState<string>('Alexander Chen');
@@ -1572,27 +1612,14 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                     <label className="text-[11px] font-bold text-slate-800 block">Achievement Bullets</label>
                     {exp.bullets.map((bullet, bIdx) => (
                       <div key={bIdx} className="group relative">
-                        <textarea
-                          rows={2}
+                        <AutoGrowTextarea
                           value={bullet}
-                          aria-label={`Bullet ${bIdx + 1}`}
-                          ref={(el) => {
-                            if (el) {
-                              el.style.height = 'auto';
-                              el.style.height = `${el.scrollHeight}px`;
-                            }
-                          }}
-                          onInput={(e) => {
-                            const el = e.currentTarget;
-                            el.style.height = 'auto';
-                            el.style.height = `${el.scrollHeight}px`;
-                          }}
-                          onChange={(e) => {
+                          ariaLabel={`Bullet ${bIdx + 1}`}
+                          onChange={(val) => {
                             const updated = [...experiences];
-                            updated[expIdx].bullets[bIdx] = e.target.value;
+                            updated[expIdx].bullets[bIdx] = val;
                             setExperiences(updated);
                           }}
-                          className="w-full p-2.5 pr-9 rounded-lg border border-slate-300 bg-white text-sm leading-relaxed resize-none overflow-hidden"
                         />
                         <button
                           type="button"
@@ -2059,7 +2086,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
         </div>
 
         {/* RIGHT COLUMN: Live Document Canvas (Width 7 cols) */}
-        <div className="lg:col-span-7 flex flex-col items-center lg:sticky lg:top-[calc(var(--builder-header-h)+1rem)] lg:max-h-[calc(100dvh-var(--builder-header-h)-2rem)] lg:overflow-y-auto space-y-3 min-w-0 w-full">
+        <div className="lg:col-span-7 flex flex-col items-center space-y-3 min-w-0 w-full">
           {/* Quick Template Switcher Bar Above Live A4 Preview */}
           <div className="w-full max-w-[850px] bg-white rounded-2xl border border-slate-200 px-3 sm:px-4 py-2.5 shadow-2xs flex flex-wrap items-center justify-between gap-2 no-print">
             <div className="flex items-center justify-between w-full sm:w-auto gap-2 text-xs">
