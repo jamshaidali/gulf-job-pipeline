@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: '500+ Free ATS-Friendly Resume Templates (2026) | TalentRadar',
+  title: '500+ Free ATS-Friendly Resume Templates (2026) | RateYourCV',
   description:
     'Browse 500+ resume templates, from ATS-safe single-column styles to designer layouts with a photo and sidebar. Free to customize, with PDF and Word download.',
   keywords: [
@@ -15,16 +15,16 @@ export const metadata: Metadata = {
     canonical: '/templates',
   },
   openGraph: {
-    title: '500+ Free ATS-Friendly Resume Templates | TalentRadar',
+    title: '500+ Free ATS-Friendly Resume Templates | RateYourCV',
     description:
       'Choose from 500+ resume templates with real, selectable text: ATS-safe single-column styles and designer layouts with a photo.',
-    url: 'https://gulf-job-pipeline.vercel.app/templates',
-    siteName: 'TalentRadar',
+    url: 'https://rateyourcv.com/templates',
+    siteName: 'RateYourCV',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: '500+ Free ATS-Friendly Resume Templates | TalentRadar',
+    title: '500+ Free ATS-Friendly Resume Templates | RateYourCV',
     description:
       'Recruiter-approved single-column and two-column resume templates verified for 100% ATS parsing.',
   },
@@ -37,7 +37,7 @@ export default function TemplatesLayout({ children }: { children: React.ReactNod
     name: '500+ ATS-Optimized Resume Templates',
     description:
       'A gallery of 500+ resume templates, from ATS-safe single-column styles to designer layouts.',
-    url: 'https://gulf-job-pipeline.vercel.app/templates',
+    url: 'https://rateyourcv.com/templates',
   };
 
   return (

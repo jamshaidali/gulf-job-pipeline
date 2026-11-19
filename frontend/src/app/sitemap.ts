@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { careerGuides } from '@/data/careerGuides';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://gulf-job-pipeline.vercel.app';
+  const baseUrl = 'https://rateyourcv.com';
   const now = new Date();
 
   const coreRoutes: MetadataRoute.Sitemap = [

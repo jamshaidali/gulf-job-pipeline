@@ -265,7 +265,7 @@ ${job.summary || 'Strong technical and architectural alignment.'}
                   </span>
                 </div>
                 <div className="text-[11px] text-slate-600 font-medium mt-0.5">
-                  Top 3 search results are free. Upgrade to TalentRadar Pro to unlock this role, direct recruiter contacts, and 1-click ATS kits.
+                  Top 3 search results are free. Upgrade to RateYourCV Pro to unlock this role, direct recruiter contacts, and 1-click ATS kits.
                 </div>
               </div>
             </div>

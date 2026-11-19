@@ -40,10 +40,10 @@ export async function generateMetadata({
   const { id } = await params;
   const job = await getJob(id);
   if (!job) {
-    return { title: 'Job Not Found | TalentRadar' };
+    return { title: 'Job Not Found | RateYourCV' };
   }
 
-  const title = `${job.title} at ${job.company} (${job.location}) | TalentRadar`;
+  const title = `${job.title} at ${job.company} (${job.location}) | RateYourCV`;
   const description = `Verified opening for ${job.title} at ${job.company}. Calculate your ATS resume match score and connect directly with hiring managers.`;
 
   return {
@@ -53,7 +53,7 @@ export async function generateMetadata({
       title,
       description,
       type: 'article',
-      url: `https://talentradar.ai/jobs/${job.id}`,
+      url: `https://rateyourcv.com/jobs/${job.id}`,
     },
     twitter: {
       card: 'summary_large_image',
@@ -186,7 +186,7 @@ export default async function JobDetailPage({
                 <span>Want to see how your CV scores for this role?</span>
               </div>
               <p className="text-xs text-indigo-700 max-w-xl">
-                TalentRadar scans your resume against this job, detects missing ATS keywords, and generates a personalized cold message to the hiring manager.
+                RateYourCV scans your resume against this job, detects missing ATS keywords, and generates a personalized cold message to the hiring manager.
               </p>
             </div>
 

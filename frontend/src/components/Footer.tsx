@@ -13,7 +13,7 @@ export default function Footer() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-sky-400 flex items-center justify-center text-white shadow-sm">
                 <Zap className="w-4 h-4 fill-white" />
               </div>
-              <span className="text-xl font-extrabold text-white tracking-tight">TalentRadar</span>
+              <span className="text-xl font-extrabold text-white tracking-tight">RateYourCV</span>
             </div>
             <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
               AI resume builder and ATS scanner. Craft clear, well-structured CVs with templates from ATS-safe single column to designer styles.
@@ -49,7 +49,7 @@ export default function Footer() {
 
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
           <div>
-            &copy; 2026 TalentRadar AI. All rights reserved.
+            &copy; 2026 RateYourCV AI. All rights reserved.
           </div>
           <div className="flex items-center gap-6">
             <span>Built with Next.js 16 &amp; FastAPI</span>

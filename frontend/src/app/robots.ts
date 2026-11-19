@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/app', '/api/*'],
       },
     ],
-    sitemap: 'https://gulf-job-pipeline.vercel.app/sitemap.xml',
+    sitemap: 'https://rateyourcv.com/sitemap.xml',
   };
 }

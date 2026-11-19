@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Sign In to Your Account | TalentRadar AI Resume Builder',
+  title: 'Sign In to Your Account | RateYourCV AI Resume Builder',
   description:
-    'Sign in to your TalentRadar account to access your saved resumes, ATS scan reports, and 500+ resume templates.',
+    'Sign in to your RateYourCV account to access your saved resumes, ATS scan reports, and 500+ resume templates.',
   alternates: {
     canonical: '/login',
   },

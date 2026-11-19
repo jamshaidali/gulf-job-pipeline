@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Free AI Resume Builder & Live Visual CV Editor | TalentRadar',
+  title: 'Free AI Resume Builder & Live Visual CV Editor | RateYourCV',
   description:
     'Build an ATS-friendly resume in minutes with our Live Visual CV Builder. Import existing PDF/DOCX resumes, quantify bullets with Google X-Y-Z metrics, and export watermark-free PDFs.',
   keywords: [
@@ -16,16 +16,16 @@ export const metadata: Metadata = {
     canonical: '/builder',
   },
   openGraph: {
-    title: 'Free AI Resume Builder & Live Visual CV Editor | TalentRadar',
+    title: 'Free AI Resume Builder & Live Visual CV Editor | RateYourCV',
     description:
       'Import your PDF/DOCX resume or build from scratch with real-time ATS scoring, AI bullet quantification, and instant PDF export.',
-    url: 'https://gulf-job-pipeline.vercel.app/builder',
-    siteName: 'TalentRadar',
+    url: 'https://rateyourcv.com/builder',
+    siteName: 'RateYourCV',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Free AI Resume Builder & Live Visual CV Editor | TalentRadar',
+    title: 'Free AI Resume Builder & Live Visual CV Editor | RateYourCV',
     description:
       'Create an interview-winning, ATS-friendly resume in minutes with live visual editing and AI impact bullets.',
   },
@@ -35,10 +35,10 @@ export default function BuilderLayout({ children }: { children: React.ReactNode 
   const softwareJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: 'TalentRadar Live AI Resume Builder',
+    name: 'RateYourCV Live AI Resume Builder',
     applicationCategory: 'BusinessApplication',
     operatingSystem: 'Web',
-    url: 'https://gulf-job-pipeline.vercel.app/builder',
+    url: 'https://rateyourcv.com/builder',
     offers: {
       '@type': 'Offer',
       price: '0',

@@ -187,7 +187,7 @@ export default function DashboardPage() {
       }
       await loadJobs(true);
       setUpgradeOpen(false);
-      showToast('🎉 Welcome to TalentRadar Pro! Unlimited searches & all jobs unlocked.', '👑');
+      showToast('🎉 Welcome to RateYourCV Pro! Unlimited searches & all jobs unlocked.', '👑');
     } catch (err: any) {
       showToast(err?.message || 'Upgrade failed', '⚠️');
     }
@@ -383,7 +383,7 @@ export default function DashboardPage() {
             </button>
 
             <div className="flex items-center gap-2 text-xs sm:text-sm">
-              <span className="font-extrabold text-slate-400">TalentRadar</span>
+              <span className="font-extrabold text-slate-400">RateYourCV</span>
               <span className="text-slate-300">/</span>
               <span className="font-black text-slate-900">{getBreadcrumbTitle()}</span>
             </div>
@@ -870,7 +870,7 @@ export default function DashboardPage() {
                       className="px-6 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs sm:text-sm shadow-lg transition inline-flex items-center gap-2 cursor-pointer hover:scale-[1.02]"
                     >
                       <Crown className="w-4 h-4 text-slate-950" />
-                      <span>Upgrade to TalentRadar Pro ($4.99/mo) to Unlock All Results &rarr;</span>
+                      <span>Upgrade to RateYourCV Pro ($4.99/mo) to Unlock All Results &rarr;</span>
                     </button>
                   </div>
                 )}
@@ -939,7 +939,7 @@ export default function DashboardPage() {
             <div className="text-center mb-6">
               <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-100 text-amber-950 border border-amber-300 inline-flex items-center gap-1.5 shadow-2xs">
                 <Crown className="w-3.5 h-3.5 text-amber-600" />
-                <span>TalentRadar Pro Accelerator</span>
+                <span>RateYourCV Pro Accelerator</span>
               </span>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-950 mt-3 tracking-tight">
                 Unlock Uncapped Market Access

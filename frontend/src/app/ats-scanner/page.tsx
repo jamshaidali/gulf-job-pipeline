@@ -486,7 +486,7 @@ export default function ATSScannerPage() {
                       <div>
                         <h4 className="text-sm font-bold text-slate-900">Using Your Saved Active CV</h4>
                         <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                          We will scan against the active resume currently saved on your TalentRadar account.
+                          We will scan against the active resume currently saved on your RateYourCV account.
                         </p>
                       </div>
                       <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-black">

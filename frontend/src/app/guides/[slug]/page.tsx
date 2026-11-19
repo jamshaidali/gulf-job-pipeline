@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
   if (!guide) return { title: 'Career Guide Not Found' };
 
   return {
-    title: `${guide.title} | TalentRadar Guides`,
+    title: `${guide.title} | RateYourCV Guides`,
     description: guide.excerpt,
     alternates: {
       canonical: `/guides/${guide.slug}`,
@@ -30,11 +30,11 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
     openGraph: {
       title: guide.title,
       description: guide.excerpt,
-      url: `https://gulf-job-pipeline.vercel.app/guides/${guide.slug}`,
-      siteName: 'TalentRadar',
+      url: `https://rateyourcv.com/guides/${guide.slug}`,
+      siteName: 'RateYourCV',
       type: 'article',
       publishedTime: '2026-10-01T00:00:00Z',
-      authors: ['TalentRadar Career Editorial Team'],
+      authors: ['RateYourCV Career Editorial Team'],
     },
   };
 }
@@ -55,13 +55,13 @@ export default async function SingleGuidePage({ params }: GuidePageProps) {
     datePublished: '2026-10-01T00:00:00Z',
     author: {
       '@type': 'Organization',
-      name: 'TalentRadar Career Editorial Team',
-      url: 'https://gulf-job-pipeline.vercel.app'
+      name: 'RateYourCV Career Editorial Team',
+      url: 'https://rateyourcv.com'
     },
     publisher: {
       '@type': 'Organization',
-      name: 'TalentRadar AI',
-      url: 'https://gulf-job-pipeline.vercel.app'
+      name: 'RateYourCV AI',
+      url: 'https://rateyourcv.com'
     }
   };
 
@@ -117,7 +117,7 @@ export default async function SingleGuidePage({ params }: GuidePageProps) {
               TR
             </div>
             <div>
-              <span className="font-bold text-slate-800">TalentRadar Research &amp; Advisory Team</span>
+              <span className="font-bold text-slate-800">RateYourCV Research &amp; Advisory Team</span>
               <span className="text-slate-400 ml-2">&bull; Published {guide.publishedAt}</span>
             </div>
           </div>
@@ -294,7 +294,7 @@ export default async function SingleGuidePage({ params }: GuidePageProps) {
         <div className="mt-12 p-8 bg-slate-900 text-white rounded-3xl border border-slate-800 shadow-xl space-y-4 text-center">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950 text-cyan-300 text-xs font-bold border border-cyan-800">
             <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Apply These Strategies With TalentRadar AI</span>
+            <span>Apply These Strategies With RateYourCV AI</span>
           </div>
           <h3 className="text-xl sm:text-2xl font-black tracking-tight">
             Want to see how your CV scores against your target role?

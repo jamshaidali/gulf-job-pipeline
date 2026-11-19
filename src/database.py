@@ -845,7 +845,7 @@ class JobDatabase:
             default_email = ""
             if user:
                 default_email = user.get("email") or ""
-            if not default_email or "example.com" in default_email or "talentradar.ai" in default_email:
+            if not default_email or "example.com" in default_email or "rateyourcv.com" in default_email:
                 default_email = os.environ.get("SMTP_RECIPIENT_EMAIL") or os.environ.get("SMTP_SENDER_EMAIL") or default_email
 
             defaults = {

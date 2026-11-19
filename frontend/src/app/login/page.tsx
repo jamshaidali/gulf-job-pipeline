@@ -57,7 +57,7 @@ export default function LoginPage() {
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-sky-400 flex items-center justify-center text-white shadow-sm">
             <Zap className="w-5 h-5 fill-white" />
           </div>
-          <span className="text-2xl font-extrabold text-slate-900 tracking-tight">TalentRadar</span>
+          <span className="text-2xl font-extrabold text-slate-900 tracking-tight">RateYourCV</span>
         </Link>
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">
           Welcome back

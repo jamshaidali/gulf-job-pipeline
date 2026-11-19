@@ -174,7 +174,7 @@ def build_alert_email_html(
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>TalentRadar High-Match Alert</title>
+        <title>RateYourCV High-Match Alert</title>
     </head>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px 12px; color: #1e293b; -webkit-font-smoothing: antialiased;">
         <div style="max-width: 620px; margin: 0 auto;">
@@ -205,7 +205,7 @@ def build_alert_email_html(
 
             <!-- Footer -->
             <div style="text-align: center; font-size: 12px; color: #64748b; padding: 20px 0; line-height: 1.6;">
-                <div style="font-weight: 700; color: #0f172a; margin-bottom: 4px;">TalentRadar AI &bull; Autonomous Career Copilot</div>
+                <div style="font-weight: 700; color: #0f172a; margin-bottom: 4px;">RateYourCV AI &bull; Autonomous Career Copilot</div>
                 <div>You received this alert because high-match notifications are enabled on your account.</div>
                 <div style="margin-top: 8px;">
                     <a href="{app_url}/app" style="color: #4f46e5; font-weight: 700; text-decoration: none;">Manage Alert Preferences in Dashboard</a>
@@ -241,7 +241,7 @@ def send_high_match_alert(
     # Determine recipient
     recipient = (custom_recipient or settings.get("alert_email") or user.get("email") or "").strip()
     # Fallback to .env SMTP_RECIPIENT_EMAIL if user email is placeholder
-    if not recipient or "example.com" in recipient or "talentradar.ai" in recipient:
+    if not recipient or "example.com" in recipient or "rateyourcv.com" in recipient:
         recipient = (os.environ.get("SMTP_RECIPIENT_EMAIL") or os.environ.get("SMTP_SENDER_EMAIL") or recipient).strip()
 
     if not recipient:
@@ -295,11 +295,11 @@ def send_high_match_alert(
         today_short = datetime.now().strftime("%b %d")
         
         if test_mode:
-            msg["Subject"] = f"[TEST ALERT] 🎯 Top ATS Matches for {candidate_name} ({len(jobs)} Opportunities) - TalentRadar"
+            msg["Subject"] = f"[TEST ALERT] 🎯 Top ATS Matches for {candidate_name} ({len(jobs)} Opportunities) - RateYourCV"
         else:
             msg["Subject"] = f"🎯 {len(jobs)} High-Match Tech Opportunities (≥{min_score}% ATS Fit) - {today_short}"
             
-        msg["From"] = f"TalentRadar AI Alerts <{sender_email}>"
+        msg["From"] = f"RateYourCV AI Alerts <{sender_email}>"
         msg["To"] = recipient
 
         msg.attach(MIMEText(html_content, "html"))
