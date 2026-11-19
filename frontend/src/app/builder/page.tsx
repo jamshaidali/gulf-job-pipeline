@@ -121,6 +121,34 @@ interface ProjectEntry {
   techStack: string;
 }
 
+/**
+ * Turn an imported resume into a COMPLETE set of builder fields. Anything the import does not
+ * contain becomes blank, so values from a previously loaded CV or the demo never mix into it.
+ */
+function resumeToFields(res: ImportedStructuredResume) {
+  const str = (v: unknown) => (typeof v === 'string' ? v : '');
+  return {
+    fullName: str(res.fullName),
+    jobTitle: str(res.jobTitle),
+    email: str(res.email),
+    phone: str(res.phone),
+    location: str(res.location),
+    linkedIn: str(res.linkedIn),
+    github: str(res.github),
+    summary: str(res.summary),
+    skills: Array.isArray(res.skills) ? res.skills : [],
+    experiences:
+      Array.isArray(res.experiences) && res.experiences.length > 0
+        ? res.experiences
+        : [{ id: '1', company: '', position: '', location: '', startDate: '', endDate: '', bullets: [''] }],
+    educations:
+      Array.isArray(res.educations) && res.educations.length > 0
+        ? res.educations
+        : [{ id: '1', institution: '', degree: '', year: '', honors: '' }],
+    projects: Array.isArray(res.projects) ? res.projects : [],
+  };
+}
+
 /** Textarea that always fits its content (re-measured on edit, resize and font load). */
 function AutoGrowTextarea({
   value,
@@ -279,18 +307,19 @@ export default function ResumeBuilderPage() {
             if (parsedPayload && parsedPayload.resume) {
               const res: ImportedStructuredResume = parsedPayload.resume;
               const srcName: string = parsedPayload.filename || 'Uploaded_Resume.pdf';
-              if (res.fullName) setFullName(res.fullName);
-              if (res.jobTitle) setJobTitle(res.jobTitle);
-              if (res.email) setEmail(res.email);
-              if (res.phone) setPhone(res.phone);
-              if (res.location) setLocation(res.location);
-              if (typeof res.linkedIn === 'string') setLinkedIn(res.linkedIn);
-              if (typeof res.github === 'string') setGithub(res.github);
-              if (res.summary) setSummary(res.summary);
-              if (Array.isArray(res.skills) && res.skills.length > 0) setSkills(res.skills);
-              if (Array.isArray(res.experiences) && res.experiences.length > 0) setExperiences(res.experiences);
-              if (Array.isArray(res.educations) && res.educations.length > 0) setEducations(res.educations);
-              if (Array.isArray(res.projects) && res.projects.length > 0) setProjects(res.projects);
+              const f = resumeToFields(res);
+              setFullName(f.fullName);
+              setJobTitle(f.jobTitle);
+              setEmail(f.email);
+              setPhone(f.phone);
+              setLocation(f.location);
+              setLinkedIn(f.linkedIn);
+              setGithub(f.github);
+              setSummary(f.summary);
+              setSkills(f.skills);
+              setExperiences(f.experiences);
+              setEducations(f.educations);
+              setProjects(f.projects);
               setLastImportedFile(srcName);
 
               if (parsedPayload.atsContext) {
@@ -455,18 +484,19 @@ export default function ResumeBuilderPage() {
   const quickFileInputRef = useRef<HTMLInputElement>(null);
 
   const applyImportedResume = (res: ImportedStructuredResume, sourceName: string) => {
-    if (res.fullName) setFullName(res.fullName);
-    if (res.jobTitle) setJobTitle(res.jobTitle);
-    if (res.email) setEmail(res.email);
-    if (res.phone) setPhone(res.phone);
-    if (res.location) setLocation(res.location);
-    if (typeof res.linkedIn === 'string') setLinkedIn(res.linkedIn);
-    if (typeof res.github === 'string') setGithub(res.github);
-    if (res.summary) setSummary(res.summary);
-    if (Array.isArray(res.skills) && res.skills.length > 0) setSkills(res.skills);
-    if (Array.isArray(res.experiences) && res.experiences.length > 0) setExperiences(res.experiences);
-    if (Array.isArray(res.educations) && res.educations.length > 0) setEducations(res.educations);
-    if (Array.isArray(res.projects) && res.projects.length > 0) setProjects(res.projects);
+    const f = resumeToFields(res);
+    setFullName(f.fullName);
+    setJobTitle(f.jobTitle);
+    setEmail(f.email);
+    setPhone(f.phone);
+    setLocation(f.location);
+    setLinkedIn(f.linkedIn);
+    setGithub(f.github);
+    setSummary(f.summary);
+    setSkills(f.skills);
+    setExperiences(f.experiences);
+    setEducations(f.educations);
+    setProjects(f.projects);
 
     setLastImportedFile(sourceName);
     if (typeof window !== 'undefined') {
