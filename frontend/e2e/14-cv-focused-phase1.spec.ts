@@ -527,4 +527,29 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     expect(body.photo).toMatch(/^data:image\/jpeg;base64,/);
     expect((await download).suggestedFilename()).toMatch(/\.pdf$/i);
   });
+
+  test('13. A switched layout stays put: the link template is not re-applied on reload', async ({ page }) => {
+    await page.goto('/builder');
+    await page.evaluate(() => {
+      localStorage.setItem('tr_auth_user', JSON.stringify({ username: 'alex_global', full_name: 'Alex Global' }));
+      localStorage.removeItem('tr_builder_look');
+    });
+    // Arrive from a template link (e.g. the Templates page "Use this template")
+    await page.goto('/builder?template=wealth_manager_hnw');
+    const canvas = page.locator('#resume-canvas');
+    await expect(canvas).toHaveAttribute('data-template', 'wealth_manager_hnw');
+    await expect(page).not.toHaveURL(/template=/); // the link parameter is dropped from the address bar
+
+    // Switch to another layout, then reload: it must stay on the layout you switched to
+    await page.getByRole('button', { name: 'Executive', exact: true }).first().click();
+    await expect(canvas).toHaveAttribute('data-layout', 'split_header');
+    await page.reload();
+    await expect(canvas).toHaveAttribute('data-layout', 'split_header');
+    await expect(page.getByTestId('active-template-name')).toHaveText(/Executive/);
+
+    // The left-hand cards agree with the preview bar about which layout is active
+    await page.getByRole('button', { name: 'Modern Tech', exact: true }).first().click();
+    await expect(canvas).toHaveAttribute('data-layout', 'modern_accent');
+    await expect(page.locator('#builder-editor-panel').getByText('Active', { exact: true })).toHaveCount(1);
+  });
 });

@@ -54,7 +54,7 @@ const BUILDER_TEMPLATES: Array<{
 }> = [
   {
     id: 'tech_two_column',
-    name: 'Modern Tech (2-Column)',
+    name: 'Modern Tech (Accent Headings)',
     shortName: 'Modern Tech',
     tag: '1-Column Accent',
     atsScore: '100% ATS',
@@ -179,6 +179,36 @@ const resizePhotoFile = (file: File, size = 320): Promise<string> =>
     };
     img.src = url;
   });
+
+/** The template / layout / font / colour you chose, remembered in this browser so a reload keeps it. */
+const LOOK_KEY = 'tr_builder_look';
+interface SavedLook {
+  backendId: string;
+  layout: PreviewLayout;
+  label: string | null;
+  template: BuilderTemplateId;
+  font: 'sans' | 'serif' | 'mono';
+  accent: string;
+}
+const LAYOUTS: PreviewLayout[] = ['single_column', 'split_header', 'modern_accent', 'compact_dense', 'sidebar_photo', 'sidebar_light', 'photo_banner'];
+const readSavedLook = (): SavedLook | null => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LOOK_KEY) || 'null');
+    if (
+      raw &&
+      typeof raw.backendId === 'string' &&
+      LAYOUTS.includes(raw.layout) &&
+      ['sans', 'serif', 'mono'].includes(raw.font) &&
+      /^#[0-9a-fA-F]{6}$/.test(raw.accent) &&
+      Object.prototype.hasOwnProperty.call(QUICK_LAYOUTS, raw.template)
+    ) {
+      return { ...raw, label: typeof raw.label === 'string' ? raw.label : null };
+    }
+  } catch {
+    // Missing or corrupt: fall back to the defaults.
+  }
+  return null;
+};
 
 /** A CV the user imported. Kept in the browser so resetting to the demo never destroys it. */
 interface SavedCv {
@@ -456,6 +486,25 @@ export default function ResumeBuilderPage() {
     else if (fontFamily === 'serif') setFontFamily('sans');
   };
 
+  // Remember the chosen look. Restored once on load, then saved on every change.
+  const [lookReady, setLookReady] = useState<boolean>(false);
+  useEffect(() => {
+    if (!lookReady) return;
+    try {
+      const look: SavedLook = {
+        backendId: activeBackendTemplateId,
+        layout: activeLayout,
+        label: activeTemplateLabel,
+        template,
+        font: fontFamily,
+        accent: accentColor,
+      };
+      localStorage.setItem(LOOK_KEY, JSON.stringify(look));
+    } catch {
+      // Storage unavailable: the choice is simply not remembered.
+    }
+  }, [lookReady, activeBackendTemplateId, activeLayout, activeTemplateLabel, template, fontFamily, accentColor]);
+
   const [savedCvs, setSavedCvs] = useState<SavedCv[]>([]);
   const [activeCvId, setActiveCvId] = useState<string | null>(null);
 
@@ -560,11 +609,29 @@ export default function ResumeBuilderPage() {
         ) {
           setActiveTab(tabParam);
         }
+        // Your last choice comes back after a reload; an explicit ?template= link (below) overrides it.
+        const savedLook = authed ? readSavedLook() : null;
+        if (savedLook) {
+          setActiveBackendTemplateId(savedLook.backendId);
+          setActiveLayout(savedLook.layout);
+          setActiveTemplateLabel(savedLook.label);
+          setTemplate(savedLook.template);
+          setFontFamily(savedLook.font);
+          setAccentColor(savedLook.accent);
+        }
         const accentParam = params.get('accent');
         if (accentParam && /^#[0-9a-fA-F]{3,8}$/.test(accentParam)) {
           setAccentColor(accentParam);
         }
         const tplParam = params.get('template');
+        // Drop the link parameters from the address bar. Otherwise a reload or "back" re-applies the template
+        // from the link and undoes whatever you switched to since.
+        if (tplParam || accentParam) {
+          const url = new URL(window.location.href);
+          url.searchParams.delete('template');
+          url.searchParams.delete('accent');
+          window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+        }
         if (tplParam) {
           // Ids used by older links (bookmarks, earlier landing / templates pages) map to the closest quick layout.
           const LEGACY_IDS: Record<string, BuilderTemplateId> = {
@@ -606,6 +673,7 @@ export default function ResumeBuilderPage() {
           }
         }
       }
+      setLookReady(true);
     };
     init();
   }, []);
@@ -2411,7 +2479,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {BUILDER_TEMPLATES.map((tpl) => {
-                const isSelected = template === tpl.id;
+                const isSelected = !activeTemplateLabel && template === tpl.id;
                 return (
                   <button
                     key={tpl.id}
