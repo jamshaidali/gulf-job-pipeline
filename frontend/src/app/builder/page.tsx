@@ -1203,10 +1203,15 @@ export default function ResumeBuilderPage() {
   };
 
   const handleGenerateSummary = () => {
-    setSummary(
-      `Results-oriented ${jobTitle} with proven expertise in ${skills.slice(0, 4).join(', ')}. Demonstrated history architecting scalable platforms, slashing operational latency, and leading engineering squads to execute mission-critical deliverables across high-scale enterprise products.`
-    );
-    showNotice('AI Professional Summary generated!');
+    // Built only from what the user has entered; no invented achievements.
+    const title = jobTitle.trim() || 'Professional';
+    const top = skills.slice(0, 4).filter(Boolean);
+    const latest = experiences.find((e) => e.position?.trim() && e.company?.trim());
+    const parts = [`${title}${top.length ? ` with experience in ${top.join(', ')}` : ''}.`];
+    if (latest) parts.push(`Most recently ${latest.position.trim()} at ${latest.company.trim()}.`);
+    parts.push('Add one sentence with your biggest real achievement and a number.');
+    setSummary(parts.join(' '));
+    showNotice('Draft summary created from your details. Add your own achievement.');
   };
 
   const handleAddSkill = (skill: string) => {

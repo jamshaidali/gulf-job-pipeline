@@ -386,7 +386,7 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     // 5. Test Summary Tab & "AI Polish Summary" button
     await editorPanel.getByRole('button', { name: 'Summary', exact: true }).click();
     await editorPanel.getByRole('button', { name: /AI Polish Summary/i }).click();
-    await expect(canvas).toContainText(/Results-oriented/i);
+    await expect(canvas).toContainText(/with experience in/i);
 
     // 6. Test Experience Tab: "+ Add Role" & "AI Quantify (X-Y-Z)" button
     await editorPanel.getByRole('button', { name: 'Experience', exact: true }).click();
