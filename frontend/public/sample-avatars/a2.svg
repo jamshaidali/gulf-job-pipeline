@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="400" height="400" role="img" aria-label="Sample profile photo">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fda4af"/><stop offset="1" stop-color="#be123c"/></linearGradient></defs>
+<rect width="200" height="200" fill="url(#g)"/>
+<circle cx="100" cy="78" r="46" fill="#111827"/>
+<path d="M30 200 C34 150 66 138 100 138 C134 138 166 150 170 200 Z" fill="#f8fafc"/>
+<rect x="88" y="112" width="24" height="32" rx="10" fill="#8D5524"/>
+<ellipse cx="100" cy="86" rx="34" ry="40" fill="#8D5524"/>
+
+<circle cx="88" cy="90" r="3.2" fill="#1f2937"/><circle cx="112" cy="90" r="3.2" fill="#1f2937"/>
+<path d="M90 106 Q100 114 110 106" fill="none" stroke="#7c2d12" stroke-width="3" stroke-linecap="round"/>
+</svg>

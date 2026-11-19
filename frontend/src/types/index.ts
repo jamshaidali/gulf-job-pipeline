@@ -134,6 +134,9 @@ export interface CVTemplate {
   description: string;
   font_family: string;
   colors: CVTemplateColors;
+  /** Photo / sidebar layouts: striking, but some strict ATS software reads them poorly. */
+  designer?: boolean;
+  ats_note?: string;
 }
 
 export interface CVTemplatesResponse {

@@ -1235,6 +1235,8 @@ class CustomCVExportRequest(BaseModel):
     # Optional look overrides so the file matches the builder preview exactly.
     accent_color: Optional[str] = Field(default=None, pattern=r"^#[0-9A-Fa-f]{6}$")
     font: Optional[str] = Field(default=None, pattern=r"^(sans|serif|mono)$")
+    # Optional profile photo (data URL) for the designer layouts; validated and re-encoded server-side.
+    photo: Optional[str] = Field(default=None, max_length=1_500_000)
 
 
 @app.post("/api/ats/export-cv")
@@ -1279,6 +1281,7 @@ async def export_custom_ats_cv(
             parsed_resume=parsed,
             accent_color=payload.accent_color,
             font=payload.font,
+            photo=payload.photo,
         )
         filename = f"{cand_slug}_{tmpl_slug}.docx"
         return Response(
@@ -1299,6 +1302,7 @@ async def export_custom_ats_cv(
             parsed_resume=parsed,
             accent_color=payload.accent_color,
             font=payload.font,
+            photo=payload.photo,
         )
         filename = f"{cand_slug}_{tmpl_slug}.pdf"
         return Response(

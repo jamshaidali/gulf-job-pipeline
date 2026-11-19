@@ -93,12 +93,11 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Plain facts about what every resume built here is (each is verified by the exporter's tests).
+  // Plain facts about what you get (each is verified by the exporter's tests).
   const resumeFacts = [
     { icon: Layers, label: '105 templates', detail: 'real layouts, not mock-ups' },
-    { icon: FileText, label: 'Single-column layout', detail: 'reads cleanly top to bottom' },
-    { icon: ShieldCheck, label: 'Standard section headings', detail: 'Summary, Skills, Experience, Education' },
-    { icon: CheckCircle2, label: 'Real, selectable text', detail: 'no images or text boxes' },
+    { icon: ShieldCheck, label: 'ATS-safe single-column styles', detail: 'standard headings, real selectable text' },
+    { icon: Palette, label: 'Designer styles with a photo', detail: 'colored sidebars and banners to share directly' },
     { icon: Download, label: 'PDF and Word export', detail: 'what you see is what you download' },
   ];
 
@@ -397,9 +396,9 @@ export default function HomePage() {
         {/* WHAT EVERY RESUME INCLUDES (plain facts, no borrowed logos or invented stats) */}
         <section className="py-10 bg-white border-b border-slate-200/70">
           <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-slate-500 mb-6">
-            Every resume you build here
+            What you get
           </p>
-          <ul className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-6 gap-y-5">
+          <ul className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5">
             {resumeFacts.map(({ icon: Icon, label, detail }) => (
               <li key={label} className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
@@ -452,7 +451,7 @@ export default function HomePage() {
                 <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center">
                   <Columns className="w-5 h-5" />
                 </div>
-                <h4 className="text-xs font-bold text-slate-800">Single-column layouts that flow cleanly onto multiple pages</h4>
+                <h4 className="text-xs font-bold text-slate-800">ATS-safe single-column styles, plus designer layouts with photos and sidebars</h4>
               </div>
             </div>
 

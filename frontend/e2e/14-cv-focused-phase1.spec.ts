@@ -484,4 +484,47 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     await expect(canvas).toHaveAttribute('data-template', expectedId!);
     await expect(canvas).toHaveAttribute('data-layout', expectedLayout!);
   });
+
+  test('12. Designer templates: listed with a clear label, applied in the builder, and the uploaded photo reaches the preview and the export', async ({ page }) => {
+    // Templates page: the Designer filter lists photo / sidebar layouts, labelled honestly
+    await page.goto('/templates');
+    await page.getByRole('button', { name: 'Designer: photo & sidebar' }).click();
+    const thumbs = page.getByTestId('template-thumbnail');
+    await expect(thumbs.first()).toBeVisible();
+    expect(await thumbs.count()).toBeGreaterThan(20);
+    await expect(thumbs.first().locator('img').first()).toHaveAttribute('src', /sample-avatars/);
+    await expect(page.getByText('Not for strict ATS').first()).toBeVisible();
+    await page.getByRole('button', { name: 'ATS-safe: single column' }).click();
+    await expect(page.getByText('Not for strict ATS')).toHaveCount(0);
+
+    // Builder (signed in) opens the designer template with its sidebar layout
+    await page.evaluate(() => {
+      localStorage.setItem('tr_auth_user', JSON.stringify({ username: 'alex_global', full_name: 'Alex Global' }));
+    });
+    await page.goto('/builder?template=ui_ux_product_designer');
+    const canvas = page.locator('#resume-canvas');
+    await expect(canvas).toHaveAttribute('data-layout', 'sidebar_photo');
+    await expect(page.getByText(/Designer layout with a photo or sidebar/i).first()).toBeVisible();
+    await expect(canvas.locator('img')).toHaveCount(0);
+
+    // Upload a photo: it appears in the preview...
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEklEQVR4nGP8z8Dwn4EIwDiqEQBo3gXzQ2bpTwAAAABJRU5ErkJggg==',
+      'base64'
+    );
+    await page.getByRole('button', { name: 'Contact', exact: true }).click();
+    await page.getByTestId('photo-upload-input').setInputFiles({ name: 'me.png', mimeType: 'image/png', buffer: png });
+    await expect(canvas.locator('img')).toHaveCount(1);
+    await expect(canvas.locator('img')).toHaveAttribute('src', /^data:image\/jpeg;base64,/);
+
+    // ...and is sent with the download (and the server returns a real PDF)
+    const exportRequest = page.waitForRequest((r) => r.url().includes('/api/ats/export-cv'));
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: /Download PDF/i }).click();
+    const req = await exportRequest;
+    const body = JSON.parse(req.postData() || '{}');
+    expect(body.template_id).toBe('ui_ux_product_designer');
+    expect(body.photo).toMatch(/^data:image\/jpeg;base64,/);
+    expect((await download).suggestedFilename()).toMatch(/\.pdf$/i);
+  });
 });

@@ -8,9 +8,13 @@ import Footer from '@/components/Footer';
 import TemplateAuthModal from '@/components/TemplateAuthModal';
 import TemplateThumbnail from '@/components/builder/TemplateThumbnail';
 import { fetchCurrentUser, fetchCVTemplates } from '@/lib/api';
-import { layoutLabel } from '@/lib/templatePreview';
+import { DESIGNER_NOTE, layoutLabel } from '@/lib/templatePreview';
 import type { CVTemplate } from '@/types';
 import { Sparkles, ArrowRight, ShieldCheck, Search, Eye, Lock, Loader2, X } from 'lucide-react';
+
+// Extra filters that cut across the categories: designer layouts (photo & sidebar) vs. ATS-safe single-column ones.
+const FILTER_DESIGNER = 'Designer: photo & sidebar';
+const FILTER_ATS_SAFE = 'ATS-safe: single column';
 
 const FALLBACK_CATEGORIES = [
   'All',
@@ -92,9 +96,15 @@ export default function TemplatesPage() {
     }
   };
 
+  const filterPills = ['All', FILTER_DESIGNER, FILTER_ATS_SAFE, ...categories.filter((c) => c !== 'All')];
+
   const query = searchQuery.toLowerCase().trim();
   const filteredTemplates = templates.filter((item) => {
-    const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
+    const matchesCategory =
+      selectedCategory === 'All' ||
+      (selectedCategory === FILTER_DESIGNER && Boolean(item.designer)) ||
+      (selectedCategory === FILTER_ATS_SAFE && !item.designer) ||
+      item.category === selectedCategory;
     const matchesSearch =
       !query ||
       item.name.toLowerCase().includes(query) ||
@@ -122,7 +132,7 @@ export default function TemplatesPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-900 text-xs font-bold mb-4">
               <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
-              <span>Single column &bull; Standard headings &bull; Real, selectable text</span>
+              <span>ATS-safe single-column styles &bull; Designer styles with photos</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl font-black text-slate-950 tracking-tight leading-tight">
@@ -134,7 +144,8 @@ export default function TemplatesPage() {
 
             <p className="mt-4 text-slate-600 text-sm sm:text-base leading-relaxed">
               Every preview below is the real template, filled with sample content. Pick one, open it in the builder, and
-              your own details flow into the same layout you download.
+              your own details flow into the same layout you download. Choose an ATS-safe single-column style for online
+              applications, or a designer style with a photo and sidebar to share directly.
             </p>
 
             {/* Search Bar */}
@@ -151,7 +162,7 @@ export default function TemplatesPage() {
 
             {/* Category Filter Pills */}
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-              {categories.map((cat) => (
+              {filterPills.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
@@ -248,6 +259,16 @@ export default function TemplatesPage() {
                         <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold">
                           {fontLabel(template.font_family)}
                         </span>
+                        {template.designer && (
+                          <>
+                            <span className="px-2 py-0.5 rounded-full bg-slate-900 text-white text-[11px] font-semibold">
+                              Designer
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 text-[11px] font-semibold">
+                              Not for strict ATS
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
 
@@ -292,9 +313,15 @@ export default function TemplatesPage() {
                     <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
                       {fontLabel(previewTemplate.font_family)}
                     </span>
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold">
-                      Single column, real text
-                    </span>
+                    {previewTemplate.designer ? (
+                      <span className="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 text-xs font-semibold">
+                        Designer layout
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold">
+                        Single column, real text
+                      </span>
+                    )}
                   </div>
                 </div>
                 <button
@@ -318,6 +345,9 @@ export default function TemplatesPage() {
                 <p className="text-center text-xs text-slate-500 mt-3">
                   Sample content shown. Your own details fill this exact layout in the builder.
                 </p>
+                {previewTemplate.designer && (
+                  <p className="text-center text-xs text-amber-800 font-semibold mt-2 max-w-md mx-auto">{DESIGNER_NOTE}</p>
+                )}
               </div>
 
               <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 px-5 sm:px-7 py-4 border-t border-slate-200 bg-white">

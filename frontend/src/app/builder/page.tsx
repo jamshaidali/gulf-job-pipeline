@@ -9,7 +9,7 @@ import TemplateGalleryModal from '@/components/dashboard/TemplateGalleryModal';
 import { CVTemplate } from '@/types';
 import { fetchCurrentUser, fetchCVTemplates, importCvToBuilder, exportCustomAtsCv, ImportedStructuredResume } from '@/lib/api';
 import ResumePreview, { PreviewLayout } from '@/components/builder/ResumePreview';
-import { asPreviewLayout, readableAccent } from '@/lib/templatePreview';
+import { asPreviewLayout, DESIGNER_NOTE, isDesignerLayout, readableAccent } from '@/lib/templatePreview';
 import { 
   Sparkles, 
   Download, 
@@ -140,6 +140,45 @@ const quickIdFor = (layout: string, fontFamily: string): BuilderTemplateId => {
   if (layout === 'modern_accent') return 'tech_two_column';
   return fontFamily === 'Times-Roman' ? 'classic_serif' : 'minimalist';
 };
+
+const PHOTO_KEY = 'tr_builder_photo';
+const MAX_PHOTO_FILE_BYTES = 8 * 1024 * 1024;
+
+/** Centre-crop an image file to a square and downscale it to a small JPEG data URL (a few tens of KB). */
+const resizePhotoFile = (file: File, size = 320): Promise<string> =>
+  new Promise((resolve, reject) => {
+    if (!/^image\/(png|jpe?g|webp)$/i.test(file.type)) {
+      reject(new Error('Please choose a PNG, JPG or WebP image.'));
+      return;
+    }
+    if (file.size > MAX_PHOTO_FILE_BYTES) {
+      reject(new Error('That image is larger than 8 MB. Please choose a smaller one.'));
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    const img = new window.Image();
+    img.onload = () => {
+      try {
+        const side = Math.min(img.width, img.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('canvas');
+        ctx.drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      } catch {
+        reject(new Error('We could not read that image. Please try another one.'));
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('We could not read that image. Please try another one.'));
+    };
+    img.src = url;
+  });
 
 /** A CV the user imported. Kept in the browser so resetting to the demo never destroys it. */
 interface SavedCv {
@@ -358,6 +397,42 @@ export default function ResumeBuilderPage() {
   const [activeBackendTemplateId, setActiveBackendTemplateId] = useState<string>(QUICK_LAYOUTS.tech_two_column.backendId);
   const [activeLayout, setActiveLayout] = useState<PreviewLayout>('modern_accent');
   const [activeTemplateLabel, setActiveTemplateLabel] = useState<string | null>(null);
+
+  // Optional profile photo for the designer layouts (kept in this browser only, until you download).
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(PHOTO_KEY);
+      if (saved && saved.startsWith('data:image/')) setPhoto(saved);
+    } catch {
+      // Storage unavailable: the photo simply is not remembered.
+    }
+  }, []);
+  const handlePhotoFile = async (file: File | undefined) => {
+    if (!file) return;
+    setPhotoError(null);
+    try {
+      const dataUrl = await resizePhotoFile(file);
+      setPhoto(dataUrl);
+      try {
+        localStorage.setItem(PHOTO_KEY, dataUrl);
+      } catch {
+        // Too large for storage: still used for this session.
+      }
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : 'We could not use that image.');
+    }
+  };
+  const removePhoto = () => {
+    setPhoto(null);
+    setPhotoError(null);
+    try {
+      localStorage.removeItem(PHOTO_KEY);
+    } catch {
+      // ignore
+    }
+  };
 
   /** Use a catalog template (from the gallery or ?template=): layout, font and colour follow it. */
   const applyBackendTemplate = (tmpl: CVTemplate) => {
@@ -1008,6 +1083,7 @@ export default function ResumeBuilderPage() {
         template_id: resolvedTemplateId,
         // What you see is what you download: the active template's layout plus your colour and font.
         accent_color: readableAccent(accentColor),
+        photo: isDesignerLayout(activeLayout) && photo ? photo : undefined,
         font: fontFamily,
         job_title: jobTitle,
         company: atsScanContext?.targetCompany || '',
@@ -1689,6 +1765,53 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
           {/* TAB 1: Contact Information */}
           {activeTab === 'basics' && (
             <div className="space-y-4 text-xs">
+              {/* Profile photo (used by the designer layouts with a photo) */}
+              <div className="flex items-center gap-4 p-3 rounded-2xl border border-slate-200 bg-slate-50/70">
+                <div className="w-16 h-16 rounded-full overflow-hidden border border-slate-300 bg-white flex items-center justify-center shrink-0">
+                  {photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={photo} alt="Your profile photo" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-7 h-7 text-slate-300" />
+                  )}
+                </div>
+                <div className="min-w-0 space-y-1.5">
+                  <div className="font-bold text-slate-800 text-sm">Profile photo (optional)</div>
+                  <p className="text-slate-600 leading-snug">
+                    Shown in the designer templates that include a photo. It is resized in your browser and only sent when you
+                    download.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-black text-white font-semibold cursor-pointer transition">
+                      {photo ? 'Change photo' : 'Upload photo'}
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        className="hidden"
+                        data-testid="photo-upload-input"
+                        onChange={(e) => {
+                          handlePhotoFile(e.target.files?.[0]);
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+                    {photo && (
+                      <button
+                        type="button"
+                        onClick={removePhoto}
+                        className="px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 font-semibold hover:bg-slate-100 transition cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  {photoError && <div className="text-rose-700 font-semibold">{photoError}</div>}
+                  {!photo && isDesignerLayout(activeLayout) && (
+                    <div className="text-amber-800 font-semibold">This template has room for a photo. Add one for the full look.</div>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <label className="font-bold text-slate-700 block mb-1">Full Name</label>
                 <input
@@ -2445,7 +2568,9 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
             </div>
             <div className="basis-full flex flex-wrap items-center justify-between gap-2">
               <p className="text-[13px] text-slate-500">
-                What you see is what you download: a single-column, ATS-safe PDF or Word file in this style.
+                {isDesignerLayout(activeLayout)
+                  ? DESIGNER_NOTE
+                  : 'What you see is what you download: a single-column, ATS-safe PDF or Word file in this style.'}
               </p>
               <button
                 type="button"
@@ -2474,6 +2599,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
           >
             <ResumePreview
               layout={activeLayout}
+              photo={photo}
               centered={activeLayout === 'single_column' && fontFamily === 'serif'}
               accent={accentColor}
               data={{ fullName, jobTitle, email, phone, location, linkedIn, github, summary, skills, experiences, educations, projects }}

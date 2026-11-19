@@ -232,6 +232,8 @@ export async function exportCustomAtsCv(payload: {
   /** Optional look overrides so the file matches the builder preview. */
   accent_color?: string;
   font?: 'sans' | 'serif' | 'mono';
+  /** Profile photo (data URL) for the designer layouts. */
+  photo?: string;
 }): Promise<void> {
   const res = await fetch('/api/ats/export-cv', {
     method: 'POST',

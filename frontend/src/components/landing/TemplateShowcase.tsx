@@ -8,22 +8,40 @@ import { layoutLabel } from '@/lib/templatePreview';
 import type { CVTemplate } from '@/types';
 
 const VISIBLE = 3;
-const FEATURED = 8;
+const FEATURED = 9;
 
-/** One template per distinct look first (layout + font), then fill with the rest, so the carousel shows variety. */
+/** The looks we want to lead with, most eye-catching first. */
+const LOOK_ORDER = [
+  'sidebar_photo|Helvetica',
+  'photo_banner|Helvetica',
+  'sidebar_light|Helvetica',
+  'split_header|Helvetica',
+  'modern_accent|Helvetica',
+  'single_column|Times-Roman',
+  'sidebar_photo|Times-Roman',
+  'photo_banner|Times-Roman',
+  'single_column|Helvetica',
+  'compact_dense|Helvetica',
+];
+
+/** One template per distinct look first (designer styles leading), then fill with the rest. */
 const pickFeatured = (all: CVTemplate[]): CVTemplate[] => {
-  const seen = new Set<string>();
-  const distinct: CVTemplate[] = [];
+  const byLook = new Map<string, CVTemplate>();
   const rest: CVTemplate[] = [];
   for (const t of all) {
     const key = `${t.layout}|${t.font_family}`;
-    if (seen.has(key)) rest.push(t);
-    else {
-      seen.add(key);
-      distinct.push(t);
+    if (byLook.has(key)) rest.push(t);
+    else byLook.set(key, t);
+  }
+  const ordered: CVTemplate[] = [];
+  for (const key of LOOK_ORDER) {
+    const t = byLook.get(key);
+    if (t) {
+      ordered.push(t);
+      byLook.delete(key);
     }
   }
-  return [...distinct, ...rest].slice(0, FEATURED);
+  return [...ordered, ...byLook.values(), ...rest].slice(0, FEATURED);
 };
 
 /** Landing-page carousel of REAL catalog templates. Choosing one opens it in the builder. */
@@ -100,7 +118,7 @@ export default function TemplateShowcase({
               >
                 <div className="p-3 bg-slate-100 border-b border-slate-200">
                   <div
-                    className="rounded-md border border-slate-200 shadow-sm overflow-hidden"
+                    className="relative rounded-md border border-slate-200 shadow-sm overflow-hidden"
                     data-testid="showcase-thumbnail"
                     data-template={tpl.id}
                     data-layout={tpl.layout}
@@ -110,7 +128,14 @@ export default function TemplateShowcase({
                 </div>
                 <div className="p-4 flex-1 flex flex-col justify-between gap-3">
                   <div>
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">{tpl.category}</div>
+                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+                      <span>{tpl.category}</span>
+                      {tpl.designer && (
+                        <span className="px-1.5 py-0.5 rounded-md bg-slate-900 text-white text-[10px] normal-case tracking-normal">
+                          Designer
+                        </span>
+                      )}
+                    </div>
                     <h3 className="text-sm font-extrabold text-slate-900 mt-0.5">{tpl.name}</h3>
                     <p className="text-xs text-slate-600 mt-0.5">{layoutLabel(tpl.layout)}</p>
                   </div>

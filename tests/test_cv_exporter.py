@@ -13,7 +13,7 @@ from src.cv_exporter import (
     generate_tailored_pdf,
     readable_color,
 )
-from src.cv_templates import PALETTES, TEMPLATES_CATALOG
+from src.cv_templates import DESIGNER_LAYOUTS, PALETTES, TEMPLATES_CATALOG, list_templates
 
 STANDARD_HEADINGS = {"PROFESSIONAL SUMMARY", "SKILLS", "PROFESSIONAL EXPERIENCE", "PROJECTS", "EDUCATION"}
 
@@ -60,7 +60,10 @@ def test_catalog_is_consistent():
     for t in TEMPLATES_CATALOG:
         assert t["palette"] in PALETTES, t["id"]
         assert t["font_family"] in ("Helvetica", "Times-Roman"), t["id"]
-        assert t["layout"] in ("single_column", "split_header", "modern_accent", "compact_dense"), t["id"]
+        assert t["layout"] in (
+            "single_column", "split_header", "modern_accent", "compact_dense",
+            "sidebar_photo", "sidebar_light", "photo_banner",
+        ), t["id"]
 
 
 @pytest.mark.parametrize("template_id", [t["id"] for t in TEMPLATES_CATALOG])
@@ -79,6 +82,7 @@ def test_pdf_text_is_ats_parseable_for_every_layout_and_font():
             continue
         seen.add(key)
         text, _sizes, pages = _text_and_sizes(_pdf(t["id"]))
+        designer = t["layout"] in DESIGNER_LAYOUTS
 
         assert "(cid:" not in text, key
         assert "•" in text or "•" in text, f"bullet glyph missing from extracted text for {key}"
@@ -86,7 +90,10 @@ def test_pdf_text_is_ats_parseable_for_every_layout_and_font():
             assert heading in text, (key, heading)
         assert "José Müller-Åkesson" in text, key           # accents survive
         assert "R&D for <payments> & \"fintech\"" in text, key  # markup characters are escaped, not parsed
-        assert text.index("PROFESSIONAL SUMMARY") < text.index("SKILLS") < text.index("PROFESSIONAL EXPERIENCE") < text.index("EDUCATION")
+        if not designer:
+            # Standard templates read top to bottom in the order ATS parsers expect. Designer sidebars put
+            # skills / education beside the main column, which is exactly why they are labelled "Designer".
+            assert text.index("PROFESSIONAL SUMMARY") < text.index("SKILLS") < text.index("PROFESSIONAL EXPERIENCE") < text.index("EDUCATION")
         assert pages == 1
 
 
@@ -174,3 +181,78 @@ def test_accent_and_font_overrides_match_what_the_builder_preview_shows():
     docx_bytes = generate_tailored_docx(JOB, PROFILE, {}, template_id="abu_dhabi_executive", parsed_resume=RESUME,
                                         accent_color="#059669", font="mono")
     assert docx_bytes.startswith(b"PK")
+
+
+def _photo_data_url(size=(500, 400)):
+    import base64
+    from PIL import Image, ImageDraw
+
+    im = Image.new("RGB", size, (120, 160, 200))
+    d = ImageDraw.Draw(im)
+    d.ellipse((170, 60, 330, 220), fill=(235, 200, 170))
+    d.ellipse((90, 230, 410, 520), fill=(60, 70, 110))
+    buf = io.BytesIO()
+    im.save(buf, "JPEG")
+    return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
+def test_catalog_marks_designer_templates_honestly():
+    listed = list_templates()
+    designers = [t for t in listed if t["designer"]]
+    assert 30 <= len(designers) < len(listed)
+    for t in designers:
+        assert t["layout"] in DESIGNER_LAYOUTS and t["ats_note"] and "ATS" in t["ats_note"]
+        assert "% ATS" not in t["ats_score"]          # no invented ATS percentage on designer layouts
+    for t in listed:
+        if not t["designer"]:
+            assert t["ats_note"] == ""
+    # the Minimalist ATS category never gets a designer layout
+    assert all(not t["designer"] for t in listed if t["category"] == "Minimalist ATS")
+
+
+@pytest.mark.parametrize("template_id", ["ui_ux_product_designer", "frontend_ui_clean", "tech_lead_manager"])
+def test_designer_layouts_embed_the_photo_and_keep_all_content(template_id):
+    photo = _photo_data_url()
+    pdf = generate_tailored_pdf(JOB, PROFILE, {}, template_id=template_id, parsed_resume=RESUME, photo=photo)
+    without = generate_tailored_pdf(JOB, PROFILE, {}, template_id=template_id, parsed_resume=RESUME)
+    assert len(pdf) > len(without) + 2000                      # the circular photo is really embedded
+    reader = PdfReader(io.BytesIO(pdf))
+    assert len(reader.pages) == 1 and len(reader.pages[0].images) == 1
+    text = reader.pages[0].extract_text()
+    for needle in ("José Müller-Åkesson", "jose@example.com", "Python", "Acme & Sons", "BSc Computer Science", "Ledger"):
+        assert needle in text, (template_id, needle)
+
+    from docx import Document
+
+    doc = Document(io.BytesIO(generate_tailored_docx(JOB, PROFILE, {}, template_id=template_id, parsed_resume=RESUME, photo=photo)))
+    assert len(doc.tables) == 1
+    assert len(doc.inline_shapes) == 1                          # the photo
+    all_text = "\n".join(p.text for c in doc.tables[0].rows[0].cells for p in c.paragraphs) + "\n".join(p.text for p in doc.paragraphs)
+    for needle in ("José Müller-Åkesson", "jose@example.com", "Python", "Acme & Sons", "BSc Computer Science"):
+        assert needle in all_text, (template_id, needle)
+
+
+def test_bad_or_oversized_photos_are_ignored_not_fatal():
+    from src.cv_exporter import prepare_photo
+
+    assert prepare_photo(None) is None
+    assert prepare_photo("not a data url") is None
+    assert prepare_photo("data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=") is None            # SVG is not accepted
+    assert prepare_photo("data:image/png;base64," + "A" * 100) is None                     # not an image
+    assert prepare_photo("data:image/png;base64," + "A" * 2_000_000) is None               # too large
+    ok = prepare_photo(_photo_data_url())
+    assert ok and ok.startswith(b"\x89PNG")
+    # a broken photo must not break the export
+    pdf = generate_tailored_pdf(JOB, PROFILE, {}, template_id="ui_ux_product_designer", parsed_resume=RESUME, photo="data:image/png;base64,AAAA")
+    assert pdf.startswith(b"%PDF")
+
+
+def test_designer_long_resume_flows_to_a_second_page_with_the_sidebar_kept():
+    long_resume = {**RESUME, "experiences": [
+        {"id": str(i), "company": f"Company {i}", "position": "Engineer", "location": "Berlin",
+         "startDate": "2019", "endDate": "2021", "bullets": ["Delivered measurable impact across the platform."] * 6}
+        for i in range(8)]}
+    pdf = generate_tailored_pdf(JOB, PROFILE, {}, template_id="ui_ux_product_designer", parsed_resume=long_resume, photo=_photo_data_url())
+    reader = PdfReader(io.BytesIO(pdf))
+    assert len(reader.pages) >= 2
+    assert "José Müller-Åkesson - Page 2" in reader.pages[1].extract_text()

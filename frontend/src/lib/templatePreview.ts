@@ -3,7 +3,28 @@ import type { PreviewData, PreviewLayout } from '@/components/builder/ResumePrev
 
 /** Map a catalog layout name to the preview layout (unknown layouts fall back to the classic single column). */
 export const asPreviewLayout = (layout: string): PreviewLayout =>
-  layout === 'split_header' || layout === 'modern_accent' || layout === 'compact_dense' ? layout : 'single_column';
+  layout === 'split_header' ||
+  layout === 'modern_accent' ||
+  layout === 'compact_dense' ||
+  layout === 'sidebar_photo' ||
+  layout === 'sidebar_light' ||
+  layout === 'photo_banner'
+    ? layout
+    : 'single_column';
+
+export const isDesignerLayout = (layout: string): boolean =>
+  layout === 'sidebar_photo' || layout === 'sidebar_light' || layout === 'photo_banner';
+
+export const DESIGNER_NOTE =
+  'Designer layout with a photo or sidebar. Great for sharing directly with people; for online applications that run through strict ATS software, choose a single-column template.';
+
+/** Illustrated placeholder portraits (not real people) used to show what the photo layouts look like. */
+const SAMPLE_AVATARS = ['/sample-avatars/a1.svg', '/sample-avatars/a2.svg', '/sample-avatars/a3.svg', '/sample-avatars/a4.svg'];
+export const samplePhotoFor = (id: string): string => {
+  let h = 0;
+  for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return SAMPLE_AVATARS[h % SAMPLE_AVATARS.length];
+};
 
 const contrastOnWhite = (hex: string): number => {
   const chan = (v: number) => {
@@ -43,6 +64,9 @@ export const layoutLabel = (layout: string): string =>
     modern_accent: 'Accent headings',
     compact_dense: 'Compact, fits more',
     single_column: 'Classic single column',
+    sidebar_photo: 'Photo + dark sidebar',
+    sidebar_light: 'Photo + light sidebar',
+    photo_banner: 'Photo banner',
   })[layout] || 'Classic single column';
 
 /** Realistic, full-page sample content used to show what a template looks like. */

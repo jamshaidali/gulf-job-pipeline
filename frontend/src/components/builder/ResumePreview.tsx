@@ -12,7 +12,15 @@ import React from 'react';
  * floor so text stays legible on phones.
  */
 
-export type PreviewLayout = 'single_column' | 'split_header' | 'modern_accent' | 'compact_dense';
+export type PreviewLayout =
+  | 'single_column'
+  | 'split_header'
+  | 'modern_accent'
+  | 'compact_dense'
+  // Designer layouts: a profile photo and/or a coloured sidebar (see DESIGNER_LAYOUTS in the exporter)
+  | 'sidebar_photo'
+  | 'sidebar_light'
+  | 'photo_banner';
 
 interface PreviewExperience {
   id: string;
@@ -76,6 +84,7 @@ export default function ResumePreview({
   data,
   fit = false,
   centered = false,
+  photo = null,
 }: {
   layout: PreviewLayout;
   accent: string;
@@ -84,11 +93,15 @@ export default function ResumePreview({
   centered?: boolean;
   /** Thumbnail mode: keep exact page proportions at any width (text may become tiny). */
   fit?: boolean;
+  /** Profile photo (data URL or image path) for the designer layouts. */
+  photo?: string | null;
 }) {
   const pt = fit ? ptExact : ptReadable;
   const compact = layout === 'compact_dense';
   const modern = layout === 'modern_accent';
-  const banner = layout === 'split_header';
+  const photoBanner = layout === 'photo_banner';
+  const banner = layout === 'split_header' || photoBanner;
+  const sidebar = layout === 'sidebar_photo' || layout === 'sidebar_light';
 
   const body = compact ? 10 : 10.5;
   const lineHeight = compact ? 1.24 : 1.314;
@@ -171,53 +184,8 @@ export default function ResumePreview({
     </div>
   );
 
-  return (
-    <div
-      data-testid="resume-preview"
-      data-layout={layout}
-      style={{
-        padding: compact ? '6.47%' : '8.82%',
-        color: TEXT,
-        fontSize: pt(body),
-        lineHeight,
-        aspectRatio: '8.5 / 11',
-        overflowWrap: 'anywhere',
-      }}
-    >
-      {/* ---- Header ---- */}
-      {banner ? (
-        <div style={{ background: accent, color: '#fff', padding: `${pt(10)} ${pt(12)}`, marginBottom: pt(4) }}>
-          <div style={{ fontSize: pt(24), fontWeight: 700, lineHeight: 1.2 }}>
-            {name || <span style={{ opacity: 0.6 }}>Your Full Name</span>}
-          </div>
-          {headline && (
-            <div style={{ color: '#E2E8F0', fontSize: pt(12), fontWeight: 700, marginTop: pt(2) }}>{headline}</div>
-          )}
-          {contact.length > 0 && (
-            <div style={{ color: '#E2E8F0', fontSize: pt(10), marginTop: pt(2) }}>{contact.join(' | ')}</div>
-          )}
-        </div>
-      ) : (
-        <div
-          style={{
-            borderBottom: `${modern ? 1.6 : 1.1}px solid ${modern ? accent : RULE}`,
-            paddingBottom: pt(4),
-            textAlign: centered ? 'center' : 'left',
-          }}
-        >
-          <div style={{ color: accent, fontSize: pt(compact ? 20 : 24), fontWeight: 700, lineHeight: 1.2 }}>
-            {name || <span style={{ color: RULE }}>Your Full Name</span>}
-          </div>
-          {headline && (
-            <div style={{ color: accent, fontSize: pt(12), fontWeight: 700, marginTop: pt(2) }}>{headline}</div>
-          )}
-          {contact.length > 0 && (
-            <div style={{ color: MUTED, fontSize: pt(10), marginTop: pt(3) }}>{contact.join(' | ')}</div>
-          )}
-        </div>
-      )}
-
-      {/* ---- Sections, in the same order as the exported file ---- */}
+  const mainSections = (
+    <>
       {summary && (
         <section>
           {sectionHeading('Professional Summary')}
@@ -225,7 +193,7 @@ export default function ResumePreview({
         </section>
       )}
 
-      {skills.length > 0 && (
+      {!sidebar && skills.length > 0 && (
         <section>
           {sectionHeading('Skills')}
           <p>{skills.join(', ')}</p>
@@ -256,7 +224,7 @@ export default function ResumePreview({
         </section>
       )}
 
-      {educations.length > 0 && (
+      {!sidebar && educations.length > 0 && (
         <section>
           {sectionHeading('Education')}
           {educations.map((line, i) => (
@@ -266,6 +234,195 @@ export default function ResumePreview({
           ))}
         </section>
       )}
+    </>
+  );
+
+  // ---- Designer: coloured sidebar (photo, contact, skills, education) + main column ----
+  if (sidebar) {
+    const dark = layout === 'sidebar_photo';
+    const sideText = dark ? '#FFFFFF' : TEXT;
+    const sideMuted = dark ? '#E2E8F0' : MUTED;
+    const sideHead = dark ? '#FFFFFF' : accent;
+    const sideHeading = (title: string) => (
+      <h2
+        style={{
+          color: sideHead,
+          fontSize: pt(10.5),
+          fontWeight: 700,
+          lineHeight: 1.2,
+          textTransform: 'uppercase',
+          marginTop: pt(12),
+          marginBottom: pt(4),
+          paddingBottom: pt(2),
+          borderBottom: `1px solid ${dark ? '#FFFFFF' : accent}`,
+        }}
+      >
+        {title}
+      </h2>
+    );
+    const rawEducations = data.educations
+      .map((e) => ({
+        degree: clean(e.degree),
+        institution: clean(e.institution),
+        extra: [clean(e.year), clean(e.honors)].filter(Boolean).join(' | '),
+      }))
+      .filter((e) => e.degree || e.institution);
+
+    return (
+      <div
+        data-testid="resume-preview"
+        data-layout={layout}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '31.05% 1fr',
+          color: TEXT,
+          fontSize: pt(10.5),
+          lineHeight: 1.314,
+          aspectRatio: '8.5 / 11',
+          overflowWrap: 'anywhere',
+        }}
+      >
+        <aside
+          style={{
+            background: dark ? accent : tint(accent, 0.1),
+            color: sideText,
+            padding: `${pt(34)} ${pt(16)} ${pt(30)} ${pt(20)}`,
+            fontSize: pt(10),
+            lineHeight: 1.3,
+          }}
+        >
+          {photo && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={photo}
+              alt="Profile photo"
+              style={{
+                display: 'block',
+                width: pt(112),
+                height: pt(112),
+                borderRadius: '50%',
+                objectFit: 'cover',
+                margin: `0 auto ${pt(4)}`,
+              }}
+            />
+          )}
+          {contact.length > 0 && (
+            <section>
+              {sideHeading('Contact')}
+              {contact.map((c, i) => (
+                <div key={i} style={{ marginBottom: pt(2) }}>
+                  {c}
+                </div>
+              ))}
+            </section>
+          )}
+          {skills.length > 0 && (
+            <section>
+              {sideHeading('Skills')}
+              {skills.map((sk, i) => (
+                <div key={i} style={{ marginBottom: pt(2) }}>
+                  {sk}
+                </div>
+              ))}
+            </section>
+          )}
+          {rawEducations.length > 0 && (
+            <section>
+              {sideHeading('Education')}
+              {rawEducations.map((e, i) => (
+                <div key={i} style={{ marginBottom: pt(4) }}>
+                  {e.degree && <div style={{ fontWeight: 700 }}>{e.degree}</div>}
+                  {e.institution && <div>{e.institution}</div>}
+                  {e.extra && <div style={{ color: sideMuted }}>{e.extra}</div>}
+                </div>
+              ))}
+            </section>
+          )}
+        </aside>
+        <div style={{ padding: `${pt(38)} ${pt(34)} ${pt(44)} ${pt(26)}` }}>
+          <div style={{ borderBottom: `1.6px solid ${accent}`, paddingBottom: pt(4) }}>
+            <div style={{ color: accent, fontSize: pt(24), fontWeight: 700, lineHeight: 1.2 }}>
+              {name || <span style={{ color: RULE }}>Your Full Name</span>}
+            </div>
+            {headline && (
+              <div style={{ color: MUTED, fontSize: pt(12), fontWeight: 700, marginTop: pt(2) }}>{headline}</div>
+            )}
+          </div>
+          {mainSections}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      data-testid="resume-preview"
+      data-layout={layout}
+      style={{
+        padding: compact ? '6.47%' : '8.82%',
+        color: TEXT,
+        fontSize: pt(body),
+        lineHeight,
+        aspectRatio: '8.5 / 11',
+        overflowWrap: 'anywhere',
+      }}
+    >
+      {/* ---- Header ---- */}
+      {banner ? (
+        <div
+          style={{
+            background: accent,
+            color: '#fff',
+            padding: `${pt(photoBanner && photo ? 12 : 10)} ${pt(12)}`,
+            marginBottom: pt(4),
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: pt(12),
+          }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: pt(24), fontWeight: 700, lineHeight: 1.2 }}>
+              {name || <span style={{ opacity: 0.6 }}>Your Full Name</span>}
+            </div>
+            {headline && (
+              <div style={{ color: '#E2E8F0', fontSize: pt(12), fontWeight: 700, marginTop: pt(2) }}>{headline}</div>
+            )}
+            {contact.length > 0 && (
+              <div style={{ color: '#E2E8F0', fontSize: pt(10), marginTop: pt(2) }}>{contact.join(' | ')}</div>
+            )}
+          </div>
+          {photoBanner && photo && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={photo}
+              alt="Profile photo"
+              style={{ width: pt(84), height: pt(84), borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+            />
+          )}
+        </div>
+      ) : (
+        <div
+          style={{
+            borderBottom: `${modern ? 1.6 : 1.1}px solid ${modern ? accent : RULE}`,
+            paddingBottom: pt(4),
+            textAlign: centered ? 'center' : 'left',
+          }}
+        >
+          <div style={{ color: accent, fontSize: pt(compact ? 20 : 24), fontWeight: 700, lineHeight: 1.2 }}>
+            {name || <span style={{ color: RULE }}>Your Full Name</span>}
+          </div>
+          {headline && (
+            <div style={{ color: accent, fontSize: pt(12), fontWeight: 700, marginTop: pt(2) }}>{headline}</div>
+          )}
+          {contact.length > 0 && (
+            <div style={{ color: MUTED, fontSize: pt(10), marginTop: pt(3) }}>{contact.join(' | ')}</div>
+          )}
+        </div>
+      )}
+
+      {/* ---- Sections, in the same order as the exported file ---- */}
+      {mainSections}
     </div>
   );
 }

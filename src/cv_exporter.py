@@ -24,9 +24,23 @@ from reportlab.lib.units import inch
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, KeepTogether, Table, TableStyle
+from reportlab.platypus import (
+    BaseDocTemplate,
+    Frame,
+    FrameBreak,
+    HRFlowable,
+    Image,
+    KeepTogether,
+    NextPageTemplate,
+    PageTemplate,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 
-from src.cv_templates import get_template, get_palette
+from src.cv_templates import DESIGNER_LAYOUTS, get_template, get_palette
 
 try:
     import docx
@@ -284,6 +298,192 @@ def _education_text(edu: Dict[str, Any]) -> str:
 # ---------------------------------------------------------------------------
 # PDF
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Profile photo (designer layouts)
+# ---------------------------------------------------------------------------
+MAX_PHOTO_DATA_URL = 1_500_000  # characters; the builder sends a ~320px JPEG (a few tens of KB)
+
+
+def prepare_photo(photo: Optional[str]) -> Optional[bytes]:
+    """Validate an uploaded data-URL image and return a square, circle-masked PNG (or None if unusable).
+
+    The image is decoded and re-encoded with Pillow, so only real raster images get through, and the
+    result is small and uniform for both the PDF and the Word file.
+    """
+    if not photo or not isinstance(photo, str) or len(photo) > MAX_PHOTO_DATA_URL:
+        return None
+    import base64
+    import re as _re
+
+    match = _re.match(r"^data:image/(png|jpeg|jpg|webp);base64,([A-Za-z0-9+/=\s]+)$", photo)
+    if not match:
+        return None
+    try:
+        from PIL import Image as PILImage, ImageDraw
+
+        img = PILImage.open(io.BytesIO(base64.b64decode(match.group(2), validate=False)))
+        img.load()
+        img = img.convert("RGBA")
+        side = min(img.size)
+        left, top = (img.width - side) // 2, (img.height - side) // 2
+        img = img.crop((left, top, left + side, top + side)).resize((360, 360))
+        mask = PILImage.new("L", (360 * 4, 360 * 4), 0)
+        ImageDraw.Draw(mask).ellipse((0, 0, 360 * 4 - 1, 360 * 4 - 1), fill=255)
+        img.putalpha(mask.resize((360, 360), PILImage.LANCZOS))
+        out = io.BytesIO()
+        img.save(out, format="PNG", optimize=True)
+        return out.getvalue()
+    except Exception:
+        return None
+
+
+def _sidebar_pdf(
+    data: Dict[str, Any],
+    layout: str,
+    fonts: Dict[str, str],
+    accent: str,
+    photo_png: Optional[bytes],
+    title: str,
+) -> bytes:
+    """Two-area page: a coloured sidebar (photo, contact, skills, education) beside the main column
+    (name, summary, experience, projects). Built with frames, so long resumes flow onto page 2."""
+    width, height = letter
+    side_w = 190.0
+    dark = layout == "sidebar_photo"
+    side_bg = accent if dark else tint(accent, 0.10)
+    side_text = "#FFFFFF" if dark else "#1E293B"
+    side_muted = "#E2E8F0" if dark else MUTED_TEXT
+    side_heading = "#FFFFFF" if dark else accent
+    side_rule = "#FFFFFF" if dark else accent
+    body_hex = "#1E293B"
+
+    styles = getSampleStyleSheet()
+
+    def style(name: str, **kw: Any) -> ParagraphStyle:
+        return ParagraphStyle(f"{name}_{layout}", parent=styles["Normal"], **kw)
+
+    s_head = style("SideHead", fontName=fonts["bold"], fontSize=10.5, leading=13, textColor=colors.HexColor(side_heading),
+                   spaceBefore=12, spaceAfter=2, keepWithNext=True)
+    s_body = style("SideBody", fontName=fonts["regular"], fontSize=10, leading=13, textColor=colors.HexColor(side_text), spaceAfter=2)
+    s_bold = style("SideBold", fontName=fonts["bold"], fontSize=10, leading=13, textColor=colors.HexColor(side_text), spaceAfter=0)
+    s_muted = style("SideMuted", fontName=fonts["regular"], fontSize=10, leading=13, textColor=colors.HexColor(side_muted), spaceAfter=4)
+
+    m_name = style("MainName", fontName=fonts["bold"], fontSize=24, leading=28, textColor=colors.HexColor(accent), spaceAfter=2)
+    m_headline = style("MainHeadline", fontName=fonts["bold"], fontSize=12, leading=15, textColor=colors.HexColor(MUTED_TEXT), spaceAfter=4)
+    m_head = style("MainHead", fontName=fonts["bold"], fontSize=11.5, leading=14, textColor=colors.HexColor(accent),
+                   spaceBefore=10, spaceAfter=1, keepWithNext=True)
+    m_body = style("MainBody", fontName=fonts["regular"], fontSize=10.5, leading=13.8, textColor=colors.HexColor(body_hex), spaceAfter=3)
+    m_entry = style("MainEntry", fontName=fonts["regular"], fontSize=10.5, leading=13.8, textColor=colors.HexColor(body_hex),
+                    spaceBefore=4, spaceAfter=1, keepWithNext=True)
+    m_bullet = style("MainBullet", fontName=fonts["regular"], fontSize=10.5, leading=13.8, textColor=colors.HexColor(body_hex),
+                     leftIndent=14, bulletIndent=3, bulletFontName=fonts["regular"], bulletFontSize=10.5, spaceAfter=2.5)
+
+    def side_section(story: List[Any], heading: str) -> None:
+        story.append(Paragraph(heading, s_head))
+        story.append(HRFlowable(width="100%", thickness=0.6, color=colors.HexColor(side_rule), spaceBefore=0, spaceAfter=4))
+
+    story: List[Any] = []
+
+    # ---- sidebar ----
+    if photo_png:
+        story.append(Image(io.BytesIO(photo_png), width=112, height=112, hAlign="CENTER"))
+        story.append(Spacer(1, 4))
+    if data["contact"]:
+        side_section(story, "CONTACT")
+        for item in data["contact"]:
+            story.append(Paragraph(_esc(item), s_body))
+    if data["skills"]:
+        side_section(story, SEC_SKILLS)
+        for skill in data["skills"]:
+            story.append(Paragraph(_esc(skill), s_body))
+    if data["education"]:
+        side_section(story, SEC_EDUCATION)
+        for edu in data["education"]:
+            if edu["degree"]:
+                story.append(Paragraph(_esc(edu["degree"]), s_bold))
+            if edu["institution"]:
+                story.append(Paragraph(_esc(edu["institution"]), s_body))
+            extra = " | ".join(p for p in (edu["year"], edu["honors"]) if p)
+            if extra:
+                story.append(Paragraph(_esc(extra), s_muted))
+    story.append(FrameBreak())
+    story.append(NextPageTemplate("later"))
+
+    # ---- main column ----
+    if data["name"]:
+        story.append(Paragraph(_esc(data["name"]), m_name))
+    if data["headline"]:
+        story.append(Paragraph(_esc(data["headline"]), m_headline))
+    if data["name"] or data["headline"]:
+        story.append(HRFlowable(width="100%", thickness=1.2, color=colors.HexColor(accent), spaceBefore=1, spaceAfter=2))
+
+    def main_section(heading: str) -> None:
+        story.append(Paragraph(heading, m_head))
+        story.append(HRFlowable(width="100%", thickness=0.6, color=colors.HexColor("#94A3B8"), spaceBefore=0, spaceAfter=3))
+
+    if data["summary"]:
+        main_section(SEC_SUMMARY)
+        story.append(Paragraph(_esc(data["summary"]), m_body))
+    if data["achievements"]:
+        main_section(SEC_ACHIEVEMENTS)
+        for text in data["achievements"]:
+            story.append(Paragraph(_esc(text), m_bullet, bulletText="\u2022"))
+    if data["experience"]:
+        main_section(SEC_EXPERIENCE)
+        for item in data["experience"]:
+            etitle, company, location, period = _experience_head(item)
+            first = f"<b>{_esc(etitle)}</b>" if etitle else ""
+            if company:
+                first += (" &ndash; " if first else "") + _esc(company)
+            meta = " | ".join(_esc(x) for x in (location, period) if x)
+            head = first + (f' <font color="{MUTED_TEXT}">| {meta}</font>' if (meta and first) else (f'<font color="{MUTED_TEXT}">{meta}</font>' if meta else ""))
+            block: List[Any] = [Paragraph(head, m_entry)]
+            for b in item["bullets"]:
+                block.append(Paragraph(_esc(b), m_bullet, bulletText="\u2022"))
+            story.extend(block[:3] if len(block) > 3 else [KeepTogether(block)])
+            story.extend(block[3:])
+    if data["projects"]:
+        main_section(SEC_PROJECTS)
+        for proj in data["projects"]:
+            head = f"<b>{_esc(proj['title'])}</b>" if proj["title"] else ""
+            if proj["stack"]:
+                head += (f' <font color="{MUTED_TEXT}">| {_esc(proj["stack"])}</font>' if head else _esc(proj["stack"]))
+            if head:
+                story.append(Paragraph(head, m_entry))
+            if proj["description"]:
+                story.append(Paragraph(_esc(proj["description"]), m_bullet, bulletText="\u2022"))
+
+    def draw_background(canvas: Any, document: Any) -> None:
+        canvas.saveState()
+        canvas.setFillColor(colors.HexColor(side_bg))
+        canvas.rect(0, 0, side_w, height, stroke=0, fill=1)
+        canvas.restoreState()
+
+    def later_page(canvas: Any, document: Any) -> None:
+        draw_background(canvas, document)
+        canvas.saveState()
+        canvas.setFont(fonts["regular"], 9)
+        canvas.setFillColor(colors.HexColor(MUTED_TEXT))
+        label = f"{data['name']} - Page {document.page}" if data["name"] else f"Page {document.page}"
+        canvas.drawCentredString(side_w + (width - side_w) / 2, 0.4 * inch, label)
+        canvas.restoreState()
+
+    buffer = io.BytesIO()
+    doc = BaseDocTemplate(buffer, pagesize=letter, title=f"{title} - Resume", author=data["name"] or "",
+                          subject="Resume", creator="TalentRadar")
+    side_frame = Frame(0, 0, side_w, height, leftPadding=20, rightPadding=16, topPadding=34, bottomPadding=30, id="side")
+    main_frame = Frame(side_w, 0, width - side_w, height, leftPadding=26, rightPadding=34, topPadding=38, bottomPadding=44, id="main")
+    later_frame = Frame(side_w, 0, width - side_w, height, leftPadding=26, rightPadding=34, topPadding=38, bottomPadding=44, id="main2")
+    doc.addPageTemplates([
+        PageTemplate(id="first", frames=[side_frame, main_frame], onPage=draw_background),
+        PageTemplate(id="later", frames=[later_frame], onPage=later_page),
+    ])
+    doc.build(story)
+    buffer.seek(0)
+    return buffer.getvalue()
+
+
 def generate_tailored_pdf(
     job: Dict[str, Any],
     user_profile: Dict[str, Any],
@@ -292,8 +492,12 @@ def generate_tailored_pdf(
     parsed_resume: Optional[Dict[str, Any]] = None,
     accent_color: Optional[str] = None,
     font: Optional[str] = None,
+    photo: Optional[str] = None,
 ) -> bytes:
-    """Generates an ATS-friendly PDF resume in the selected template style (US Letter, single column).
+    """Generates a PDF resume in the selected template style (US Letter).
+
+    Most templates are single column and ATS-safe. The "designer" layouts (sidebar_photo, sidebar_light,
+    photo_banner) add a profile photo and/or a coloured sidebar; `photo` is an optional data-URL image.
 
     accent_color ('#RRGGBB') and font ('sans' | 'serif' | 'mono') optionally override the template's
     heading/banner colour and typeface, so the file matches what the builder preview shows.
@@ -329,6 +533,10 @@ def generate_tailored_pdf(
         # Same neutral text / rule colours the builder preview uses, so the file matches the screen.
         text_hex = "#1E293B"
         rule_hex = "#94A3B8"
+
+    photo_png = prepare_photo(photo) if layout in DESIGNER_LAYOUTS else None
+    if layout in ("sidebar_photo", "sidebar_light"):
+        return _sidebar_pdf(data, layout, fonts, accent, photo_png, data["name"] or "Resume")
 
     buffer = io.BytesIO()
     page_name = data["name"] or "Resume"
@@ -382,7 +590,7 @@ def generate_tailored_pdf(
 
     # ---- Header ----
     contact_line = " &nbsp;|&nbsp; ".join(_esc(c) for c in data["contact"])
-    if layout == "split_header":
+    if layout in ("split_header", "photo_banner"):
         rows = []
         if data["name"]:
             rows.append([Paragraph(_esc(data["name"]), banner_name)])
@@ -390,7 +598,22 @@ def generate_tailored_pdf(
             rows.append([Paragraph(_esc(data["headline"]), banner_headline)])
         if contact_line:
             rows.append([Paragraph(contact_line, banner_contact)])
-        if rows:
+        if rows and layout == "photo_banner" and photo_png:
+            # Banner with the circular photo on the right-hand side.
+            text_cells = [r[0] for r in rows]
+            header = Table([[text_cells, Image(io.BytesIO(photo_png), width=84, height=84)]],
+                           colWidths=[doc.width - 84 - 24, 84 + 12])
+            header.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor(primary)),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("TOPPADDING", (0, 0), (-1, -1), 12),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+                ("LEFTPADDING", (0, 0), (0, 0), 12),
+                ("RIGHTPADDING", (-1, -1), (-1, -1), 12),
+            ]))
+            story.append(header)
+            story.append(Spacer(1, 4))
+        elif rows:
             header = Table(rows, colWidths=[doc.width])
             header.setStyle(TableStyle([
                 ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor(primary)),
@@ -507,6 +730,170 @@ def _docx_font(run_or_style: Any, name: str) -> None:
             fonts.set(qn(attr), name)
 
 
+def _shade(cell: Any, hex_fill: str) -> None:
+    """Fill a Word table cell with a solid colour."""
+    from docx.oxml import OxmlElement
+
+    tc_pr = cell._tc.get_or_add_tcPr()
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear")
+    shd.set(qn("w:color"), "auto")
+    shd.set(qn("w:fill"), hex_fill.lstrip("#"))
+    tc_pr.append(shd)
+
+
+def _cell_margins(cell: Any, top: int, right: int, bottom: int, left: int) -> None:
+    from docx.oxml import OxmlElement
+
+    tc_pr = cell._tc.get_or_add_tcPr()
+    mar = OxmlElement("w:tcMar")
+    for side, val in (("top", top), ("left", left), ("bottom", bottom), ("right", right)):
+        el = OxmlElement(f"w:{side}")
+        el.set(qn("w:w"), str(val))
+        el.set(qn("w:type"), "dxa")
+        mar.append(el)
+    tc_pr.append(mar)
+
+
+def _set_cell_width(cell: Any, inches: float) -> None:
+    cell.width = Inches(inches)
+
+
+def _first_paragraph(cell: Any, used: List[bool]) -> Any:
+    """Reuse the empty paragraph every new cell starts with, then add new ones."""
+    if not used[0]:
+        used[0] = True
+        return cell.paragraphs[0]
+    return cell.add_paragraph()
+
+
+def _docx_sidebar_layout(
+    document: Any,
+    data: Dict[str, Any],
+    layout: str,
+    font_name: str,
+    accent_rgb: tuple,
+    muted_rgb: tuple,
+    body_pt: float,
+    photo_png: Optional[bytes],
+) -> None:
+    """Sidebar (photo, contact, skills, education) + main column (name, summary, experience, projects)
+    laid out as a borderless two-cell table. Word carries the sidebar shading across pages."""
+    dark = layout == "sidebar_photo"
+    accent_hex = "#%02X%02X%02X" % accent_rgb
+    side_fill = accent_hex if dark else tint(accent_hex, 0.10)
+    side_text = (255, 255, 255) if dark else (30, 41, 59)
+    side_muted = (226, 232, 240) if dark else muted_rgb
+    side_head = (255, 255, 255) if dark else accent_rgb
+
+    for section in document.sections:
+        section.top_margin = section.bottom_margin = Inches(0.4)
+        section.left_margin = section.right_margin = Inches(0.4)
+
+    table = document.add_table(rows=1, cols=2)
+    table.autofit = False
+    row = table.rows[0]
+    from docx.enum.table import WD_ROW_HEIGHT_RULE
+
+    row.height = Inches(10.1)
+    row.height_rule = WD_ROW_HEIGHT_RULE.AT_LEAST
+    side, main = row.cells
+    _set_cell_width(side, 2.3)
+    _set_cell_width(main, 5.4)
+    _shade(side, side_fill)
+    _cell_margins(side, 360, 200, 300, 280)
+    _cell_margins(main, 380, 340, 300, 360)
+
+    side_used, main_used = [False], [False]
+
+    def put(cell: Any, used: List[bool], text: str, size: float, bold: bool = False, color: tuple = (30, 41, 59),
+            after: float = 2, before: float = 0, style: Optional[str] = None) -> Any:
+        para = _first_paragraph(cell, used)
+        if style:
+            para.style = document.styles[style]
+        para.paragraph_format.space_after = Pt(after)
+        para.paragraph_format.space_before = Pt(before)
+        run = para.add_run(text)
+        run.bold = bold
+        run.font.size = Pt(size)
+        run.font.color.rgb = RGBColor(*color)
+        return para
+
+    # ---- sidebar ----
+    if photo_png:
+        pp = _first_paragraph(side, side_used)
+        pp.alignment = 1
+        pp.add_run().add_picture(io.BytesIO(photo_png), width=Inches(1.45))
+    if data["contact"]:
+        put(side, side_used, "CONTACT", 10.5, True, side_head, after=2, before=10)
+        for item in data["contact"]:
+            put(side, side_used, item, 10, color=side_text)
+    if data["skills"]:
+        put(side, side_used, SEC_SKILLS, 10.5, True, side_head, after=2, before=10)
+        for skill in data["skills"]:
+            put(side, side_used, skill, 10, color=side_text)
+    if data["education"]:
+        put(side, side_used, SEC_EDUCATION, 10.5, True, side_head, after=2, before=10)
+        for edu in data["education"]:
+            if edu["degree"]:
+                put(side, side_used, edu["degree"], 10, True, side_text, after=0)
+            if edu["institution"]:
+                put(side, side_used, edu["institution"], 10, color=side_text, after=0)
+            extra = " | ".join(p for p in (edu["year"], edu["honors"]) if p)
+            if extra:
+                put(side, side_used, extra, 10, color=side_muted, after=4)
+
+    # ---- main column ----
+    def heading(text: str) -> None:
+        para = _first_paragraph(main, main_used)
+        para.style = document.styles["Heading 2"]
+        para.add_run(text)
+
+    if data["name"]:
+        put(main, main_used, data["name"], 24, True, accent_rgb, after=0)
+    if data["headline"]:
+        put(main, main_used, data["headline"], 12, True, muted_rgb, after=4)
+    if data["summary"]:
+        heading(SEC_SUMMARY)
+        put(main, main_used, data["summary"], body_pt)
+    if data["achievements"]:
+        heading(SEC_ACHIEVEMENTS)
+        for text in data["achievements"]:
+            _first_paragraph(main, main_used).style = document.styles["List Bullet"]
+            main.paragraphs[-1].add_run(text)
+    if data["experience"]:
+        heading(SEC_EXPERIENCE)
+        for item in data["experience"]:
+            etitle, company, location, period = _experience_head(item)
+            para = _first_paragraph(main, main_used)
+            para.paragraph_format.space_before = Pt(3)
+            para.paragraph_format.keep_with_next = True
+            first = para.add_run(etitle)
+            first.bold = True
+            if company:
+                para.add_run((" \u2013 " if etitle else "") + company)
+            meta = " | ".join(x for x in (location, period) if x)
+            if meta:
+                m = para.add_run(f" | {meta}" if (etitle or company) else meta)
+                m.font.color.rgb = RGBColor(*muted_rgb)
+            for b in item["bullets"]:
+                bp = main.add_paragraph(style="List Bullet")
+                bp.add_run(b)
+    if data["projects"]:
+        heading(SEC_PROJECTS)
+        for proj in data["projects"]:
+            para = _first_paragraph(main, main_used)
+            t = para.add_run(proj["title"])
+            t.bold = True
+            if proj["stack"]:
+                st = para.add_run(f" | {proj['stack']}" if proj["title"] else proj["stack"])
+                st.font.color.rgb = RGBColor(*muted_rgb)
+            if proj["description"]:
+                main.add_paragraph(style="List Bullet").add_run(proj["description"])
+    if not main_used[0]:
+        main.paragraphs[0].add_run("")
+
+
 def generate_tailored_docx(
     job: Dict[str, Any],
     user_profile: Dict[str, Any],
@@ -515,8 +902,12 @@ def generate_tailored_docx(
     parsed_resume: Optional[Dict[str, Any]] = None,
     accent_color: Optional[str] = None,
     font: Optional[str] = None,
+    photo: Optional[str] = None,
 ) -> bytes:
-    """Generates an ATS-friendly Word resume: real headings and list styles, no tables, template font and colours."""
+    """Generates a Word resume: real headings and list styles, template font and colours.
+
+    Standard templates use no tables. The designer layouts (sidebar_photo, sidebar_light, photo_banner) use
+    a borderless table for the sidebar / photo banner, and `photo` is an optional data-URL image."""
     if docx is None:
         raise ImportError("python-docx is not installed.")
 
@@ -566,8 +957,52 @@ def generate_tailored_docx(
     props.author = data["name"] or ""
     props.subject = "Resume"
 
+    layout_name = tmpl.get("layout", "single_column")
+    photo_png = prepare_photo(photo) if layout_name in DESIGNER_LAYOUTS else None
+
+    if layout_name in ("sidebar_photo", "sidebar_light"):
+        _docx_sidebar_layout(document, data, layout_name, font_name, accent_rgb, muted_rgb, body_pt, photo_png)
+        buffer = io.BytesIO()
+        document.save(buffer)
+        buffer.seek(0)
+        return buffer.getvalue()
+
     def add_heading(text: str) -> None:
         document.add_heading(text, level=2)
+
+    if layout_name == "photo_banner":
+        accent_hex = "#%02X%02X%02X" % accent_rgb
+        banner = document.add_table(rows=1, cols=2 if photo_png else 1)
+        banner.autofit = False
+        text_cell = banner.rows[0].cells[0]
+        _shade(text_cell, accent_hex)
+        _cell_margins(text_cell, 160, 200, 160, 200)
+        used = [False]
+        width_in = 8.5 - 2 * (0.55 if is_compact else 0.75)
+        _set_cell_width(text_cell, width_in - (1.35 if photo_png else 0))
+        for text, size, bold, color in (
+            (data["name"], 24, True, (255, 255, 255)),
+            (data["headline"], 12, True, (226, 232, 240)),
+            (" | ".join(data["contact"]), 10, False, (226, 232, 240)),
+        ):
+            if not text:
+                continue
+            para = _first_paragraph(text_cell, used)
+            para.paragraph_format.space_after = Pt(1)
+            run = para.add_run(text)
+            run.bold = bold
+            run.font.size = Pt(size)
+            run.font.color.rgb = RGBColor(*color)
+        if photo_png:
+            photo_cell = banner.rows[0].cells[1]
+            _shade(photo_cell, accent_hex)
+            _cell_margins(photo_cell, 120, 160, 120, 40)
+            _set_cell_width(photo_cell, 1.35)
+            pp = photo_cell.paragraphs[0]
+            pp.alignment = 2
+            pp.add_run().add_picture(io.BytesIO(photo_png), width=Inches(1.05))
+        document.add_paragraph().paragraph_format.space_after = Pt(0)
+        data = {**data, "name": "", "headline": "", "contact": []}  # already shown in the banner
 
     if data["name"]:
         p = document.add_paragraph()

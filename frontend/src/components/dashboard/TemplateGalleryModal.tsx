@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { CVTemplate } from '@/types';
 import { fetchCVTemplates } from '@/lib/api';
 import TemplateAuthModal from '@/components/TemplateAuthModal';
+import TemplateThumbnail from '@/components/builder/TemplateThumbnail';
+import { DESIGNER_NOTE } from '@/lib/templatePreview';
 import { 
   X, 
   Search, 
@@ -289,7 +291,7 @@ export default function TemplateGalleryModal({
             {loading ? (
               <div className="flex flex-col items-center justify-center h-64 gap-2 text-indigo-600 font-bold text-xs">
                 <Loader2 className="w-6 h-6 animate-spin" />
-                <span>Loading 105+ curated CV templates...</span>
+                <span>Rendering 105+ templates…</span>
               </div>
             ) : filteredTemplates.length === 0 ? (
               <div className="text-center py-16 space-y-2">
@@ -312,6 +314,7 @@ export default function TemplateGalleryModal({
                     <div
                       key={tmpl.id}
                       onClick={() => handleTemplateCardClick(tmpl)}
+                      style={{ contentVisibility: 'auto', containIntrinsicSize: '300px 430px' }}
                       className={`bg-white rounded-2xl border p-4 transition-all duration-200 cursor-pointer flex flex-col justify-between relative group hover:shadow-lg ${
                         isSelected
                           ? 'border-indigo-600 ring-2 ring-indigo-500/20 shadow-md'
@@ -345,45 +348,9 @@ export default function TemplateGalleryModal({
                           </div>
                         </div>
 
-                        {/* Visual Mini Resume Thumbnail Representation */}
-                        <div 
-                          className="h-28 rounded-xl border border-slate-200 p-2.5 mb-3 flex flex-col justify-between relative overflow-hidden transition group-hover:scale-[1.01]"
-                          style={{ backgroundColor: tmpl.colors.bg || '#FFFFFF' }}
-                        >
-                          {/* Mock Header */}
-                          {tmpl.layout === 'split_header' ? (
-                            <div 
-                              className="w-full rounded p-1.5 mb-1.5 flex items-center justify-between"
-                              style={{ backgroundColor: tmpl.colors.primary }}
-                            >
-                              <div className="h-2.5 w-20 bg-white/90 rounded-xs"></div>
-                              <div className="h-1.5 w-12 bg-cyan-200/80 rounded-xs"></div>
-                            </div>
-                          ) : (
-                            <div className="space-y-1 mb-1">
-                              <div className="flex items-center justify-between">
-                                <div className="h-2.5 w-24 rounded-xs" style={{ backgroundColor: tmpl.colors.primary }}></div>
-                                <div className="h-1.5 w-10 bg-slate-300 rounded-xs"></div>
-                              </div>
-                              <div className="h-1.5 w-32 rounded-xs" style={{ backgroundColor: tmpl.colors.secondary }}></div>
-                              <div className="w-full h-0.5" style={{ backgroundColor: tmpl.colors.rule }}></div>
-                            </div>
-                          )}
-
-                          {/* Mock Body Lines */}
-                          <div className="space-y-1 flex-1">
-                            <div className="flex items-center gap-1">
-                              {tmpl.layout === 'modern_accent' && (
-                                <div className="w-1.5 h-2 rounded-2xs" style={{ backgroundColor: tmpl.colors.accent }}></div>
-                              )}
-                              <div className="h-1.5 w-16 rounded-xs" style={{ backgroundColor: tmpl.colors.secondary }}></div>
-                            </div>
-                            <div className="h-1 w-full bg-slate-200 rounded-2xs"></div>
-                            <div className="h-1 w-4/5 bg-slate-200 rounded-2xs"></div>
-                            <div className="h-1.5 w-14 rounded-xs mt-1" style={{ backgroundColor: tmpl.colors.secondary }}></div>
-                            <div className="h-1 w-full bg-slate-200 rounded-2xs"></div>
-                          </div>
-
+                        {/* The real template, rendered with sample content */}
+                        <div className="rounded-xl border border-slate-200 mb-3 relative overflow-hidden transition group-hover:scale-[1.01]">
+                          <TemplateThumbnail template={tmpl} crop />
                           {/* Selected Checkmark Overlay */}
                           {isSelected ? (
                             <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-md">
@@ -410,9 +377,13 @@ export default function TemplateGalleryModal({
 
                       {/* Bottom Meta & Selection */}
                       <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                        <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[10px] flex items-center gap-1">
-                          <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                          <span>{tmpl.ats_score}</span>
+                        <span
+                          className={`font-bold px-2 py-0.5 rounded text-[10px] flex items-center gap-1 ${
+                            tmpl.designer ? 'text-amber-800 bg-amber-50' : 'text-emerald-700 bg-emerald-50'
+                          }`}
+                        >
+                          <ShieldCheck className={`w-3 h-3 ${tmpl.designer ? 'text-amber-600' : 'text-emerald-600'}`} />
+                          <span>{tmpl.designer ? 'Designer: photo & sidebar' : tmpl.ats_score}</span>
                         </span>
 
                         <button
@@ -452,8 +423,11 @@ export default function TemplateGalleryModal({
                   <span>Active Template:</span>
                   <span className="text-indigo-600 font-black truncate">{currentTemplate?.name}</span>
                 </div>
+                {currentTemplate?.designer && (
+                  <div className="text-[11px] text-amber-800 font-semibold max-w-md leading-snug">{DESIGNER_NOTE}</div>
+                )}
                 <div className="text-[10px] text-slate-500">
-                  {currentTemplate?.category} &bull; {currentTemplate?.ats_score}
+                  {currentTemplate?.category} &bull; {currentTemplate?.designer ? 'Designer layout' : currentTemplate?.ats_score}
                   {!authed && (
                     <span className="ml-2 text-amber-700 font-bold">
                       &bull; {isSelectMode ? 'Free account required to use templates' : 'Free account required to download'}

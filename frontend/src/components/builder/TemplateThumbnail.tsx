@@ -2,7 +2,14 @@
 
 import React from 'react';
 import ResumePreview from '@/components/builder/ResumePreview';
-import { asPreviewLayout, previewFontFamily, SAMPLE_PREVIEW_DATA, templateAccent } from '@/lib/templatePreview';
+import {
+  asPreviewLayout,
+  isDesignerLayout,
+  previewFontFamily,
+  SAMPLE_PREVIEW_DATA,
+  samplePhotoFor,
+  templateAccent,
+} from '@/lib/templatePreview';
 import type { CVTemplate } from '@/types';
 
 /**
@@ -34,6 +41,7 @@ export default function TemplateThumbnail({
         layout={layout}
         centered={layout === 'single_column' && template.font_family === 'Times-Roman'}
         accent={templateAccent(template)}
+        photo={isDesignerLayout(template.layout) ? samplePhotoFor(template.id) : null}
         data={SAMPLE_PREVIEW_DATA}
       />
       {crop && (
