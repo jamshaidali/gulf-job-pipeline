@@ -106,17 +106,13 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  const hiringCompanies = [
-    'Google',
-    'Microsoft',
-    'Stripe',
-    'Spotify',
-    'Airbnb',
-    'Netflix',
-    'Shopify',
-    'Atlassian',
-    'Datadog',
-    'Figma',
+  // Plain facts about what every resume built here is (each is verified by the exporter's tests).
+  const resumeFacts = [
+    { icon: Layers, label: '105 templates', detail: 'real layouts, not mock-ups' },
+    { icon: FileText, label: 'Single-column layout', detail: 'reads cleanly top to bottom' },
+    { icon: ShieldCheck, label: 'Standard section headings', detail: 'Summary, Skills, Experience, Education' },
+    { icon: CheckCircle2, label: 'Real, selectable text', detail: 'no images or text boxes' },
+    { icon: Download, label: 'PDF and Word export', detail: 'what you see is what you download' },
   ];
 
   const templates: TemplateCard[] = [
@@ -458,23 +454,24 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* HIRING COMPANIES MARQUEE */}
+        {/* WHAT EVERY RESUME INCLUDES (plain facts, no borrowed logos or invented stats) */}
         <section className="py-10 bg-white border-b border-slate-200/70">
-          <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-slate-400 mb-6">
-            Our users got hired at industry-leading companies
+          <p className="text-center text-xs font-bold uppercase tracking-[0.18em] text-slate-500 mb-6">
+            Every resume you build here
           </p>
-          <div className="marquee-mask overflow-hidden">
-            <div className="flex w-max animate-marquee gap-14 pr-14">
-              {[...hiringCompanies, ...hiringCompanies].map((company, i) => (
-                <span
-                  key={`${company}-${i}`}
-                  className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-300 hover:text-slate-700 transition-colors whitespace-nowrap select-none"
-                >
-                  {company}
+          <ul className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-6 gap-y-5">
+            {resumeFacts.map(({ icon: Icon, label, detail }) => (
+              <li key={label} className="flex items-start gap-3">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                  <Icon className="h-4 w-4" />
                 </span>
-              ))}
-            </div>
-          </div>
+                <span>
+                  <span className="block text-sm font-bold text-slate-900">{label}</span>
+                  <span className="block text-xs leading-snug text-slate-600">{detail}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* 2. PICK A TEMPLATE CAROUSEL SECTION (Matches Enhancv Screenshot 2 & 3) */}
