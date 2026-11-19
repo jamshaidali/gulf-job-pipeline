@@ -6,204 +6,127 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import TemplateAuthModal from '@/components/TemplateAuthModal';
+import ResumePreview from '@/components/builder/ResumePreview';
 import { fetchCurrentUser, fetchCVTemplates } from '@/lib/api';
-import { 
-  Sparkles, 
-  Check, 
-  ArrowRight, 
-  ShieldCheck, 
-  FileText, 
-  Sliders, 
-  Download, 
-  CheckCircle2, 
-  ExternalLink,
-  Search,
-  Eye,
-  Star,
-  Lock
-} from 'lucide-react';
+import {
+  asPreviewLayout,
+  layoutLabel,
+  previewFontFamily,
+  SAMPLE_PREVIEW_DATA,
+  templateAccent,
+} from '@/lib/templatePreview';
+import type { CVTemplate } from '@/types';
+import { Sparkles, ArrowRight, ShieldCheck, Search, Eye, Lock, Loader2, X } from 'lucide-react';
 
-interface TemplateItem {
-  id: string;
-  name: string;
-  category: string;
-  atsScore: string;
-  description: string;
-  accentColor: string;
-  primaryHex?: string;
-  layout: 'single' | 'two-column';
-  bestFor: string;
+const FALLBACK_CATEGORIES = [
+  'All',
+  'Tech & Software',
+  'Executive & Leadership',
+  'Minimalist ATS',
+  'Data & AI',
+  'Finance & Banking',
+  'Creative & Remote',
+  'Enterprise & Global',
+];
+
+/** The real resume, rendered with sample content, in the template's own layout, font and colour. */
+function TemplatePage({ template, fit = true }: { template: CVTemplate; fit?: boolean }) {
+  return (
+    <div
+      className="bg-white overflow-hidden text-slate-900"
+      style={{
+        containerType: 'inline-size',
+        fontFamily: previewFontFamily(template.font_family),
+      } as React.CSSProperties}
+    >
+      <ResumePreview
+        fit={fit}
+        layout={asPreviewLayout(template.layout)}
+        accent={templateAccent(template)}
+        data={SAMPLE_PREVIEW_DATA}
+      />
+    </div>
+  );
 }
 
-const TEMPLATES_CATALOG: TemplateItem[] = [
-  {
-    id: 'ats_minimalist_clean',
-    name: 'ATS Minimalist Clean',
-    category: 'ATS-Friendly',
-    atsScore: '100% ATS Verified',
-    description: 'Single-column high-contrast layout tested across Taleo, Workday, and Greenhouse with zero parsing errors.',
-    accentColor: 'from-slate-900 to-slate-800',
-    layout: 'single',
-    bestFor: 'Software Engineers, DevOps, Data Engineers'
-  },
-  {
-    id: 'sapphire_modern_tech',
-    name: 'Sapphire Modern Tech',
-    category: 'Tech & Engineering',
-    atsScore: '98% ATS Verified',
-    description: 'Modern two-column layout with technical competency sidebar, optimized for high-salary engineering and fintech roles.',
-    accentColor: 'from-cyan-600 to-sky-700',
-    layout: 'two-column',
-    bestFor: 'Senior Full Stack, Cloud Architects, AI Engineers'
-  },
-  {
-    id: 'executive_leadership_pro',
-    name: 'Executive Leadership Pro',
-    category: 'Executive & Leadership',
-    atsScore: '99% ATS Verified',
-    description: 'Distinguished header typography and prominent executive summary section built for VP, Director, and C-Suite leadership roles.',
-    accentColor: 'from-amber-600 to-amber-800',
-    layout: 'single',
-    bestFor: 'Engineering Directors, VP of Product, Heads of Engineering'
-  },
-  {
-    id: 'compact_direct_impact',
-    name: 'Compact 1-Page Direct',
-    category: 'Compact 1-Page',
-    atsScore: '100% ATS Verified',
-    description: 'High-density typography engineered to fit 6–10 years of experience on exactly one sheet with Google X-Y-Z bullets.',
-    accentColor: 'from-indigo-600 to-indigo-800',
-    layout: 'single',
-    bestFor: 'Mid-Senior Engineers, Tech Leads, Product Managers'
-  },
-  {
-    id: 'emerald_growth_matrix',
-    name: 'Emerald FinTech Modern',
-    category: 'Tech & Engineering',
-    atsScore: '97% ATS Verified',
-    description: 'Clean modern aesthetic with subtle emerald accents, perfect for payments, banking, and fast-growth startups.',
-    accentColor: 'from-emerald-600 to-teal-800',
-    layout: 'two-column',
-    bestFor: 'FinTech Engineers, Product Designers, Growth Leads'
-  },
-  {
-    id: 'monochrome_ivy_league',
-    name: 'Monochrome Ivy Classic',
-    category: 'ATS-Friendly',
-    atsScore: '100% ATS Verified',
-    description: 'Timeless serif typography, zero graphics or icons, 100% machine-parsable for hyper-conservative corporate boards.',
-    accentColor: 'from-slate-800 to-slate-950',
-    layout: 'single',
-    bestFor: 'C-Suite, Management Consultants, Legal & Finance'
-  },
-  {
-    id: 'creative_accent_cyan',
-    name: 'Digital Product Lead',
-    category: 'Creative',
-    atsScore: '96% ATS Verified',
-    description: 'Striking visual balance highlighting key portfolio projects, design systems, and product metrics.',
-    accentColor: 'from-purple-600 to-pink-700',
-    layout: 'two-column',
-    bestFor: 'UI/UX Leads, Product Designers, Creative Technologists'
-  },
-  {
-    id: 'quantum_cloud_architect',
-    name: 'Quantum Systems Specialist',
-    category: 'Tech & Engineering',
-    atsScore: '99% ATS Verified',
-    description: 'Features dedicated technical skills matrix (Languages, Cloud, Databases, Tools) at the top of the resume.',
-    accentColor: 'from-blue-600 to-indigo-900',
-    layout: 'single',
-    bestFor: 'Cloud Architects, DevOps/SRE, Infrastructure Leads'
-  }
-];
+const fontLabel = (fontFamily: string) => (fontFamily === 'Times-Roman' ? 'Serif font' : 'Sans-serif font');
 
 export default function TemplatesPage() {
   const router = useRouter();
+  const [templates, setTemplates] = useState<CVTemplate[]>([]);
+  const [categories, setCategories] = useState<string[]>(FALLBACK_CATEGORIES);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<boolean>(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [previewTemplate, setPreviewTemplate] = useState<TemplateItem | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<CVTemplate | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [authModalTemplate, setAuthModalTemplate] = useState<{ id: string; name: string } | null>(null);
-  const [dynamicTemplates, setDynamicTemplates] = useState<TemplateItem[]>([]);
+  const [reloadKey, setReloadKey] = useState<number>(0);
 
   useEffect(() => {
-    const checkUserAndLoadTemplates = async () => {
+    const checkUser = async () => {
       try {
         if (typeof window !== 'undefined' && localStorage.getItem('tr_auth_user')) {
           setIsAuthenticated(true);
         }
         const user = await fetchCurrentUser();
-        if (user) {
-          setIsAuthenticated(true);
-        }
+        if (user) setIsAuthenticated(true);
       } catch {
-        // Ignore
-      }
-
-      try {
-        const res = await fetchCVTemplates();
-        if (res && Array.isArray(res.templates)) {
-          const existingIds = new Set(TEMPLATES_CATALOG.map((t) => t.id));
-          const mapped: TemplateItem[] = res.templates
-            .filter((t) => !existingIds.has(t.id))
-            .map((t) => {
-              const cat = t.category.includes('Tech') || t.category.includes('Data')
-                ? 'Tech & Engineering'
-                : t.category.includes('Executive') || t.category.includes('Enterprise')
-                ? 'Executive & Leadership'
-                : t.category.includes('Minimalist')
-                ? 'ATS-Friendly'
-                : t.category.includes('Creative')
-                ? 'Creative'
-                : 'Compact 1-Page';
-              return {
-                id: t.id,
-                name: t.name,
-                category: cat,
-                atsScore: t.ats_score || '99% ATS Verified',
-                description: t.description,
-                accentColor: 'from-cyan-600 to-indigo-800',
-                primaryHex: t.colors?.primary || '#0284c7',
-                layout: t.layout === 'split_header' || t.layout === 'modern_accent' ? 'two-column' : 'single',
-                bestFor: `${t.category} &bull; ${t.badge || 'Global ATS Standard'}`.replace('&bull;', '•'),
-              };
-            });
-          setDynamicTemplates(mapped);
-        }
-      } catch {
-        // Ignore
+        // Signed-out visitors are fine.
       }
     };
-    checkUserAndLoadTemplates();
+    checkUser();
   }, []);
 
-  const handleUseTemplate = (templateId: string, templateName: string, primaryHex?: string) => {
-    const accentParam = primaryHex ? `&accent=${encodeURIComponent(primaryHex)}` : '';
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(false);
+    fetchCVTemplates()
+      .then((res) => {
+        if (cancelled) return;
+        setTemplates(Array.isArray(res.templates) ? res.templates : []);
+        if (Array.isArray(res.categories) && res.categories.length > 0) setCategories(res.categories);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
+
+  useEffect(() => {
+    if (!previewTemplate) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPreviewTemplate(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [previewTemplate]);
+
+  const handleUseTemplate = (template: CVTemplate) => {
     if (isAuthenticated || (typeof window !== 'undefined' && localStorage.getItem('tr_auth_user'))) {
-      router.push(`/builder?template=${encodeURIComponent(templateId)}${accentParam}`);
+      router.push(`/builder?template=${encodeURIComponent(template.id)}`);
     } else {
       setPreviewTemplate(null);
-      setAuthModalTemplate({ id: templateId, name: templateName });
+      setAuthModalTemplate({ id: template.id, name: template.name });
     }
   };
 
-  const categories = [
-    'All',
-    'ATS-Friendly',
-    'Tech & Engineering',
-    'Executive & Leadership',
-    'Compact 1-Page',
-    'Creative'
-  ];
-
-  const allTemplates = [...TEMPLATES_CATALOG, ...dynamicTemplates];
-
-  const filteredTemplates = allTemplates.filter((item) => {
+  const query = searchQuery.toLowerCase().trim();
+  const filteredTemplates = templates.filter((item) => {
     const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.bestFor.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      !query ||
+      item.name.toLowerCase().includes(query) ||
+      item.description.toLowerCase().includes(query) ||
+      item.category.toLowerCase().includes(query) ||
+      layoutLabel(item.layout).toLowerCase().includes(query);
     return matchesCategory && matchesSearch;
   });
 
@@ -225,7 +148,7 @@ export default function TemplatesPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-900 text-xs font-bold mb-4">
               <Sparkles className="w-3.5 h-3.5 text-cyan-600" />
-              <span>Tested on Taleo, Workday, Greenhouse &amp; Lever</span>
+              <span>Single column &bull; Standard headings &bull; Real, selectable text</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl font-black text-slate-950 tracking-tight leading-tight">
@@ -236,7 +159,8 @@ export default function TemplatesPage() {
             </h1>
 
             <p className="mt-4 text-slate-600 text-sm sm:text-base leading-relaxed">
-              Every template is built with machine-readable typography, precise hierarchy, and clean semantic structures so your resume lands directly in front of human recruiters.
+              Every preview below is the real template, filled with sample content. Pick one, open it in the builder, and
+              your own details flow into the same layout you download.
             </p>
 
             {/* Search Bar */}
@@ -244,7 +168,7 @@ export default function TemplatesPage() {
               <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search templates (e.g. Software Engineer, Executive)..."
+                placeholder="Search templates (e.g. Executive, Compact, Data)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-full text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:bg-white transition"
@@ -273,142 +197,158 @@ export default function TemplatesPage() {
         {/* TEMPLATES GRID */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
           <div className="flex items-center justify-between pb-6 border-b border-slate-200 text-xs font-bold text-slate-500">
-            <span>Showing {filteredTemplates.length} Templates</span>
+            <span>{loading ? 'Loading templates…' : `Showing ${filteredTemplates.length} Templates`}</span>
             <span className="text-emerald-700 flex items-center gap-1">
-              <ShieldCheck className="w-4 h-4" /> All templates 100% Free &amp; Unlocked
+              <ShieldCheck className="w-4 h-4" /> Free account required to use a template
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-            {filteredTemplates.map((template) => (
-              <div 
-                key={template.id}
-                className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between group"
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-2 text-slate-500 text-sm font-semibold">
+              <Loader2 className="w-6 h-6 animate-spin text-cyan-600" />
+              <span>Rendering templates…</span>
+            </div>
+          ) : loadError ? (
+            <div className="text-center py-20 space-y-3">
+              <div className="font-extrabold text-slate-800">We couldn&apos;t load the templates.</div>
+              <button
+                type="button"
+                onClick={() => setReloadKey((k) => k + 1)}
+                className="px-5 py-2 rounded-full bg-slate-900 text-white text-xs font-bold cursor-pointer"
               >
-                {/* Visual Preview Header */}
-                <div className="p-4 bg-slate-100 border-b border-slate-200 relative overflow-hidden">
-                  <div className="h-48 rounded-2xl bg-white border border-slate-200 p-4 text-[7px] text-slate-400 font-mono shadow-xs overflow-hidden relative group-hover:scale-[1.02] transition-transform">
-                    {/* Simulated Resume Layout */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <div>
-                          <div className="h-3 w-24 bg-slate-800 rounded-sm"></div>
-                          <div className="h-2 w-32 bg-slate-300 rounded-sm mt-1"></div>
-                        </div>
-                        <div className={`h-4 w-4 rounded-full bg-gradient-to-tr ${template.accentColor}`}></div>
-                      </div>
+                Try again
+              </button>
+            </div>
+          ) : filteredTemplates.length === 0 ? (
+            <div className="text-center py-20 space-y-2">
+              <div className="font-extrabold text-slate-800">No templates match your search.</div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('All');
+                }}
+                className="px-5 py-2 rounded-full bg-slate-900 text-white text-xs font-bold cursor-pointer"
+              >
+                Reset filters
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+              {filteredTemplates.map((template) => (
+                <div
+                  key={template.id}
+                  className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between group"
+                  style={{ contentVisibility: 'auto', containIntrinsicSize: '420px 640px' }}
+                >
+                  {/* The actual template, rendered with sample content */}
+                  <div className="p-4 bg-slate-100 border-b border-slate-200 relative">
+                    <div
+                      className="rounded-lg border border-slate-200 shadow-sm overflow-hidden"
+                      data-testid="template-thumbnail"
+                      data-layout={template.layout}
+                      aria-label={`${template.name} preview`}
+                    >
+                      <TemplatePage template={template} />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewTemplate(template)}
+                      className="absolute bottom-7 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-slate-900/90 text-white text-xs font-bold shadow-md hover:bg-black transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Quick Preview</span>
+                    </button>
+                  </div>
 
-                      {template.layout === 'two-column' ? (
-                        <div className="grid grid-cols-3 gap-2 pt-1">
-                          <div className="col-span-1 space-y-1 border-r border-slate-100 pr-1">
-                            <div className="h-2 w-10 bg-cyan-600 rounded-xs"></div>
-                            <div className="h-1.5 w-full bg-slate-200 rounded-xs"></div>
-                            <div className="h-1.5 w-full bg-slate-200 rounded-xs"></div>
-                            <div className="h-2 w-10 bg-cyan-600 rounded-xs mt-2"></div>
-                            <div className="h-1.5 w-full bg-slate-200 rounded-xs"></div>
-                          </div>
-                          <div className="col-span-2 space-y-1">
-                            <div className="h-2 w-16 bg-slate-700 rounded-xs"></div>
-                            <div className="h-1.5 w-full bg-slate-200 rounded-xs"></div>
-                            <div className="h-1.5 w-full bg-slate-200 rounded-xs"></div>
-                            <div className="h-1.5 w-3/4 bg-slate-200 rounded-xs"></div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-1.5 pt-1">
-                          <div className="h-2 w-20 bg-slate-700 rounded-xs"></div>
-                          <div className="h-1.5 w-full bg-slate-200 rounded-xs"></div>
-                          <div className="h-1.5 w-full bg-slate-200 rounded-xs"></div>
-                          <div className="h-2 w-20 bg-slate-700 rounded-xs mt-2"></div>
-                          <div className="h-1.5 w-full bg-slate-200 rounded-xs"></div>
-                          <div className="h-1.5 w-5/6 bg-slate-200 rounded-xs"></div>
-                        </div>
-                      )}
+                  {/* Details */}
+                  <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
+                    <div>
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-cyan-700">{template.category}</div>
+                      <h3 className="text-base font-extrabold text-slate-900 mt-0.5">{template.name}</h3>
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">{template.description}</p>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold">
+                          {layoutLabel(template.layout)}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold">
+                          {fontLabel(template.font_family)}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-transparent flex items-end justify-center pb-3">
+                    <div className="pt-2">
                       <button
-                        onClick={() => setPreviewTemplate(template)}
-                        className="px-3 py-1 rounded-full bg-slate-900/90 text-white text-[10px] font-bold shadow-sm hover:bg-black transition flex items-center gap-1 cursor-pointer"
+                        type="button"
+                        onClick={() => handleUseTemplate(template)}
+                        className="w-full py-2.5 px-4 rounded-full bg-slate-900 hover:bg-black text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer"
                       >
-                        <Eye className="w-3 h-3 text-cyan-400" />
-                        <span>Quick Preview</span>
+                        {!isAuthenticated && <Lock className="w-3.5 h-3.5 text-amber-400" />}
+                        <span>Use This Template</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
                       </button>
                     </div>
                   </div>
-
-                  <span className="absolute top-6 right-6 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold border border-emerald-300">
-                    {template.atsScore}
-                  </span>
                 </div>
-
-                {/* Content Details */}
-                <div className="p-6 space-y-3 flex-1 flex flex-col justify-between">
-                  <div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-cyan-600">
-                      {template.category}
-                    </div>
-                    <h3 className="text-base font-extrabold text-slate-900 mt-0.5">
-                      {template.name}
-                    </h3>
-                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                      {template.description}
-                    </p>
-                    <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-600">
-                      <span className="font-bold text-slate-900">Best for: </span>
-                      {template.bestFor}
-                    </div>
-                  </div>
-
-                  <div className="pt-4">
-                    <button
-                      type="button"
-                      onClick={() => handleUseTemplate(template.id, template.name, template.primaryHex)}
-                      className="w-full py-2.5 px-4 rounded-full bg-slate-900 hover:bg-black text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer"
-                    >
-                      {!isAuthenticated && <Lock className="w-3.5 h-3.5 text-amber-400" />}
-                      <span>Use This Template</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
-        {/* QUICK PREVIEW MODAL */}
+        {/* QUICK PREVIEW: the real template at reading size */}
         {previewTemplate && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200">
-                <div>
-                  <div className="text-xs font-bold text-cyan-600 uppercase tracking-wider">{previewTemplate.category}</div>
+          <div
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${previewTemplate.name} preview`}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setPreviewTemplate(null);
+            }}
+          >
+            <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[94vh] flex flex-col shadow-2xl overflow-hidden">
+              <div className="flex items-start justify-between gap-3 px-5 sm:px-7 py-4 border-b border-slate-200">
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-cyan-700 uppercase tracking-wider">{previewTemplate.category}</div>
                   <h3 className="text-xl font-black text-slate-900 mt-0.5">{previewTemplate.name}</h3>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
+                      {layoutLabel(previewTemplate.layout)}
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
+                      {fontLabel(previewTemplate.font_family)}
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold">
+                      Single column, real text
+                    </span>
+                  </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setPreviewTemplate(null)}
-                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition cursor-pointer"
+                  aria-label="Close preview"
+                  className="w-9 h-9 shrink-0 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer"
                 >
-                  &times;
+                  <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 space-y-3 leading-relaxed">
-                <p><strong>Overview:</strong> {previewTemplate.description}</p>
-                <p><strong>Ideal Target Careers:</strong> {previewTemplate.bestFor}</p>
-                <div className="flex items-center gap-3 pt-2">
-                  <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs">
-                    ✓ {previewTemplate.atsScore}
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-sky-100 text-sky-800 font-bold text-xs">
-                    ✓ Google X-Y-Z Ready
-                  </span>
+              <div className="flex-1 overflow-y-auto bg-slate-100 px-3 sm:px-6 py-5">
+                <div
+                  className="mx-auto max-w-[620px] rounded-md border border-slate-300 shadow-lg overflow-hidden"
+                  data-testid="template-quick-preview"
+                  data-layout={previewTemplate.layout}
+                >
+                  <TemplatePage template={previewTemplate} />
                 </div>
+                <p className="text-center text-xs text-slate-500 mt-3">
+                  Sample content shown. Your own details fill this exact layout in the builder.
+                </p>
               </div>
 
-              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 pt-2">
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3 px-5 sm:px-7 py-4 border-t border-slate-200 bg-white">
                 <button
+                  type="button"
                   onClick={() => setPreviewTemplate(null)}
                   className="px-5 py-2.5 rounded-full border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100 transition cursor-pointer text-center"
                 >
@@ -416,11 +356,11 @@ export default function TemplatesPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleUseTemplate(previewTemplate.id, previewTemplate.name, previewTemplate.primaryHex)}
+                  onClick={() => handleUseTemplate(previewTemplate)}
                   className="px-6 py-2.5 rounded-full bg-slate-900 hover:bg-black text-white font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
                 >
                   {!isAuthenticated && <Lock className="w-3.5 h-3.5 text-amber-400" />}
-                  <span>Open in Visual Builder</span>
+                  <span>Use this template in the builder</span>
                   <ArrowRight className="w-3.5 h-3.5 text-cyan-400" />
                 </button>
               </div>
@@ -432,7 +372,7 @@ export default function TemplatesPage() {
       <TemplateAuthModal
         isOpen={!!authModalTemplate}
         onClose={() => setAuthModalTemplate(null)}
-        templateId={authModalTemplate?.id || 'ats_minimalist_clean'}
+        templateId={authModalTemplate?.id || 'gulf_dubai_sapphire'}
         templateName={authModalTemplate?.name || 'ATS-Optimized Template'}
       />
 

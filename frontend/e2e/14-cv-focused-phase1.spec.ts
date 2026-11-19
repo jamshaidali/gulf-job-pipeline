@@ -104,9 +104,21 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     // Check heading
     await expect(page.locator('h1')).toContainText(/ATS-Optimized Resume Templates/i);
 
-    // Filter by Executive
+    // Filter by Executive: real catalog templates are listed, each shown as the actual rendered resume
     await page.getByRole('button', { name: 'Executive & Leadership' }).click();
-    await expect(page.getByText(/Executive Leadership Pro/i)).toBeVisible();
+    await expect(page.getByText('Global Sovereign Executive')).toBeVisible();
+    const thumbnails = page.getByTestId('template-thumbnail');
+    await expect(thumbnails.first()).toContainText('Alexander Chen');
+    await expect(thumbnails.first()).toContainText(/Professional Experience/i);
+
+    // Quick Preview shows the real template at reading size, not a text description
+    await page.getByRole('button', { name: /Quick Preview/i }).first().click();
+    const quick = page.getByTestId('template-quick-preview');
+    await expect(quick).toBeVisible();
+    await expect(quick).toContainText(/Professional Summary/i);
+    await expect(page.getByRole('dialog')).not.toContainText(/ATS Verified|Google X-Y-Z/i);
+    await page.getByRole('button', { name: 'Close preview' }).click();
+    await expect(quick).toBeHidden();
 
     // Clicking Use This Template while unauthenticated opens Create Account modal
     const useTemplateBtn = page.getByRole('button', { name: /Use This Template/i }).first();

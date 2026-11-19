@@ -57,7 +57,9 @@ const MUTED = '#475569';
 const RULE = '#94A3B8';
 
 /** n points of an 8.5in-wide page, scaled to the container, never below ~80% of the nominal px size. */
-const pt = (n: number) => `max(${(n * (96 / 72) * 0.8).toFixed(2)}px, ${((n / 612) * 100).toFixed(3)}cqw)`;
+const ptReadable = (n: number) => `max(${(n * (96 / 72) * 0.8).toFixed(2)}px, ${((n / 612) * 100).toFixed(3)}cqw)`;
+/** Exact proportions at any size (no pixel floor): used for thumbnails of the whole page. */
+const ptExact = (n: number) => `${((n / 612) * 100).toFixed(3)}cqw`;
 
 const clean = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
@@ -65,11 +67,15 @@ export default function ResumePreview({
   layout,
   accent,
   data,
+  fit = false,
 }: {
   layout: PreviewLayout;
   accent: string;
   data: PreviewData;
+  /** Thumbnail mode: keep exact page proportions at any width (text may become tiny). */
+  fit?: boolean;
 }) {
+  const pt = fit ? ptExact : ptReadable;
   const compact = layout === 'compact_dense';
   const modern = layout === 'modern_accent';
   const banner = layout === 'split_header';

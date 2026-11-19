@@ -9,6 +9,7 @@ import TemplateGalleryModal from '@/components/dashboard/TemplateGalleryModal';
 import { CVTemplate } from '@/types';
 import { fetchCurrentUser, fetchCVTemplates, importCvToBuilder, exportCustomAtsCv, ImportedStructuredResume } from '@/lib/api';
 import ResumePreview, { PreviewLayout } from '@/components/builder/ResumePreview';
+import { asPreviewLayout, readableAccent } from '@/lib/templatePreview';
 import { 
   Sparkles, 
   Download, 
@@ -132,38 +133,12 @@ const QUICK_LAYOUTS: Record<BuilderTemplateId, { backendId: string; layout: Prev
   classic_serif: { backendId: 'abu_dhabi_executive', layout: 'single_column', font: 'serif' },
 };
 
-const asPreviewLayout = (layout: string): PreviewLayout =>
-  layout === 'split_header' || layout === 'modern_accent' || layout === 'compact_dense' ? layout : 'single_column';
-
 /** Which quick-layout chip best describes a catalog template (used only to highlight a chip). */
 const quickIdFor = (layout: string, fontFamily: string): BuilderTemplateId => {
   if (layout === 'split_header') return 'executive';
   if (layout === 'compact_dense') return 'compact';
   if (layout === 'modern_accent') return 'tech_two_column';
   return fontFamily === 'Times-Roman' ? 'classic_serif' : 'minimalist';
-};
-
-const contrastOnWhite = (hex: string): number => {
-  const chan = (v: number) => {
-    const c = v / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  };
-  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  return 1.05 / (0.2126 * chan(r) + 0.7152 * chan(g) + 0.0722 * chan(b) + 0.05);
-};
-
-/** Darken a colour until it is readable on white. Mirrors the exporter, so preview colour == printed colour. */
-const readableAccent = (hex: string, minimum = 4.5): string => {
-  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return '#0369a1';
-  let [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  let current = hex.toUpperCase();
-  for (let i = 0; i < 40 && contrastOnWhite(current) < minimum; i++) {
-    r = Math.floor(r * 0.9);
-    g = Math.floor(g * 0.9);
-    b = Math.floor(b * 0.9);
-    current = `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
-  }
-  return current;
 };
 
 /** A CV the user imported. Kept in the browser so resetting to the demo never destroys it. */
