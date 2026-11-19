@@ -35,7 +35,8 @@ import {
   X,
   Lock,
   LogOut,
-  User
+  User,
+  History
 } from 'lucide-react';
 
 type BuilderTemplateId = 'tech_two_column' | 'minimalist' | 'executive' | 'compact' | 'classic_serif';
@@ -120,6 +121,55 @@ interface ProjectEntry {
   description: string;
   techStack: string;
 }
+
+/** A CV the user imported. Kept in the browser so resetting to the demo never destroys it. */
+interface SavedCv {
+  id: string;
+  name: string;
+  savedAt: number;
+  resume: ImportedStructuredResume;
+}
+
+const CV_LIBRARY_KEY = 'tr_builder_cv_library';
+const MAX_SAVED_CVS = 5;
+const SAMPLE_CV_NAME = 'Sample_Senior_Engineer_CV.pdf';
+/** Autosave names that mean "demo content", not a CV the user uploaded. */
+const NON_LIBRARY_NAMES = [SAMPLE_CV_NAME, 'Live_Edited_Resume.pdf'];
+
+const newCvId = () => `cv_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+
+const readCvLibrary = (): SavedCv[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CV_LIBRARY_KEY) || '[]');
+    return Array.isArray(parsed)
+      ? parsed.filter((c) => c && typeof c.id === 'string' && typeof c.name === 'string' && c.resume).slice(0, MAX_SAVED_CVS)
+      : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeCvLibrary = (list: SavedCv[]) => {
+  try {
+    localStorage.setItem(CV_LIBRARY_KEY, JSON.stringify(list.slice(0, MAX_SAVED_CVS)));
+  } catch {
+    // Storage full or blocked: the CV is still in the editor, just not in the library.
+  }
+};
+
+/** Friendly label: pasted text has no real file name, so use the person's name instead. */
+const cvLabel = (cv: SavedCv) =>
+  /^pasted_resume/i.test(cv.name) ? `${cv.resume.fullName || 'Pasted resume'} (pasted text)` : cv.name;
+
+const timeAgo = (ts: number) => {
+  const mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs} h ago`;
+  return `${Math.round(hrs / 24)} d ago`;
+};
 
 /** Join only the non-empty parts, so empty fields never leave dangling separators. */
 const joinParts = (parts: Array<string | undefined | null>, sep = ' \u2022 ') =>
@@ -281,6 +331,10 @@ export default function ResumeBuilderPage() {
     targetCompany: string;
   } | null>(null);
 
+  // Library of the user's imported CVs (kept in the browser) and which one is being edited now.
+  const [savedCvs, setSavedCvs] = useState<SavedCv[]>([]);
+  const [activeCvId, setActiveCvId] = useState<string | null>(null);
+
   useEffect(() => {
     const mapTemplateParam = (raw: string | null): BuilderTemplateId | null => {
       if (!raw) return null;
@@ -301,7 +355,10 @@ export default function ResumeBuilderPage() {
     };
 
     const init = async () => {
+      let library: SavedCv[] = [];
       if (typeof window !== 'undefined') {
+        library = readCvLibrary();
+        setSavedCvs(library);
         const rawStoredCv =
           sessionStorage.getItem('tr_builder_imported_cv') ||
           localStorage.getItem('tr_builder_imported_cv');
@@ -325,6 +382,21 @@ export default function ResumeBuilderPage() {
               setEducations(f.educations);
               setProjects(f.projects);
               setLastImportedFile(srcName);
+
+              // Re-attach to the library entry being edited. A CV saved before the library existed
+              // (or arriving from the ATS scanner) is added to it, so it can always be switched back to.
+              let restoredId: string | null =
+                typeof parsedPayload.cvId === 'string' && library.some((c) => c.id === parsedPayload.cvId)
+                  ? parsedPayload.cvId
+                  : null;
+              if (!restoredId && !NON_LIBRARY_NAMES.includes(srcName)) {
+                const entry: SavedCv = { id: newCvId(), name: srcName, savedAt: Date.now(), resume: f as ImportedStructuredResume };
+                library = [entry, ...library].slice(0, MAX_SAVED_CVS);
+                writeCvLibrary(library);
+                setSavedCvs(library);
+                restoredId = entry.id;
+              }
+              setActiveCvId(restoredId);
 
               if (parsedPayload.atsContext) {
                 setAtsScanContext(parsedPayload.atsContext);
@@ -449,6 +521,7 @@ export default function ResumeBuilderPage() {
     if (typeof window === 'undefined') return;
     const payload = JSON.stringify({
       filename: lastImportedFile || 'Live_Edited_Resume.pdf',
+      cvId: activeCvId,
       resume: {
         fullName,
         jobTitle,
@@ -469,6 +542,7 @@ export default function ResumeBuilderPage() {
     localStorage.setItem('tr_builder_imported_cv', payload);
     sessionStorage.setItem('tr_builder_imported_cv', payload);
   }, [
+    activeCvId,
     hasManualEdits,
     lastImportedFile,
     fullName,
@@ -487,7 +561,22 @@ export default function ResumeBuilderPage() {
   ]);
   const quickFileInputRef = useRef<HTMLInputElement>(null);
 
-  const applyImportedResume = (res: ImportedStructuredResume, sourceName: string) => {
+  // Keep the active CV's library entry in sync with the user's edits, so switching away never loses work.
+  useEffect(() => {
+    if (!activeCvId) return;
+    const current = { fullName, jobTitle, email, phone, location, linkedIn, github, summary, skills, experiences, educations, projects };
+    setSavedCvs((prev) => {
+      const entry = prev.find((c) => c.id === activeCvId);
+      if (!entry || JSON.stringify(entry.resume) === JSON.stringify(current)) return prev;
+      const next = prev.map((c) =>
+        c.id === activeCvId ? { ...c, resume: current as ImportedStructuredResume, savedAt: Date.now() } : c
+      );
+      writeCvLibrary(next);
+      return next;
+    });
+  }, [activeCvId, fullName, jobTitle, email, phone, location, linkedIn, github, summary, skills, experiences, educations, projects]);
+
+  const applyImportedResume = (res: ImportedStructuredResume, sourceName: string, opts?: { sample?: boolean }) => {
     const f = resumeToFields(res);
     setFullName(f.fullName);
     setJobTitle(f.jobTitle);
@@ -502,10 +591,23 @@ export default function ResumeBuilderPage() {
     setEducations(f.educations);
     setProjects(f.projects);
 
+    // Importing never discards the CV being edited: it already lives in the library. A real upload
+    // becomes the newest library entry; the demo sample is shown but not added to it.
+    let newActiveId: string | null = null;
+    if (!opts?.sample) {
+      const entry: SavedCv = { id: newCvId(), name: sourceName, savedAt: Date.now(), resume: f as ImportedStructuredResume };
+      const nextLibrary = [entry, ...savedCvs].slice(0, MAX_SAVED_CVS);
+      writeCvLibrary(nextLibrary);
+      setSavedCvs(nextLibrary);
+      newActiveId = entry.id;
+    }
+    setActiveCvId(newActiveId);
+
     setLastImportedFile(sourceName);
     if (typeof window !== 'undefined') {
       const payload = JSON.stringify({
         filename: sourceName,
+        cvId: newActiveId,
         resume: res,
         atsContext: atsScanContext,
         timestamp: Date.now(),
@@ -572,7 +674,7 @@ export default function ResumeBuilderPage() {
     setIsImporting(true);
     try {
       const result = await importCvToBuilder({ useSample: true });
-      applyImportedResume(result.resume, 'Sample_Senior_Engineer_CV.pdf');
+      applyImportedResume(result.resume, SAMPLE_CV_NAME, { sample: true });
     } catch (err: any) {
       setImportError(err.message || 'Failed to import sample resume.');
     } finally {
@@ -595,11 +697,50 @@ export default function ResumeBuilderPage() {
 
   const [collapsedRoles, setCollapsedRoles] = useState<Set<string>>(new Set());
 
+  const handleSwitchToSavedCv = (id: string) => {
+    const target = savedCvs.find((c) => c.id === id);
+    if (!target) return;
+    const f = resumeToFields(target.resume);
+    setFullName(f.fullName);
+    setJobTitle(f.jobTitle);
+    setEmail(f.email);
+    setPhone(f.phone);
+    setLocation(f.location);
+    setLinkedIn(f.linkedIn);
+    setGithub(f.github);
+    setSummary(f.summary);
+    setSkills(f.skills);
+    setExperiences(f.experiences);
+    setEducations(f.educations);
+    setProjects(f.projects);
+    setActiveCvId(id);
+    setLastImportedFile(target.name);
+    setAtsScanContext(null);
+    setActiveTab('basics');
+    showNotice(`Switched to your CV "${cvLabel(target)}".`);
+  };
+
+  const handleDeleteSavedCv = (id: string) => {
+    const target = savedCvs.find((c) => c.id === id);
+    if (!target) return;
+    if (typeof window !== 'undefined' && !window.confirm(`Remove "${cvLabel(target)}" from your saved CVs? This can't be undone.`)) return;
+    const next = savedCvs.filter((c) => c.id !== id);
+    writeCvLibrary(next);
+    setSavedCvs(next);
+    if (activeCvId === id) {
+      setActiveCvId(null);
+      setLastImportedFile(null);
+    }
+    showNotice(`Removed "${cvLabel(target)}" from your saved CVs.`);
+  };
+
   const handleStartFromScratch = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('tr_builder_imported_cv');
       sessionStorage.removeItem('tr_builder_imported_cv');
     }
+    const leavingCv = savedCvs.find((c) => c.id === activeCvId);
+    setActiveCvId(null);
     setHasManualEdits(false);
     setLastImportedFile(null);
     setAtsScanContext(null);
@@ -641,7 +782,11 @@ export default function ResumeBuilderPage() {
     ]);
     setProjects([]);
     setActiveTab('basics');
-    showNotice('Cleared uploaded CV — Ready to build your resume from scratch!');
+    showNotice(
+      leavingCv
+        ? `Blank resume ready. Your CV "${cvLabel(leavingCv)}" is saved — switch back from "Your saved CVs".`
+        : 'Blank resume ready — start building from scratch!'
+    );
   };
 
   const handleResetToDefaultTemplate = () => {
@@ -649,6 +794,8 @@ export default function ResumeBuilderPage() {
       localStorage.removeItem('tr_builder_imported_cv');
       sessionStorage.removeItem('tr_builder_imported_cv');
     }
+    const leavingCv = savedCvs.find((c) => c.id === activeCvId);
+    setActiveCvId(null);
     setHasManualEdits(false);
     setLastImportedFile(null);
     setAtsScanContext(null);
@@ -726,7 +873,11 @@ export default function ResumeBuilderPage() {
         techStack: 'Go, Kafka, Redis, Docker',
       },
     ]);
-    showNotice('Reset resume back to default sample template!');
+    showNotice(
+      leavingCv
+        ? `Showing the demo. Your CV "${cvLabel(leavingCv)}" is saved — switch back from "Your saved CVs".`
+        : 'Reset resume back to default sample template!'
+    );
   };
 
   // Calculate Real-time ATS Health Score
@@ -1174,7 +1325,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 type="button"
                 onClick={handleResetToDefaultTemplate}
                 className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-bold transition flex items-center gap-1 cursor-pointer"
-                title="Reset to sample template data"
+                title="Show the demo resume (your uploaded CV stays saved)"
               >
                 <RotateCcw className="w-3 h-3" />
                 <span>Reset Demo</span>
@@ -1243,7 +1394,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                     type="button"
                     onClick={handleResetToDefaultTemplate}
                     className="px-2 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-800 text-[10px] font-extrabold transition flex items-center gap-1 cursor-pointer"
-                    title="Remove uploaded CV and reset"
+                    title="Show the demo resume (your uploaded CV stays saved)"
                   >
                     <X className="w-3 h-3" />
                     <span>Reset CV</span>
@@ -1252,6 +1403,87 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
               )}
             </div>
           </div>
+
+          {/* YOUR SAVED CVs: switching to the demo / sample / another file never deletes a CV */}
+          {savedCvs.length > 0 && (
+            <div
+              data-testid="saved-cvs-card"
+              className={`rounded-2xl border p-3 space-y-2.5 ${
+                activeCvId ? 'border-slate-200 bg-white' : 'border-amber-300 bg-amber-50/70'
+              }`}
+            >
+              <div className="flex items-start gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
+                  <History className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-bold text-slate-900">
+                    {activeCvId ? 'Your saved CVs' : "You're viewing the demo — not your CV"}
+                  </div>
+                  <p className="text-[13px] text-slate-600 leading-snug">
+                    {activeCvId
+                      ? 'Resetting to the demo, trying the sample or importing another file never deletes your CV. Pick one here to switch back anytime.'
+                      : 'Your uploaded CV is safe. Choose it below to switch back and keep editing.'}
+                  </p>
+                </div>
+              </div>
+
+              {!activeCvId && (
+                <button
+                  type="button"
+                  onClick={() => handleSwitchToSavedCv(savedCvs[0].id)}
+                  className="w-full inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white text-sm font-semibold transition cursor-pointer"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span className="truncate">Switch back to my CV: {cvLabel(savedCvs[0])}</span>
+                </button>
+              )}
+
+              <ul className="space-y-1.5">
+                {savedCvs.map((cv) => {
+                  const isActive = cv.id === activeCvId;
+                  return (
+                    <li
+                      key={cv.id}
+                      className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${
+                        isActive ? 'border-emerald-300 bg-emerald-50/70' : 'border-slate-200 bg-slate-50/60'
+                      }`}
+                    >
+                      <FileText className="w-4 h-4 text-slate-500 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[13px] font-semibold text-slate-900 truncate">{cvLabel(cv)}</div>
+                        <div className="text-xs text-slate-500">
+                          {cv.resume.fullName ? `${cv.resume.fullName} · ` : ''}edited {timeAgo(cv.savedAt)}
+                        </div>
+                      </div>
+                      {isActive ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 shrink-0">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Editing now
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleSwitchToSavedCv(cv.id)}
+                          className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-xs font-semibold text-slate-800 transition cursor-pointer shrink-0"
+                        >
+                          Switch to this CV
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteSavedCv(cv.id)}
+                        className="p-1.5 rounded-md text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer shrink-0"
+                        title="Remove this CV from your saved list"
+                        aria-label={`Remove ${cvLabel(cv)}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
 
           {/* ATS SCANNER SYNC BANNER (When opened via "Edit in Live Visual Builder" from /ats-scanner) */}
           {atsScanContext && (
