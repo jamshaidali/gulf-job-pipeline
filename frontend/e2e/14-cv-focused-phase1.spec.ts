@@ -393,7 +393,10 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     await editorPanel.getByRole('button', { name: /Add Role/i }).click();
     await expect(canvas).toContainText('New Company');
     await editorPanel.getByRole('button', { name: /AI Quantify \(X-Y-Z\)/i }).first().click();
-    await expect(canvas).toContainText(/accelerating processing throughput by 38%/i);
+    await expect(canvas).toContainText(/\[add result/i);
+    // clicking again must not stack more text
+    await editorPanel.getByRole('button', { name: /AI Quantify \(X-Y-Z\)/i }).first().click();
+    expect((await canvas.innerText()).match(/\[add result/gi)?.length).toBe(1);
 
     // 7. Test Skills Tab: Add custom skill & 1-click recommended skill chip
     await editorPanel.getByRole('button', { name: 'Skills', exact: true }).click();

@@ -1185,17 +1185,21 @@ export default function ResumeBuilderPage() {
 
   // AI Helpers
   const handleEnhanceBullet = (expIndex: number, bulletIndex: number) => {
-    const current = experiences[expIndex].bullets[bulletIndex];
-    let improved = current;
-    if (!/[0-9]+%/.test(current)) {
-      improved = current.replace(/\.$/, '') + ', accelerating processing throughput by 38% and reducing error rates.';
-    } else {
-      improved = 'Engineered and optimized ' + current.charAt(0).toLowerCase() + current.slice(1);
+    // Never invents numbers: it only adds a fill-in-the-blank so the user supplies their real result.
+    const current = experiences[expIndex].bullets[bulletIndex] || '';
+    if (current.includes('[add result')) {
+      showNotice('Replace the [add result] placeholder with your real number.');
+      return;
     }
+    if (/\d/.test(current)) {
+      showNotice('This bullet already has a number. Check it states your real result.');
+      return;
+    }
+    const base = current.trim().replace(/[.\s]+$/, '');
     const updated = [...experiences];
-    updated[expIndex].bullets[bulletIndex] = improved;
+    updated[expIndex].bullets[bulletIndex] = `${base}, resulting in [add result: X% / $Y / time saved].`;
     setExperiences(updated);
-    showNotice('Bullet point enhanced with Google X-Y-Z metrics!');
+    showNotice('Replace the [add result] placeholder with your real number (X-Y-Z).');
   };
 
   const handleGenerateSummary = () => {
