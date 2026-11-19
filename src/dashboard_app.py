@@ -1247,8 +1247,7 @@ async def export_custom_ats_cv(
     parsed = payload.parsed_resume or {}
     target_role = (
         (payload.job_title or "").strip()
-        or parsed.get("jobTitle")
-        or "Senior Software Engineer"
+        or (parsed.get("jobTitle") or "").strip()
     )
     target_company = (payload.company or "").strip()
     tmpl_id = (payload.template_id or "gulf_dubai_sapphire").strip()

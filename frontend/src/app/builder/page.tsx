@@ -121,6 +121,10 @@ interface ProjectEntry {
   techStack: string;
 }
 
+/** Join only the non-empty parts, so empty fields never leave dangling separators. */
+const joinParts = (parts: Array<string | undefined | null>, sep = ' \u2022 ') =>
+  parts.map((p) => (p || '').trim()).filter(Boolean).join(sep);
+
 /**
  * Turn an imported resume into a COMPLETE set of builder fields. Anything the import does not
  * contain becomes blank, so values from a previously loaded CV or the demo never mix into it.
@@ -805,7 +809,7 @@ export default function ResumeBuilderPage() {
       await exportCustomAtsCv({
         format,
         template_id: resolvedTemplateId,
-        job_title: jobTitle || 'Senior Software Engineer',
+        job_title: jobTitle,
         company: atsScanContext?.targetCompany || '',
         parsed_resume: {
           fullName,
@@ -822,7 +826,8 @@ export default function ResumeBuilderPage() {
           projects,
         },
         tailored_summary: summary,
-        tailored_bullets: atsScanContext?.tailoredBullets || [],
+        // Only what the preview shows is exported (accepted ATS bullets are already inserted into the roles).
+        tailored_bullets: [],
         missing_keywords: [],
       });
       setIsGalleryModalOpen(false);
@@ -2157,6 +2162,9 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 );
               })}
             </div>
+            <p className="basis-full text-[13px] text-slate-500">
+              Downloads are exported as a single-column, ATS-safe file in the matching style.
+            </p>
           </div>
 
           <div 
@@ -2174,22 +2182,12 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                   <div className="text-xl sm:text-3xl font-black tracking-tight" style={{ color: accentColor }}>
                     {fullName || 'Your Full Name'}
                   </div>
-                  <p className="text-xs sm:text-sm font-bold text-slate-700 mt-1">
+                  <p className="text-[13px] sm:text-sm font-bold text-slate-700 mt-1">
                     {jobTitle || 'Target Professional Role'}
                   </p>
                   
-                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-slate-500 mt-2 font-medium break-all sm:break-words">
-                    <span>{location}</span>
-                    <span>&bull;</span>
-                    <span>{phone}</span>
-                    <span>&bull;</span>
-                    <span>{email}</span>
-                    {linkedIn && (
-                      <>
-                        <span>&bull;</span>
-                        <span className="text-slate-700">{linkedIn}</span>
-                      </>
-                    )}
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-slate-500 mt-2 font-medium break-all sm:break-words">
+                    <span>{joinParts([location, phone, email, linkedIn, github])}</span>
                   </div>
                 </div>
 
@@ -2200,10 +2198,10 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                     {/* Summary */}
                     {summary && (
                       <div>
-                        <h2 className="text-xs font-black uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-200" style={{ color: accentColor }}>
+                        <h2 className="text-[13px] font-black uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-200" style={{ color: accentColor }}>
                           Professional Profile
                         </h2>
-                        <p className="text-xs text-slate-700 leading-relaxed">
+                        <p className="text-[13px] text-slate-700 leading-relaxed">
                           {summary}
                         </p>
                       </div>
@@ -2211,20 +2209,20 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
 
                     {/* Experience */}
                     <div>
-                      <h2 className="text-xs font-black uppercase tracking-wider pb-1.5 mb-3 border-b border-slate-200" style={{ color: accentColor }}>
+                      <h2 className="text-[13px] font-black uppercase tracking-wider pb-1.5 mb-3 border-b border-slate-200" style={{ color: accentColor }}>
                         Experience
                       </h2>
                       <div className="space-y-4">
                         {experiences.map((exp) => (
                           <div key={exp.id} className="space-y-1">
-                            <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-xs">
+                            <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-[13px]">
                               <span className="font-extrabold text-slate-900">{exp.position}</span>
-                              <span className="text-[10px] text-slate-500 font-semibold">{exp.startDate} &ndash; {exp.endDate}</span>
+                              <span className="text-[13px] text-slate-500 font-semibold">{joinParts([exp.startDate, exp.endDate], ' \u2013 ')}</span>
                             </div>
-                            <div className="text-[11px] font-semibold text-slate-600">
-                              {exp.company} &bull; {exp.location}
+                            <div className="text-[13px] font-semibold text-slate-600">
+                              {joinParts([exp.company, exp.location])}
                             </div>
-                            <ul className="list-disc list-outside pl-4 space-y-1 text-[11px] text-slate-700 pt-1 leading-relaxed">
+                            <ul className="list-disc list-outside pl-4 space-y-1 text-[13px] text-slate-700 pt-1 leading-relaxed">
                               {exp.bullets.map((b, bIdx) => (
                                 <li key={bIdx}>{b}</li>
                               ))}
@@ -2239,14 +2237,14 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                   <div className="sm:col-span-4 space-y-6 border-t sm:border-t-0 sm:border-l border-slate-100 pt-4 sm:pt-0 sm:pl-6 min-w-0">
                     {/* Skills Matrix */}
                     <div>
-                      <h2 className="text-xs font-black uppercase tracking-wider pb-1.5 mb-2.5 border-b border-slate-200" style={{ color: accentColor }}>
+                      <h2 className="text-[13px] font-black uppercase tracking-wider pb-1.5 mb-2.5 border-b border-slate-200" style={{ color: accentColor }}>
                         Technical Stack
                       </h2>
                       <div className="flex flex-wrap gap-1.5">
                         {skills.map((s) => (
                           <span
                             key={s}
-                            className="px-2 py-0.5 rounded-sm bg-slate-100 text-[10px] font-bold text-slate-800"
+                            className="px-2 py-0.5 rounded-sm bg-slate-100 text-[13px] font-bold text-slate-800"
                           >
                             {s}
                           </span>
@@ -2256,15 +2254,15 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
 
                     {/* Education */}
                     <div>
-                      <h2 className="text-xs font-black uppercase tracking-wider pb-1.5 mb-2.5 border-b border-slate-200" style={{ color: accentColor }}>
+                      <h2 className="text-[13px] font-black uppercase tracking-wider pb-1.5 mb-2.5 border-b border-slate-200" style={{ color: accentColor }}>
                         Education
                       </h2>
                       <div className="space-y-2">
                         {educations.map((edu) => (
-                          <div key={edu.id} className="text-xs">
+                          <div key={edu.id} className="text-[13px]">
                             <div className="font-bold text-slate-900">{edu.degree}</div>
-                            <div className="text-[10px] text-slate-600">{edu.institution}</div>
-                            <div className="text-[10px] text-slate-400 font-medium">{edu.year} &bull; {edu.honors}</div>
+                            <div className="text-[13px] text-slate-600">{edu.institution}</div>
+                            <div className="text-[13px] text-slate-400 font-medium">{joinParts([edu.year, edu.honors])}</div>
                           </div>
                         ))}
                       </div>
@@ -2273,14 +2271,14 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                     {/* Portfolio / Projects */}
                     {projects.length > 0 && (
                       <div>
-                        <h2 className="text-xs font-black uppercase tracking-wider pb-1.5 mb-2.5 border-b border-slate-200" style={{ color: accentColor }}>
+                        <h2 className="text-[13px] font-black uppercase tracking-wider pb-1.5 mb-2.5 border-b border-slate-200" style={{ color: accentColor }}>
                           Key Highlights
                         </h2>
                         {projects.map((proj) => (
-                          <div key={proj.id} className="text-xs space-y-1">
+                          <div key={proj.id} className="text-[13px] space-y-1">
                             <div className="font-bold text-slate-900">{proj.title}</div>
-                            <div className="text-[10px] text-slate-600 leading-normal">{proj.description}</div>
-                            <div className="text-[9px] text-slate-400 font-mono">{proj.techStack}</div>
+                            <div className="text-[13px] text-slate-600 leading-normal">{proj.description}</div>
+                            <div className="text-[13px] text-slate-400 font-mono">{proj.techStack}</div>
                           </div>
                         ))}
                       </div>
@@ -2297,42 +2295,42 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                   <div className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight">
                     {fullName}
                   </div>
-                  <p className="text-xs font-bold text-slate-600 uppercase tracking-wider mt-1">
+                  <p className="text-[13px] font-bold text-slate-600 uppercase tracking-wider mt-1">
                     {jobTitle}
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-1 break-words">
+                  <p className="text-[13px] text-slate-500 mt-1 break-words">
                     {location} | {phone} | {email} | {linkedIn}
                   </p>
                 </div>
 
                 {summary && (
                   <div>
-                    <h2 className="text-xs font-extrabold uppercase tracking-wider pb-1 mb-2 border-b border-slate-800 text-slate-900">
+                    <h2 className="text-[13px] font-extrabold uppercase tracking-wider pb-1 mb-2 border-b border-slate-800 text-slate-900">
                       Summary
                     </h2>
-                    <p className="text-xs text-slate-700 leading-relaxed">{summary}</p>
+                    <p className="text-[13px] text-slate-700 leading-relaxed">{summary}</p>
                   </div>
                 )}
 
                 <div>
-                  <h2 className="text-xs font-extrabold uppercase tracking-wider pb-1 mb-2 border-b border-slate-800 text-slate-900">
+                  <h2 className="text-[13px] font-extrabold uppercase tracking-wider pb-1 mb-2 border-b border-slate-800 text-slate-900">
                     Core Competencies
                   </h2>
-                  <p className="text-xs text-slate-700">{skills.join(' • ')}</p>
+                  <p className="text-[13px] text-slate-700">{skills.join(' • ')}</p>
                 </div>
 
                 <div>
-                  <h2 className="text-xs font-extrabold uppercase tracking-wider pb-1 mb-3 border-b border-slate-800 text-slate-900">
+                  <h2 className="text-[13px] font-extrabold uppercase tracking-wider pb-1 mb-3 border-b border-slate-800 text-slate-900">
                     Work Experience
                   </h2>
                   <div className="space-y-4">
                     {experiences.map((exp) => (
                       <div key={exp.id} className="space-y-1">
-                        <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-xs font-bold">
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-[13px] font-bold">
                           <span>{exp.position} &mdash; {exp.company}</span>
-                          <span className="text-[10px] text-slate-500 font-normal">{exp.startDate} - {exp.endDate}</span>
+                          <span className="text-[13px] text-slate-500 font-normal">{exp.startDate} - {exp.endDate}</span>
                         </div>
-                        <ul className="list-disc list-outside pl-4 space-y-1 text-xs text-slate-700">
+                        <ul className="list-disc list-outside pl-4 space-y-1 text-[13px] text-slate-700">
                           {exp.bullets.map((b, i) => (
                             <li key={i}>{b}</li>
                           ))}
@@ -2343,11 +2341,11 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 </div>
 
                 <div>
-                  <h2 className="text-xs font-extrabold uppercase tracking-wider pb-1 mb-2 border-b border-slate-800 text-slate-900">
+                  <h2 className="text-[13px] font-extrabold uppercase tracking-wider pb-1 mb-2 border-b border-slate-800 text-slate-900">
                     Education
                   </h2>
                   {educations.map((edu) => (
-                    <div key={edu.id} className="flex flex-wrap justify-between gap-x-2 text-xs">
+                    <div key={edu.id} className="flex flex-wrap justify-between gap-x-2 text-[13px]">
                       <span><strong>{edu.degree}</strong>, {edu.institution}</span>
                       <span className="text-slate-500">{edu.year}</span>
                     </div>
@@ -2356,12 +2354,12 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
 
                 {projects.length > 0 && (
                   <div>
-                    <h2 className="text-xs font-extrabold uppercase tracking-wider pb-1 mb-2 border-b border-slate-800 text-slate-900">
+                    <h2 className="text-[13px] font-extrabold uppercase tracking-wider pb-1 mb-2 border-b border-slate-800 text-slate-900">
                       Key Projects &amp; Highlights
                     </h2>
                     <div className="space-y-2">
                       {projects.map((proj) => (
-                        <div key={proj.id} className="text-xs">
+                        <div key={proj.id} className="text-[13px]">
                           <div className="font-bold text-slate-900">
                             {proj.title} {proj.techStack ? <span className="font-normal text-slate-500">({proj.techStack})</span> : null}
                           </div>
@@ -2379,31 +2377,31 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
               <div className="space-y-6">
                 <div className="p-4 sm:p-6 rounded-xl text-white space-y-1.5" style={{ backgroundColor: accentColor }}>
                   <div className="text-xl sm:text-3xl font-black tracking-tight">{fullName}</div>
-                  <p className="text-xs sm:text-sm font-semibold opacity-90">{jobTitle}</p>
-                  <p className="text-[11px] opacity-80 pt-1 break-words">{location} &bull; {phone} &bull; {email}</p>
+                  <p className="text-[13px] sm:text-sm font-semibold opacity-90">{jobTitle}</p>
+                  <p className="text-[13px] opacity-80 pt-1 break-words">{joinParts([location, phone, email, linkedIn, github])}</p>
                 </div>
 
                 {summary && (
                   <div>
-                    <h2 className="text-xs font-black uppercase tracking-wider pb-1 mb-2 border-b-2" style={{ borderColor: accentColor, color: accentColor }}>
+                    <h2 className="text-[13px] font-black uppercase tracking-wider pb-1 mb-2 border-b-2" style={{ borderColor: accentColor, color: accentColor }}>
                       Executive Summary
                     </h2>
-                    <p className="text-xs text-slate-700 leading-relaxed font-serif">{summary}</p>
+                    <p className="text-[13px] text-slate-700 leading-relaxed font-serif">{summary}</p>
                   </div>
                 )}
 
                 <div>
-                  <h2 className="text-xs font-black uppercase tracking-wider pb-1 mb-3 border-b-2" style={{ borderColor: accentColor, color: accentColor }}>
+                  <h2 className="text-[13px] font-black uppercase tracking-wider pb-1 mb-3 border-b-2" style={{ borderColor: accentColor, color: accentColor }}>
                     Professional Background
                   </h2>
                   <div className="space-y-4">
                     {experiences.map((exp) => (
                       <div key={exp.id} className="space-y-1">
-                        <div className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 text-xs font-bold text-slate-900">
+                        <div className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 text-[13px] font-bold text-slate-900">
                           <span>{exp.position} | {exp.company}</span>
-                          <span className="text-slate-500 font-normal">{exp.startDate} &ndash; {exp.endDate}</span>
+                          <span className="text-slate-500 font-normal">{joinParts([exp.startDate, exp.endDate], ' \u2013 ')}</span>
                         </div>
-                        <ul className="list-disc list-outside pl-4 space-y-1 text-xs text-slate-700 font-serif">
+                        <ul className="list-disc list-outside pl-4 space-y-1 text-[13px] text-slate-700 font-serif">
                           {exp.bullets.map((b, i) => (
                             <li key={i}>{b}</li>
                           ))}
@@ -2414,12 +2412,12 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 </div>
 
                 <div>
-                  <h2 className="text-xs font-black uppercase tracking-wider pb-1 mb-2 border-b-2" style={{ borderColor: accentColor, color: accentColor }}>
+                  <h2 className="text-[13px] font-black uppercase tracking-wider pb-1 mb-2 border-b-2" style={{ borderColor: accentColor, color: accentColor }}>
                     Core Leadership &amp; Tech Competencies
                   </h2>
                   <div className="flex flex-wrap gap-1.5">
                     {skills.map((s) => (
-                      <span key={s} className="px-2.5 py-1 rounded-sm bg-slate-100 text-slate-800 text-xs font-bold">
+                      <span key={s} className="px-2.5 py-1 rounded-sm bg-slate-100 text-slate-800 text-[13px] font-bold">
                         {s}
                       </span>
                     ))}
@@ -2428,12 +2426,12 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
 
                 {projects.length > 0 && (
                   <div>
-                    <h2 className="text-xs font-black uppercase tracking-wider pb-1 mb-2 border-b-2" style={{ borderColor: accentColor, color: accentColor }}>
+                    <h2 className="text-[13px] font-black uppercase tracking-wider pb-1 mb-2 border-b-2" style={{ borderColor: accentColor, color: accentColor }}>
                       Key Strategic Initiatives &amp; Projects
                     </h2>
                     <div className="space-y-2">
                       {projects.map((proj) => (
-                        <div key={proj.id} className="text-xs">
+                        <div key={proj.id} className="text-[13px]">
                           <span className="font-bold text-slate-900">{proj.title}: </span>
                           <span className="text-slate-700 font-serif">{proj.description}</span>
                         </div>
@@ -2450,29 +2448,29 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b-2 pb-3 gap-1" style={{ borderColor: accentColor }}>
                   <div>
                     <div className="text-xl sm:text-2xl font-black tracking-tight text-slate-950">{fullName}</div>
-                    <div className="text-xs font-extrabold uppercase tracking-wider mt-0.5" style={{ color: accentColor }}>
+                    <div className="text-[13px] font-extrabold uppercase tracking-wider mt-0.5" style={{ color: accentColor }}>
                       {jobTitle}
                     </div>
                   </div>
-                  <div className="text-[10px] text-slate-600 sm:text-right space-y-0.5 font-medium break-words">
-                    <div>{email} &bull; {phone}</div>
-                    <div>{location} {linkedIn ? `• ${linkedIn}` : ''}</div>
+                  <div className="text-[13px] text-slate-600 sm:text-right space-y-0.5 font-medium break-words">
+                    <div>{joinParts([email, phone])}</div>
+                    <div>{joinParts([location, linkedIn, github])}</div>
                   </div>
                 </div>
 
                 {summary && (
-                  <p className="text-[11px] text-slate-700 leading-snug bg-slate-50 p-3 rounded-lg border border-slate-200/80">
+                  <p className="text-[13px] text-slate-700 leading-snug bg-slate-50 p-3 rounded-lg border border-slate-200/80">
                     {summary}
                   </p>
                 )}
 
                 <div>
-                  <h2 className="text-[10px] font-black uppercase tracking-widest pb-1 mb-1.5 border-b border-slate-200" style={{ color: accentColor }}>
+                  <h2 className="text-[13px] font-black uppercase tracking-widest pb-1 mb-1.5 border-b border-slate-200" style={{ color: accentColor }}>
                     Technical Skills &amp; Core Stack
                   </h2>
                   <div className="flex flex-wrap gap-1">
                     {skills.map((s) => (
-                      <span key={s} className="px-2 py-0.5 rounded bg-slate-100 text-[10px] font-bold text-slate-800">
+                      <span key={s} className="px-2 py-0.5 rounded bg-slate-100 text-[13px] font-bold text-slate-800">
                         {s}
                       </span>
                     ))}
@@ -2480,17 +2478,17 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 </div>
 
                 <div>
-                  <h2 className="text-[10px] font-black uppercase tracking-widest pb-1 mb-2 border-b border-slate-200" style={{ color: accentColor }}>
+                  <h2 className="text-[13px] font-black uppercase tracking-widest pb-1 mb-2 border-b border-slate-200" style={{ color: accentColor }}>
                     Professional Experience
                   </h2>
                   <div className="space-y-3">
                     {experiences.map((exp) => (
                       <div key={exp.id} className="space-y-0.5">
-                        <div className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 text-xs font-extrabold text-slate-900">
+                        <div className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 text-[13px] font-extrabold text-slate-900">
                           <span>{exp.position} &mdash; <span className="text-slate-600 font-bold">{exp.company} ({exp.location})</span></span>
-                          <span className="text-[10px] text-slate-500 font-semibold">{exp.startDate} &ndash; {exp.endDate}</span>
+                          <span className="text-[13px] text-slate-500 font-semibold">{joinParts([exp.startDate, exp.endDate], ' \u2013 ')}</span>
                         </div>
-                        <ul className="list-disc list-outside pl-4 space-y-0.5 text-[11px] text-slate-700 leading-snug">
+                        <ul className="list-disc list-outside pl-4 space-y-0.5 text-[13px] text-slate-700 leading-snug">
                           {exp.bullets.map((b, i) => (
                             <li key={i}>{b}</li>
                           ))}
@@ -2502,25 +2500,25 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                   <div>
-                    <h2 className="text-[10px] font-black uppercase tracking-widest pb-1 mb-1.5 border-b border-slate-200" style={{ color: accentColor }}>
+                    <h2 className="text-[13px] font-black uppercase tracking-widest pb-1 mb-1.5 border-b border-slate-200" style={{ color: accentColor }}>
                       Education
                     </h2>
                     {educations.map((edu) => (
-                      <div key={edu.id} className="text-[11px]">
+                      <div key={edu.id} className="text-[13px]">
                         <div className="font-bold text-slate-900">{edu.degree}</div>
-                        <div className="text-slate-600 text-[10px]">{edu.institution} ({edu.year})</div>
+                        <div className="text-slate-600 text-[13px]">{edu.institution} ({edu.year})</div>
                       </div>
                     ))}
                   </div>
                   {projects.length > 0 && (
                     <div>
-                      <h2 className="text-[10px] font-black uppercase tracking-widest pb-1 mb-1.5 border-b border-slate-200" style={{ color: accentColor }}>
+                      <h2 className="text-[13px] font-black uppercase tracking-widest pb-1 mb-1.5 border-b border-slate-200" style={{ color: accentColor }}>
                         Key Projects
                       </h2>
                       {projects.slice(0, 2).map((proj) => (
-                        <div key={proj.id} className="text-[11px] mb-1">
+                        <div key={proj.id} className="text-[13px] mb-1">
                           <span className="font-bold text-slate-900">{proj.title}: </span>
-                          <span className="text-slate-600 text-[10px]">{proj.description}</span>
+                          <span className="text-slate-600 text-[13px]">{proj.description}</span>
                         </div>
                       ))}
                     </div>
@@ -2536,34 +2534,34 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                   <div className="text-xl sm:text-3xl font-bold tracking-wide uppercase text-slate-950">
                     {fullName}
                   </div>
-                  <div className="text-xs italic text-slate-700 mt-1">{jobTitle}</div>
-                  <div className="text-[11px] text-slate-600 mt-1 break-words">
-                    {location} &bull; {phone} &bull; {email} {linkedIn ? `• ${linkedIn}` : ''}
+                  <div className="text-[13px] italic text-slate-700 mt-1">{jobTitle}</div>
+                  <div className="text-[13px] text-slate-600 mt-1 break-words">
+                    {joinParts([location, phone, email, linkedIn, github])}
                   </div>
                 </div>
 
                 {summary && (
                   <div>
-                    <h2 className="text-xs font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-2 text-slate-900">
+                    <h2 className="text-[13px] font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-2 text-slate-900">
                       Executive Profile
                     </h2>
-                    <p className="text-xs text-slate-800 leading-relaxed">{summary}</p>
+                    <p className="text-[13px] text-slate-800 leading-relaxed">{summary}</p>
                   </div>
                 )}
 
                 <div>
-                  <h2 className="text-xs font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-2.5 text-slate-900">
+                  <h2 className="text-[13px] font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-2.5 text-slate-900">
                     Professional Experience
                   </h2>
                   <div className="space-y-4">
                     {experiences.map((exp) => (
                       <div key={exp.id} className="space-y-1">
-                        <div className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 text-xs font-bold text-slate-950">
+                        <div className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 text-[13px] font-bold text-slate-950">
                           <span>{exp.company}, {exp.location}</span>
-                          <span>{exp.startDate} &ndash; {exp.endDate}</span>
+                          <span>{joinParts([exp.startDate, exp.endDate], ' \u2013 ')}</span>
                         </div>
-                        <div className="text-xs italic text-slate-700">{exp.position}</div>
-                        <ul className="list-disc list-outside pl-4 space-y-1 text-xs text-slate-800">
+                        <div className="text-[13px] italic text-slate-700">{exp.position}</div>
+                        <ul className="list-disc list-outside pl-4 space-y-1 text-[13px] text-slate-800">
                           {exp.bullets.map((b, i) => (
                             <li key={i}>{b}</li>
                           ))}
@@ -2574,11 +2572,11 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 </div>
 
                 <div>
-                  <h2 className="text-xs font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-2 text-slate-900">
+                  <h2 className="text-[13px] font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-2 text-slate-900">
                     Education
                   </h2>
                   {educations.map((edu) => (
-                    <div key={edu.id} className="flex flex-wrap justify-between gap-x-2 text-xs mb-1">
+                    <div key={edu.id} className="flex flex-wrap justify-between gap-x-2 text-[13px] mb-1">
                       <span><strong>{edu.institution}</strong> &mdash; <em>{edu.degree}</em></span>
                       <span>{edu.year}</span>
                     </div>
@@ -2586,20 +2584,20 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 </div>
 
                 <div>
-                  <h2 className="text-xs font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-1.5 text-slate-900">
+                  <h2 className="text-[13px] font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-1.5 text-slate-900">
                     Core Skills &amp; Expertise
                   </h2>
-                  <p className="text-xs text-slate-800">{skills.join(', ')}</p>
+                  <p className="text-[13px] text-slate-800">{skills.join(', ')}</p>
                 </div>
 
                 {projects.length > 0 && (
                   <div>
-                    <h2 className="text-xs font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-2 text-slate-900">
+                    <h2 className="text-[13px] font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-2 text-slate-900">
                       Key Projects &amp; Publications
                     </h2>
                     <div className="space-y-1.5">
                       {projects.map((proj) => (
-                        <div key={proj.id} className="text-xs">
+                        <div key={proj.id} className="text-[13px]">
                           <strong>{proj.title}:</strong> {proj.description}
                         </div>
                       ))}
