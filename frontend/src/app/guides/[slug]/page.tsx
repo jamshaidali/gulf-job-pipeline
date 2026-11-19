@@ -114,7 +114,7 @@ export default async function SingleGuidePage({ params }: GuidePageProps) {
 
           <div className="flex items-center gap-3 pt-3 border-t border-slate-100 text-xs text-slate-500">
             <div className="w-7 h-7 rounded-full bg-slate-900 text-white font-black text-[10px] flex items-center justify-center">
-              TR
+              RC
             </div>
             <div>
               <span className="font-bold text-slate-800">RateYourCV Research &amp; Advisory Team</span>
