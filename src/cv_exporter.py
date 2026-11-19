@@ -57,7 +57,11 @@ _FAMILIES = {
     # template font_family -> (reportlab family name, file prefix, built-in fallback)
     "Helvetica": ("TR-Sans", "LiberationSans", ("Helvetica", "Helvetica-Bold", "Helvetica-Oblique", "Helvetica-BoldOblique")),
     "Times-Roman": ("TR-Serif", "LiberationSerif", ("Times-Roman", "Times-Bold", "Times-Italic", "Times-BoldItalic")),
+    "Courier": ("TR-Mono", "LiberationMono", ("Courier", "Courier-Bold", "Courier-Oblique", "Courier-BoldOblique")),
 }
+
+# User-facing font choices in the builder -> template font family
+FONT_CHOICES = {"sans": "Helvetica", "serif": "Times-Roman", "mono": "Courier"}
 _registered: Dict[str, Dict[str, str]] = {}
 
 
@@ -128,6 +132,17 @@ def readable_color(hex_code: str, bg: str = "#FFFFFF", minimum: float = 4.5) -> 
         r, g, b = int(r * 0.9), int(g * 0.9), int(b * 0.9)
         current = f"#{r:02X}{g:02X}{b:02X}"
     return current
+
+
+def _valid_hex(value: Optional[str]) -> Optional[str]:
+    """Return '#RRGGBB' if value is a valid 6-digit hex colour, else None."""
+    if isinstance(value, str) and len(value) == 7 and value[0] == "#":
+        try:
+            int(value[1:], 16)
+            return value.upper()
+        except ValueError:
+            return None
+    return None
 
 
 def _esc(val: Any) -> str:
@@ -268,25 +283,40 @@ def generate_tailored_pdf(
     user_prefs: Dict[str, Any],
     template_id: Optional[str] = "gulf_dubai_sapphire",
     parsed_resume: Optional[Dict[str, Any]] = None,
+    accent_color: Optional[str] = None,
+    font: Optional[str] = None,
 ) -> bytes:
-    """Generates an ATS-friendly PDF resume in the selected template style (US Letter, single column)."""
+    """Generates an ATS-friendly PDF resume in the selected template style (US Letter, single column).
+
+    accent_color ('#RRGGBB') and font ('sans' | 'serif' | 'mono') optionally override the template's
+    heading/banner colour and typeface, so the file matches what the builder preview shows.
+    """
     data = build_resume_data(job, user_profile, user_prefs, parsed_resume)
     tmpl = get_template(template_id or "gulf_dubai_sapphire")
     pal = get_palette(tmpl.get("palette", "slate_navy"))
     layout = tmpl.get("layout", "single_column")
-    fonts = _font_set(tmpl.get("font_family", "Helvetica"))
+    fonts = _font_set(FONT_CHOICES.get((font or "").lower(), tmpl.get("font_family", "Helvetica")))
+    override = _valid_hex(accent_color)
 
     is_compact = layout == "compact_dense"
     margin = (0.55 if is_compact else 0.75) * inch
     body_size = 10 if is_compact else 10.5
     body_leading = 12.4 if is_compact else 13.8
 
-    primary = readable_color(pal["primary"], minimum=7.0)
-    accent = readable_color(pal["secondary"], minimum=4.5)
+    if override:
+        # One user-chosen colour drives the banner, headings and sub-headline (always kept readable).
+        primary = accent = readable_color(override, minimum=4.5)
+    else:
+        primary = readable_color(pal["primary"], minimum=7.0)
+        accent = readable_color(pal["secondary"], minimum=4.5)
     text_hex = readable_color(pal["text"], minimum=7.0)
     rule_hex = pal["rule"]
     # Rules are decorative, but keep them visible on white.
     if contrast_ratio(rule_hex) < 1.6:
+        rule_hex = "#94A3B8"
+    if override:
+        # Same neutral text / rule colours the builder preview uses, so the file matches the screen.
+        text_hex = "#1E293B"
         rule_hex = "#94A3B8"
 
     buffer = io.BytesIO()
@@ -463,6 +493,8 @@ def generate_tailored_docx(
     user_prefs: Dict[str, Any],
     template_id: Optional[str] = "gulf_dubai_sapphire",
     parsed_resume: Optional[Dict[str, Any]] = None,
+    accent_color: Optional[str] = None,
+    font: Optional[str] = None,
 ) -> bytes:
     """Generates an ATS-friendly Word resume: real headings and list styles, no tables, template font and colours."""
     if docx is None:
@@ -472,9 +504,14 @@ def generate_tailored_docx(
     tmpl = get_template(template_id or "gulf_dubai_sapphire")
     pal = get_palette(tmpl.get("palette", "slate_navy"))
     is_compact = tmpl.get("layout") == "compact_dense"
-    font_name = "Times New Roman" if tmpl.get("font_family") == "Times-Roman" else "Arial"
-    primary_rgb = _hex_to_rgb(readable_color(pal["primary"], minimum=7.0))
-    accent_rgb = _hex_to_rgb(readable_color(pal["secondary"], minimum=4.5))
+    family = FONT_CHOICES.get((font or "").lower(), tmpl.get("font_family", "Helvetica"))
+    font_name = {"Times-Roman": "Times New Roman", "Courier": "Courier New"}.get(family, "Arial")
+    override = _valid_hex(accent_color)
+    if override:
+        primary_rgb = accent_rgb = _hex_to_rgb(readable_color(override, minimum=4.5))
+    else:
+        primary_rgb = _hex_to_rgb(readable_color(pal["primary"], minimum=7.0))
+        accent_rgb = _hex_to_rgb(readable_color(pal["secondary"], minimum=4.5))
     muted_rgb = _hex_to_rgb(MUTED_TEXT)
     body_pt = 10 if is_compact else 10.5
 

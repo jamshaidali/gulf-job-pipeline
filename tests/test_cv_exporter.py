@@ -151,3 +151,26 @@ def test_palette_colors_meet_wcag_aa_on_white():
         assert contrast_ratio(readable_color(pal["primary"], minimum=7.0)) >= 7.0, name
         assert contrast_ratio(readable_color(pal["secondary"])) >= 4.5, name
         assert contrast_ratio(readable_color(pal["text"], minimum=7.0)) >= 7.0, name
+
+
+def test_accent_and_font_overrides_match_what_the_builder_preview_shows():
+    import pdfplumber
+
+    base = generate_tailored_pdf(JOB, PROFILE, {}, template_id="abu_dhabi_executive", parsed_resume=RESUME)
+    custom = generate_tailored_pdf(JOB, PROFILE, {}, template_id="abu_dhabi_executive", parsed_resume=RESUME,
+                                   accent_color="#059669", font="mono")
+    assert base != custom
+
+    with pdfplumber.open(io.BytesIO(custom)) as pdf:
+        fonts = {ch["fontname"].split("+")[-1] for ch in pdf.pages[0].chars}
+        heading = next(ch for ch in pdf.pages[0].chars if ch["text"] == "P")  # PROFESSIONAL SUMMARY
+        assert any("Mono" in f for f in fonts), fonts
+    # headings are drawn in the (readable) accent colour, not the template default
+    assert heading["non_stroking_color"] != (0, 0, 0)
+    # invalid values fall back to the template instead of failing
+    ok = generate_tailored_pdf(JOB, PROFILE, {}, template_id="abu_dhabi_executive", parsed_resume=RESUME,
+                               accent_color="not-a-colour", font="comic-sans")
+    assert ok.startswith(b"%PDF")
+    docx_bytes = generate_tailored_docx(JOB, PROFILE, {}, template_id="abu_dhabi_executive", parsed_resume=RESUME,
+                                        accent_color="#059669", font="mono")
+    assert docx_bytes.startswith(b"PK")

@@ -229,6 +229,9 @@ export async function exportCustomAtsCv(payload: {
   tailored_summary?: string;
   tailored_bullets?: Array<{ focus?: string; bullet?: string; suggested_bullet?: string }>;
   missing_keywords?: string[];
+  /** Optional look overrides so the file matches the builder preview. */
+  accent_color?: string;
+  font?: 'sans' | 'serif' | 'mono';
 }): Promise<void> {
   const res = await fetch('/api/ats/export-cv', {
     method: 'POST',

@@ -21,12 +21,19 @@ import {
 } from 'lucide-react';
 
 interface TemplateGalleryModalProps {
+  /**
+   * 'export' (default): download a tailored CV straight from the gallery (dashboard job cards, ATS scanner).
+   * 'select': only choose a template; the caller applies it and the user edits and downloads elsewhere (builder).
+   */
+  mode?: 'export' | 'select';
   isOpen: boolean;
   selectedTemplateId: string;
   onSelectTemplate: (template: CVTemplate) => void;
   onClose: () => void;
-  onExport: (format: 'pdf' | 'docx', templateId: string) => Promise<void> | void;
-  isExporting: boolean;
+  onExport?: (format: 'pdf' | 'docx', templateId: string) => Promise<void> | void;
+  /** select mode: the user confirmed "Use this template". */
+  onUseTemplate?: (template: CVTemplate) => void;
+  isExporting?: boolean;
   isAuthenticated?: boolean;
   onAuthSuccess?: () => void;
   exportError?: string | null;
@@ -34,12 +41,14 @@ interface TemplateGalleryModalProps {
 }
 
 export default function TemplateGalleryModal({
+  mode = 'export',
   isOpen,
   selectedTemplateId,
   onSelectTemplate,
   onClose,
   onExport,
-  isExporting,
+  onUseTemplate,
+  isExporting = false,
   isAuthenticated = false,
   onAuthSuccess,
   exportError = null,
@@ -52,8 +61,14 @@ export default function TemplateGalleryModal({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [authed, setAuthed] = useState<boolean>(Boolean(isAuthenticated));
+  // select mode: the highlighted card is only a pending choice until "Use this template" is pressed
+  const [chosenId, setChosenId] = useState<string>(selectedTemplateId);
+  useEffect(() => {
+    if (isOpen) setChosenId(selectedTemplateId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
   const [pendingAction, setPendingAction] = useState<{
-    type: 'select' | 'export' | 'builder';
+    type: 'select' | 'export' | 'builder' | 'use';
     format?: 'pdf' | 'docx';
     template: CVTemplate;
   } | null>(null);
@@ -73,7 +88,7 @@ export default function TemplateGalleryModal({
           const loaded = res.templates || [];
           setTemplates(loaded);
           setCategories(res.categories || []);
-          if (loaded.length > 0 && !loaded.some((t) => t.id === selectedTemplateId)) {
+          if (mode !== 'select' && loaded.length > 0 && !loaded.some((t) => t.id === selectedTemplateId)) {
             onSelectTemplate(loaded[0]);
           }
         })
@@ -95,7 +110,8 @@ export default function TemplateGalleryModal({
     return matchesCategory && matchesSearch;
   });
 
-  const currentTemplate = templates.find((t) => t.id === selectedTemplateId) || templates[0] || {
+  const activeId = mode === 'select' ? chosenId : selectedTemplateId;
+  const currentTemplate = templates.find((t) => t.id === activeId) || templates[0] || {
     id: 'gulf_dubai_sapphire',
     name: 'Sapphire Modern Tech Pro',
     category: 'Tech & Software',
@@ -128,7 +144,8 @@ export default function TemplateGalleryModal({
 
   const handleTemplateCardClick = (tmpl: CVTemplate) => {
     if (authed) {
-      onSelectTemplate(tmpl);
+      if (mode === 'select') setChosenId(tmpl.id);
+      else onSelectTemplate(tmpl);
     } else {
       setPendingAction({
         type: 'select',
@@ -148,9 +165,19 @@ export default function TemplateGalleryModal({
     }
   };
 
+  const isSelectMode = mode === 'select';
+
+  const handleUseTemplateClick = () => {
+    if (authed) {
+      onUseTemplate?.(currentTemplate);
+    } else {
+      setPendingAction({ type: 'use', template: currentTemplate });
+    }
+  };
+
   const handleDownloadClick = (format: 'pdf' | 'docx') => {
     if (authed) {
-      onExport(format, currentTemplate.id);
+      onExport?.(format, currentTemplate.id);
     } else {
       setPendingAction({
         type: 'export',
@@ -179,20 +206,22 @@ export default function TemplateGalleryModal({
                 {authed ? (
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                    <span>Unlocked &amp; Ready to Download</span>
+                    <span>{isSelectMode ? 'Unlocked' : 'Unlocked & Ready to Download'}</span>
                   </span>
                 ) : (
                   <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1">
                     <Lock className="w-3 h-3 text-amber-400" />
-                    <span>Free Signup Required to Download</span>
+                    <span>{isSelectMode ? 'Free Signup Required to Use Templates' : 'Free Signup Required to Download'}</span>
                   </span>
                 )}
               </div>
               <h2 className="text-lg sm:text-2xl font-black text-white mt-1.5 tracking-tight">
-                Select Your Tailored CV Template
+                {isSelectMode ? 'Choose Your Resume Template' : 'Select Your Tailored CV Template'}
               </h2>
               <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
-                Choose from 105+ proven layouts and download your tailored resume as an ATS-friendly PDF or Word (.docx).
+                {isSelectMode
+                  ? 'Pick a layout and color style. It opens in the builder, where you edit your details and then download as an ATS-friendly PDF or Word (.docx).'
+                  : 'Choose from 105+ proven layouts and download your tailored resume as an ATS-friendly PDF or Word (.docx).'}
               </p>
             </div>
 
@@ -208,7 +237,7 @@ export default function TemplateGalleryModal({
 
           {/* Search & Category Filter Bar */}
           <div className="p-3 sm:p-4 bg-slate-50 border-b border-slate-200 space-y-2.5">
-            {exportError && (
+            {!isSelectMode && exportError && (
               <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
                 <span>{exportError}</span>
@@ -427,62 +456,82 @@ export default function TemplateGalleryModal({
                   {currentTemplate?.category} &bull; {currentTemplate?.ats_score}
                   {!authed && (
                     <span className="ml-2 text-amber-700 font-bold">
-                      &bull; Free account required to download
+                      &bull; {isSelectMode ? 'Free account required to use templates' : 'Free account required to download'}
                     </span>
                   )}
                 </div>
               </div>
             </div>
 
+            {isSelectMode ? (
+              <>
+            {/* Select mode: choose the template, then edit and download in the builder */}
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    onClick={handleUseTemplateClick}
+                    data-testid="modal-use-template-btn"
+                    className="flex-1 sm:flex-initial justify-center px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm shadow-sm transition flex items-center gap-2 cursor-pointer"
+                  >
+                    {!authed && <Lock className="w-3.5 h-3.5 text-indigo-100" />}
+                    <span>Use this template</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
             {/* Quick Export Trigger Buttons */}
-            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-              <button
-                type="button"
-                onClick={handleOpenInBuilderClick}
-                data-testid="modal-open-builder-btn"
-                className="flex-1 sm:flex-initial justify-center px-3.5 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer"
-              >
-                {!authed && <Lock className="w-3.5 h-3.5 text-indigo-600" />}
-                <span>Edit in Live Builder</span>
-                <ArrowRight className="w-3.5 h-3.5 text-indigo-600" />
-              </button>
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    onClick={handleOpenInBuilderClick}
+                    data-testid="modal-open-builder-btn"
+                    className="flex-1 sm:flex-initial justify-center px-3.5 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    {!authed && <Lock className="w-3.5 h-3.5 text-indigo-600" />}
+                    <span>Edit in Live Builder</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-indigo-600" />
+                  </button>
 
-              <button
-                type="button"
-                onClick={() => handleDownloadClick('pdf')}
-                disabled={isExporting}
-                data-testid="modal-download-pdf-btn"
-                className="flex-1 sm:flex-initial justify-center px-4 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-xs shadow-sm transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                {isExporting ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : !authed ? (
-                  <Lock className="w-3.5 h-3.5 text-slate-900" />
-                ) : (
-                  <Download className="w-3.5 h-3.5" />
-                )}
-                <span>
-                  {isExporting
-                    ? 'Generating PDF...'
-                    : 'Download PDF in this Style'}
-                </span>
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadClick('pdf')}
+                    disabled={isExporting}
+                    data-testid="modal-download-pdf-btn"
+                    className="flex-1 sm:flex-initial justify-center px-4 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-xs shadow-sm transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {isExporting ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : !authed ? (
+                      <Lock className="w-3.5 h-3.5 text-slate-900" />
+                    ) : (
+                      <Download className="w-3.5 h-3.5" />
+                    )}
+                    <span>
+                      {isExporting
+                        ? 'Generating PDF...'
+                        : 'Download PDF in this Style'}
+                    </span>
+                  </button>
 
-              <button
-                type="button"
-                onClick={() => handleDownloadClick('docx')}
-                disabled={isExporting}
-                data-testid="modal-download-docx-btn"
-                className="flex-1 sm:flex-initial justify-center px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                {!authed ? (
-                  <Lock className="w-3.5 h-3.5 text-amber-400" />
-                ) : (
-                  <FileText className="w-3.5 h-3.5 text-blue-300" />
-                )}
-                <span>Word Doc (.docx)</span>
-              </button>
-            </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadClick('docx')}
+                    disabled={isExporting}
+                    data-testid="modal-download-docx-btn"
+                    className="flex-1 sm:flex-initial justify-center px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white font-extrabold text-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {!authed ? (
+                      <Lock className="w-3.5 h-3.5 text-amber-400" />
+                    ) : (
+                      <FileText className="w-3.5 h-3.5 text-blue-300" />
+                    )}
+                    <span>Word Doc (.docx)</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
         </div>
@@ -506,9 +555,12 @@ export default function TemplateGalleryModal({
             onAuthSuccess();
           }
           if (action) {
-            onSelectTemplate(action.template);
+            if (mode === 'select') setChosenId(action.template.id);
+            else onSelectTemplate(action.template);
             if (action.type === 'export' && action.format) {
-              onExport(action.format, action.template.id);
+              onExport?.(action.format, action.template.id);
+            } else if (action.type === 'use') {
+              onUseTemplate?.(action.template);
             } else if (action.type === 'builder') {
               triggerOpenInBuilder(action.template);
             }

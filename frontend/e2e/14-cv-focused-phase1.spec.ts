@@ -79,17 +79,23 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     });
     await page.reload();
 
+    // Every layout shares the exporter's standard sections; only the layout style changes.
     await page.getByRole('button', { name: /1-Column Standard/i }).click();
-    await expect(canvas).toContainText(/Core Competencies/i);
+    await expect(canvas).toHaveAttribute('data-layout', 'single_column');
+    await expect(canvas).toContainText(/Professional Summary/i);
+    await expect(canvas).toContainText(/Professional Experience/i);
 
     await page.getByRole('button', { name: /Banner Header/i }).click();
-    await expect(canvas).toContainText(/Executive Summary/i);
+    await expect(canvas).toHaveAttribute('data-layout', 'split_header');
+    await expect(canvas).toContainText(/Professional Summary/i);
 
     await page.getByRole('button', { name: /Dense 1-Page/i }).click();
-    await expect(canvas).toContainText(/Technical Skills & Core Stack/i);
+    await expect(canvas).toHaveAttribute('data-layout', 'compact_dense');
+    await expect(canvas).toContainText(/Skills/);
 
     await page.getByRole('button', { name: /Editorial Serif/i }).click();
-    await expect(canvas).toContainText(/Core Skills & Expertise/i);
+    await expect(canvas).toHaveAttribute('data-layout', 'single_column');
+    await expect(canvas).toHaveCSS('font-family', /serif/i);
   });
 
   test('Page 4 (Templates Gallery): should display global templates and require account creation before using a template', async ({ page }) => {
@@ -399,7 +405,7 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     await expect(canvas).toContainText('New Key Project');
 
     // Switch through all 5 layouts and verify "New Key Project" is visible on every layout
-    for (const layoutBtnName of ['1-Column Standard', 'Banner Header', 'Dense 1-Page', 'Editorial Serif', '2-Column Split']) {
+    for (const layoutBtnName of ['1-Column Standard', 'Banner Header', 'Dense 1-Page', 'Editorial Serif', '1-Column Accent']) {
       await editorPanel.getByRole('button', { name: new RegExp(layoutBtnName, 'i') }).click();
       await expect(canvas).toContainText('New Key Project');
     }
@@ -413,10 +419,19 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
 
     // 11. Test "Browse All 105+ ->" & "105+ Designs" modal inside /builder
     await editorPanel.getByRole('button', { name: /Browse All 105\+/i }).click();
-    await expect(page.getByText('Select Your Tailored CV Template')).toBeVisible();
-    await expect(page.getByText('Sapphire Modern Tech Pro')).toBeVisible();
-    await page.getByTestId('modal-open-builder-btn').click();
-    await expect(page.getByText('Select Your Tailored CV Template')).toBeHidden();
+    // In the builder the gallery only CHOOSES a template; downloading happens from the builder toolbar.
+    await expect(page.getByText('Choose Your Resume Template')).toBeVisible();
+    await expect(page.getByTestId('modal-download-pdf-btn')).toHaveCount(0);
+    await expect(page.getByTestId('modal-download-docx-btn')).toHaveCount(0);
+    await page.getByRole('heading', { name: 'Sapphire Modern Tech Pro' }).click();
+    // Picking a card alone changes nothing behind the dialog...
+    await expect(canvas).not.toHaveAttribute('data-template', 'gulf_dubai_sapphire');
+    await page.getByTestId('modal-use-template-btn').click();
+    await expect(page.getByText('Choose Your Resume Template')).toBeHidden();
+    // ...confirming applies the template's layout to the live preview.
+    await expect(canvas).toHaveAttribute('data-template', 'gulf_dubai_sapphire');
+    await expect(canvas).toHaveAttribute('data-layout', 'split_header');
+    await expect(page.getByTestId('active-template-name')).toHaveText('Sapphire Modern Tech Pro');
 
     // 12. Test Word (.docx) download button directly from /builder toolbar
     const docxDownloadPromise = page.waitForEvent('download');

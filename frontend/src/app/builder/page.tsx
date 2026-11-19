@@ -7,7 +7,8 @@ import Footer from '@/components/Footer';
 import TemplateAuthModal from '@/components/TemplateAuthModal';
 import TemplateGalleryModal from '@/components/dashboard/TemplateGalleryModal';
 import { CVTemplate } from '@/types';
-import { fetchCurrentUser, importCvToBuilder, exportCustomAtsCv, ImportedStructuredResume } from '@/lib/api';
+import { fetchCurrentUser, fetchCVTemplates, importCvToBuilder, exportCustomAtsCv, ImportedStructuredResume } from '@/lib/api';
+import ResumePreview, { PreviewLayout } from '@/components/builder/ResumePreview';
 import { 
   Sparkles, 
   Download, 
@@ -54,10 +55,10 @@ const BUILDER_TEMPLATES: Array<{
     id: 'tech_two_column',
     name: 'Modern Tech (2-Column)',
     shortName: 'Modern Tech',
-    tag: '2-Column Split',
+    tag: '1-Column Accent',
     atsScore: '100% ATS',
-    accent: '#0284c7',
-    description: 'High-impact 2-column layout for Software, Cloud, Data & Product roles.',
+    accent: '#0369a1',
+    description: 'Modern single-column layout with accent headings for Software, Cloud, Data & Product roles.',
   },
   {
     id: 'minimalist',
@@ -121,6 +122,49 @@ interface ProjectEntry {
   description: string;
   techStack: string;
 }
+
+/** The 5 quick layouts: the catalog template (layout) each one exports with, and its default font. */
+const QUICK_LAYOUTS: Record<BuilderTemplateId, { backendId: string; layout: PreviewLayout; font?: 'sans' | 'serif' }> = {
+  tech_two_column: { backendId: 'saudi_vision_emerald', layout: 'modern_accent' },
+  minimalist: { backendId: 'silicon_tech_indigo', layout: 'single_column' },
+  executive: { backendId: 'gulf_dubai_sapphire', layout: 'split_header' },
+  compact: { backendId: 'backend_architect_dark', layout: 'compact_dense' },
+  classic_serif: { backendId: 'abu_dhabi_executive', layout: 'single_column', font: 'serif' },
+};
+
+const asPreviewLayout = (layout: string): PreviewLayout =>
+  layout === 'split_header' || layout === 'modern_accent' || layout === 'compact_dense' ? layout : 'single_column';
+
+/** Which quick-layout chip best describes a catalog template (used only to highlight a chip). */
+const quickIdFor = (layout: string, fontFamily: string): BuilderTemplateId => {
+  if (layout === 'split_header') return 'executive';
+  if (layout === 'compact_dense') return 'compact';
+  if (layout === 'modern_accent') return 'tech_two_column';
+  return fontFamily === 'Times-Roman' ? 'classic_serif' : 'minimalist';
+};
+
+const contrastOnWhite = (hex: string): number => {
+  const chan = (v: number) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return 1.05 / (0.2126 * chan(r) + 0.7152 * chan(g) + 0.0722 * chan(b) + 0.05);
+};
+
+/** Darken a colour until it is readable on white. Mirrors the exporter, so preview colour == printed colour. */
+const readableAccent = (hex: string, minimum = 4.5): string => {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return '#0369a1';
+  let [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  let current = hex.toUpperCase();
+  for (let i = 0; i < 40 && contrastOnWhite(current) < minimum; i++) {
+    r = Math.floor(r * 0.9);
+    g = Math.floor(g * 0.9);
+    b = Math.floor(b * 0.9);
+    current = `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+  }
+  return current;
+};
 
 /** A CV the user imported. Kept in the browser so resetting to the demo never destroys it. */
 interface SavedCv {
@@ -311,7 +355,7 @@ export default function ResumeBuilderPage() {
 
   // Design System States
   const [template, setTemplate] = useState<BuilderTemplateId>('tech_two_column');
-  const [accentColor, setAccentColor] = useState<string>('#0284c7'); // Cyan/Sky
+  const [accentColor, setAccentColor] = useState<string>('#0369a1'); // Sky blue (AA contrast on white)
   const [fontFamily, setFontFamily] = useState<'sans' | 'serif' | 'mono'>('sans');
   const [copiedNotification, setCopiedNotification] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -319,6 +363,8 @@ export default function ResumeBuilderPage() {
   const [authModalTemplate, setAuthModalTemplate] = useState<{
     id: BuilderTemplateId;
     name: string;
+    /** Set when the visitor arrived with a specific catalog template (?template=...). */
+    catalog?: CVTemplate;
   } | null>(null);
   const [atsScanContext, setAtsScanContext] = useState<{
     overallScore?: number;
@@ -332,28 +378,38 @@ export default function ResumeBuilderPage() {
   } | null>(null);
 
   // Library of the user's imported CVs (kept in the browser) and which one is being edited now.
+  // Template state. The catalog template decides the layout of the preview AND of the downloaded file;
+  // accent colour and font are the user's overrides and are applied to both.
+  const [activeBackendTemplateId, setActiveBackendTemplateId] = useState<string>(QUICK_LAYOUTS.tech_two_column.backendId);
+  const [activeLayout, setActiveLayout] = useState<PreviewLayout>('modern_accent');
+  const [activeTemplateLabel, setActiveTemplateLabel] = useState<string | null>(null);
+
+  /** Use a catalog template (from the gallery or ?template=): layout, font and colour follow it. */
+  const applyBackendTemplate = (tmpl: CVTemplate) => {
+    setActiveBackendTemplateId(tmpl.id);
+    setActiveLayout(asPreviewLayout(tmpl.layout));
+    setActiveTemplateLabel(tmpl.name);
+    setTemplate(quickIdFor(tmpl.layout, tmpl.font_family));
+    setFontFamily(tmpl.font_family === 'Times-Roman' ? 'serif' : 'sans');
+    const base = tmpl.layout === 'modern_accent' ? tmpl.colors?.secondary : tmpl.colors?.primary;
+    if (base) setAccentColor(readableAccent(base));
+  };
+
+  /** Switch to one of the 5 quick layouts. */
+  const applyQuickLayout = (id: BuilderTemplateId) => {
+    const quick = QUICK_LAYOUTS[id];
+    setTemplate(id);
+    setActiveBackendTemplateId(quick.backendId);
+    setActiveLayout(quick.layout);
+    setActiveTemplateLabel(null);
+    if (quick.font) setFontFamily(quick.font);
+    else if (fontFamily === 'serif') setFontFamily('sans');
+  };
+
   const [savedCvs, setSavedCvs] = useState<SavedCv[]>([]);
   const [activeCvId, setActiveCvId] = useState<string | null>(null);
 
   useEffect(() => {
-    const mapTemplateParam = (raw: string | null): BuilderTemplateId | null => {
-      if (!raw) return null;
-      const lower = raw.toLowerCase();
-      if (lower.includes('compact') || lower.includes('dense')) {
-        return 'compact';
-      }
-      if (lower.includes('classic') || lower.includes('serif') || lower.includes('academic')) {
-        return 'classic_serif';
-      }
-      if (lower.includes('minimal') || lower.includes('monochrome')) {
-        return 'minimalist';
-      }
-      if (lower.includes('exec')) {
-        return 'executive';
-      }
-      return 'tech_two_column';
-    };
-
     const init = async () => {
       let library: SavedCv[] = [];
       if (typeof window !== 'undefined') {
@@ -459,19 +515,29 @@ export default function ResumeBuilderPage() {
           setAccentColor(accentParam);
         }
         const tplParam = params.get('template');
-        const mapped = mapTemplateParam(tplParam);
-        if (mapped) {
-          if (tplParam && !['tech_two_column', 'minimalist', 'executive', 'compact', 'classic_serif'].includes(tplParam)) {
-            setActiveBackendTemplateId(tplParam);
-          }
-          const foundMeta = BUILDER_TEMPLATES.find((t) => t.id === mapped);
-          if (authed) {
-            setTemplate(mapped);
+        if (tplParam) {
+          const quickId = (Object.keys(QUICK_LAYOUTS) as BuilderTemplateId[]).find((id) => id === tplParam);
+          if (quickId) {
+            if (authed) {
+              applyQuickLayout(quickId);
+            } else {
+              setAuthModalTemplate({ id: quickId, name: BUILDER_TEMPLATES.find((t) => t.id === quickId)?.name || 'ATS-Optimized Template' });
+            }
           } else {
-            setAuthModalTemplate({
-              id: mapped,
-              name: foundMeta?.name || 'ATS-Optimized Template',
-            });
+            // A catalog template id (e.g. from the Templates page): look it up so layout, font and colour follow it.
+            try {
+              const res = await fetchCVTemplates();
+              const found = (res.templates || []).find((t) => t.id === tplParam);
+              if (found) {
+                if (authed) {
+                  applyBackendTemplate(found);
+                } else {
+                  setAuthModalTemplate({ id: quickIdFor(found.layout, found.font_family), name: found.name, catalog: found });
+                }
+              }
+            } catch {
+              // Catalog unavailable: keep the default layout.
+            }
           }
         }
       }
@@ -481,7 +547,7 @@ export default function ResumeBuilderPage() {
 
   const handleSelectTemplate = (targetTpl: BuilderTemplateId, displayName: string) => {
     if (isAuthenticated || (typeof window !== 'undefined' && localStorage.getItem('tr_auth_user'))) {
-      setTemplate(targetTpl);
+      applyQuickLayout(targetTpl);
       showNotice(`Switched layout to ${displayName}!`);
     } else {
       setAuthModalTemplate({ id: targetTpl, name: displayName });
@@ -937,29 +1003,22 @@ export default function ResumeBuilderPage() {
   const [pendingDownloadAfterAuth, setPendingDownloadAfterAuth] = useState<'pdf' | 'docx' | false>(false);
   const [pendingCopyAfterAuth, setPendingCopyAfterAuth] = useState<boolean>(false);
   const [isGalleryModalOpen, setIsGalleryModalOpen] = useState<boolean>(false);
-  const [activeBackendTemplateId, setActiveBackendTemplateId] = useState<string>('gulf_dubai_sapphire');
   const [galleryExportError, setGalleryExportError] = useState<string | null>(null);
-
-  const backendTemplateMap: Record<BuilderTemplateId, string> = {
-    tech_two_column: 'gulf_dubai_sapphire',
-    minimalist: 'silicon_tech_indigo',
-    executive: 'abu_dhabi_executive',
-    compact: 'backend_architect_dark',
-    classic_serif: 'qatar_pearl_corporate',
-  };
 
   const triggerBuilderExport = async (
     format: 'pdf' | 'docx' = 'pdf',
-    customBackendTplId?: string,
-    tplId: BuilderTemplateId = template
+    customBackendTplId?: string
   ) => {
     setIsDownloadingPdf(true);
     setGalleryExportError(null);
     try {
-      const resolvedTemplateId = customBackendTplId || activeBackendTemplateId || backendTemplateMap[tplId] || 'gulf_dubai_sapphire';
+      const resolvedTemplateId = customBackendTplId || activeBackendTemplateId;
       await exportCustomAtsCv({
         format,
         template_id: resolvedTemplateId,
+        // What you see is what you download: the active template's layout plus your colour and font.
+        accent_color: readableAccent(accentColor),
+        font: fontFamily,
         job_title: jobTitle,
         company: atsScanContext?.targetCompany || '',
         parsed_resume: {
@@ -993,8 +1052,8 @@ export default function ResumeBuilderPage() {
     }
   };
 
-  const triggerBuilderPdfDownload = async (tplId: BuilderTemplateId = template) => {
-    await triggerBuilderExport('pdf', backendTemplateMap[tplId], tplId);
+  const triggerBuilderPdfDownload = async () => {
+    await triggerBuilderExport('pdf');
   };
 
   const handlePrint = () => {
@@ -1009,7 +1068,7 @@ export default function ResumeBuilderPage() {
       });
       return;
     }
-    triggerBuilderPdfDownload(template);
+    triggerBuilderPdfDownload();
   };
 
   const handleDownloadDocx = () => {
@@ -1024,7 +1083,7 @@ export default function ResumeBuilderPage() {
       });
       return;
     }
-    triggerBuilderExport('docx', backendTemplateMap[template], template);
+    triggerBuilderExport('docx');
   };
 
   const copyPlainTextNow = () => {
@@ -1132,11 +1191,11 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
           {/* Color Palettes */}
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-full border border-slate-200">
             {[
-              { label: 'Cyan', color: '#0284c7' },
+              { label: 'Cyan', color: '#0369a1' },
               { label: 'Navy', color: '#0f172a' },
-              { label: 'Emerald', color: '#059669' },
-              { label: 'Indigo', color: '#6366f1' },
-              { label: 'Amber', color: '#d97706' }
+              { label: 'Emerald', color: '#047857' },
+              { label: 'Indigo', color: '#4f46e5' },
+              { label: 'Amber', color: '#b45309' }
             ].map((c) => (
               <button
                 key={c.color}
@@ -2360,8 +2419,8 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
               <div className="flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
                 <span className="font-bold text-slate-600">Active Layout:</span>
-                <span className="font-black text-slate-900">
-                  {BUILDER_TEMPLATES.find((t) => t.id === template)?.name || 'Modern Tech'}
+                <span className="font-black text-slate-900" data-testid="active-template-name">
+                  {activeTemplateLabel || BUILDER_TEMPLATES.find((t) => t.id === template)?.name || 'Modern Tech'}
                 </span>
               </div>
               <a
@@ -2374,7 +2433,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
 
             <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
               {BUILDER_TEMPLATES.map((tpl) => {
-                const isSelected = template === tpl.id;
+                const isSelected = !activeTemplateLabel && template === tpl.id;
                 return (
                   <button
                     key={tpl.id}
@@ -2394,450 +2453,40 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 );
               })}
             </div>
-            <p className="basis-full text-[13px] text-slate-500">
-              Downloads are exported as a single-column, ATS-safe file in the matching style.
-            </p>
+            <div className="basis-full flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[13px] text-slate-500">
+                What you see is what you download: a single-column, ATS-safe PDF or Word file in this style.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setGalleryExportError(null);
+                  setIsGalleryModalOpen(true);
+                }}
+                data-testid="browse-templates-btn"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-[13px] font-semibold transition cursor-pointer"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Browse 105+ templates</span>
+              </button>
+            </div>
           </div>
 
           <div 
             id="resume-canvas"
-            className="w-full max-w-[850px] bg-white rounded-2xl shadow-xl border border-slate-200 p-4 sm:p-8 md:p-12 min-h-[640px] sm:min-h-[1050px] text-slate-900 transition-all break-words overflow-hidden"
+            className="w-full max-w-[816px] bg-white rounded-2xl shadow-xl border border-slate-200 text-slate-900 break-words overflow-hidden"
+            data-layout={activeLayout}
+            data-template={activeBackendTemplateId}
             style={{
+              containerType: 'inline-size',
               fontFamily: fontFamily === 'serif' ? 'serif' : fontFamily === 'mono' ? 'monospace' : 'sans-serif'
-            }}
+            } as React.CSSProperties}
           >
-            {/* TEMPLATE VARIANT: TECH TWO COLUMN */}
-            {template === 'tech_two_column' && (
-              <div className="space-y-6">
-                {/* Header */}
-                <div className="border-b-2 pb-5" style={{ borderColor: accentColor }}>
-                  <div className="text-xl sm:text-3xl font-black tracking-tight" style={{ color: accentColor }}>
-                    {fullName || 'Your Full Name'}
-                  </div>
-                  <p className="text-[13px] sm:text-sm font-bold text-slate-700 mt-1">
-                    {jobTitle || 'Target Professional Role'}
-                  </p>
-                  
-                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-slate-500 mt-2 font-medium break-all sm:break-words">
-                    <span>{joinParts([location, phone, email, linkedIn, github])}</span>
-                  </div>
-                </div>
-
-                {/* 2-Column Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 sm:gap-8">
-                  {/* Left Main Stream (8 cols) */}
-                  <div className="sm:col-span-8 space-y-6 min-w-0">
-                    {/* Summary */}
-                    {summary && (
-                      <div>
-                        <h2 className="text-[13px] font-black uppercase tracking-wider pb-1.5 mb-2 border-b border-slate-200" style={{ color: accentColor }}>
-                          Professional Profile
-                        </h2>
-                        <p className="text-[13px] text-slate-700 leading-relaxed">
-                          {summary}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Experience */}
-                    <div>
-                      <h2 className="text-[13px] font-black uppercase tracking-wider pb-1.5 mb-3 border-b border-slate-200" style={{ color: accentColor }}>
-                        Experience
-                      </h2>
-                      <div className="space-y-4">
-                        {experiences.map((exp) => (
-                          <div key={exp.id} className="space-y-1">
-                            <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-[13px]">
-                              <span className="font-extrabold text-slate-900">{exp.position}</span>
-                              <span className="text-[13px] text-slate-500 font-semibold">{joinParts([exp.startDate, exp.endDate], ' \u2013 ')}</span>
-                            </div>
-                            <div className="text-[13px] font-semibold text-slate-600">
-                              {joinParts([exp.company, exp.location])}
-                            </div>
-                            <ul className="list-disc list-outside pl-4 space-y-1 text-[13px] text-slate-700 pt-1 leading-relaxed">
-                              {exp.bullets.map((b, bIdx) => (
-                                <li key={bIdx}>{b}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Sidebar (4 cols) */}
-                  <div className="sm:col-span-4 space-y-6 border-t sm:border-t-0 sm:border-l border-slate-100 pt-4 sm:pt-0 sm:pl-6 min-w-0">
-                    {/* Skills Matrix */}
-                    <div>
-                      <h2 className="text-[13px] font-black uppercase tracking-wider pb-1.5 mb-2.5 border-b border-slate-200" style={{ color: accentColor }}>
-                        Technical Stack
-                      </h2>
-                      <div className="flex flex-wrap gap-1.5">
-                        {skills.map((s) => (
-                          <span
-                            key={s}
-                            className="px-2 py-0.5 rounded-sm bg-slate-100 text-[13px] font-bold text-slate-800"
-                          >
-                            {s}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Education */}
-                    <div>
-                      <h2 className="text-[13px] font-black uppercase tracking-wider pb-1.5 mb-2.5 border-b border-slate-200" style={{ color: accentColor }}>
-                        Education
-                      </h2>
-                      <div className="space-y-2">
-                        {educations.map((edu) => (
-                          <div key={edu.id} className="text-[13px]">
-                            <div className="font-bold text-slate-900">{edu.degree}</div>
-                            <div className="text-[13px] text-slate-600">{edu.institution}</div>
-                            <div className="text-[13px] text-slate-400 font-medium">{joinParts([edu.year, edu.honors])}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Portfolio / Projects */}
-                    {projects.length > 0 && (
-                      <div>
-                        <h2 className="text-[13px] font-black uppercase tracking-wider pb-1.5 mb-2.5 border-b border-slate-200" style={{ color: accentColor }}>
-                          Key Highlights
-                        </h2>
-                        {projects.map((proj) => (
-                          <div key={proj.id} className="text-[13px] space-y-1">
-                            <div className="font-bold text-slate-900">{proj.title}</div>
-                            <div className="text-[13px] text-slate-600 leading-normal">{proj.description}</div>
-                            <div className="text-[13px] text-slate-400 font-mono">{proj.techStack}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TEMPLATE VARIANT: MINIMALIST SINGLE COLUMN */}
-            {template === 'minimalist' && (
-              <div className="space-y-6">
-                <div className="text-center border-b pb-4 border-slate-200">
-                  <div className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                    {fullName}
-                  </div>
-                  <p className="text-[13px] font-bold text-slate-600 uppercase tracking-wider mt-1">
-                    {jobTitle}
-                  </p>
-                  <p className="text-[13px] text-slate-500 mt-1 break-words">
-                    {location} | {phone} | {email} | {linkedIn}
-                  </p>
-                </div>
-
-                {summary && (
-                  <div>
-                    <h2 className="text-[13px] font-extrabold uppercase tracking-wider pb-1 mb-2 border-b border-slate-800 text-slate-900">
-                      Summary
-                    </h2>
-                    <p className="text-[13px] text-slate-700 leading-relaxed">{summary}</p>
-                  </div>
-                )}
-
-                <div>
-                  <h2 className="text-[13px] font-extrabold uppercase tracking-wider pb-1 mb-2 border-b border-slate-800 text-slate-900">
-                    Core Competencies
-                  </h2>
-                  <p className="text-[13px] text-slate-700">{skills.join(' • ')}</p>
-                </div>
-
-                <div>
-                  <h2 className="text-[13px] font-extrabold uppercase tracking-wider pb-1 mb-3 border-b border-slate-800 text-slate-900">
-                    Work Experience
-                  </h2>
-                  <div className="space-y-4">
-                    {experiences.map((exp) => (
-                      <div key={exp.id} className="space-y-1">
-                        <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-[13px] font-bold">
-                          <span>{exp.position} &mdash; {exp.company}</span>
-                          <span className="text-[13px] text-slate-500 font-normal">{exp.startDate} - {exp.endDate}</span>
-                        </div>
-                        <ul className="list-disc list-outside pl-4 space-y-1 text-[13px] text-slate-700">
-                          {exp.bullets.map((b, i) => (
-                            <li key={i}>{b}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h2 className="text-[13px] font-extrabold uppercase tracking-wider pb-1 mb-2 border-b border-slate-800 text-slate-900">
-                    Education
-                  </h2>
-                  {educations.map((edu) => (
-                    <div key={edu.id} className="flex flex-wrap justify-between gap-x-2 text-[13px]">
-                      <span><strong>{edu.degree}</strong>, {edu.institution}</span>
-                      <span className="text-slate-500">{edu.year}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {projects.length > 0 && (
-                  <div>
-                    <h2 className="text-[13px] font-extrabold uppercase tracking-wider pb-1 mb-2 border-b border-slate-800 text-slate-900">
-                      Key Projects &amp; Highlights
-                    </h2>
-                    <div className="space-y-2">
-                      {projects.map((proj) => (
-                        <div key={proj.id} className="text-[13px]">
-                          <div className="font-bold text-slate-900">
-                            {proj.title} {proj.techStack ? <span className="font-normal text-slate-500">({proj.techStack})</span> : null}
-                          </div>
-                          <p className="text-slate-700 leading-relaxed">{proj.description}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* TEMPLATE VARIANT: EXECUTIVE */}
-            {template === 'executive' && (
-              <div className="space-y-6">
-                <div className="p-4 sm:p-6 rounded-xl text-white space-y-1.5" style={{ backgroundColor: accentColor }}>
-                  <div className="text-xl sm:text-3xl font-black tracking-tight">{fullName}</div>
-                  <p className="text-[13px] sm:text-sm font-semibold opacity-90">{jobTitle}</p>
-                  <p className="text-[13px] opacity-80 pt-1 break-words">{joinParts([location, phone, email, linkedIn, github])}</p>
-                </div>
-
-                {summary && (
-                  <div>
-                    <h2 className="text-[13px] font-black uppercase tracking-wider pb-1 mb-2 border-b-2" style={{ borderColor: accentColor, color: accentColor }}>
-                      Executive Summary
-                    </h2>
-                    <p className="text-[13px] text-slate-700 leading-relaxed font-serif">{summary}</p>
-                  </div>
-                )}
-
-                <div>
-                  <h2 className="text-[13px] font-black uppercase tracking-wider pb-1 mb-3 border-b-2" style={{ borderColor: accentColor, color: accentColor }}>
-                    Professional Background
-                  </h2>
-                  <div className="space-y-4">
-                    {experiences.map((exp) => (
-                      <div key={exp.id} className="space-y-1">
-                        <div className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 text-[13px] font-bold text-slate-900">
-                          <span>{exp.position} | {exp.company}</span>
-                          <span className="text-slate-500 font-normal">{joinParts([exp.startDate, exp.endDate], ' \u2013 ')}</span>
-                        </div>
-                        <ul className="list-disc list-outside pl-4 space-y-1 text-[13px] text-slate-700 font-serif">
-                          {exp.bullets.map((b, i) => (
-                            <li key={i}>{b}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h2 className="text-[13px] font-black uppercase tracking-wider pb-1 mb-2 border-b-2" style={{ borderColor: accentColor, color: accentColor }}>
-                    Core Leadership &amp; Tech Competencies
-                  </h2>
-                  <div className="flex flex-wrap gap-1.5">
-                    {skills.map((s) => (
-                      <span key={s} className="px-2.5 py-1 rounded-sm bg-slate-100 text-slate-800 text-[13px] font-bold">
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {projects.length > 0 && (
-                  <div>
-                    <h2 className="text-[13px] font-black uppercase tracking-wider pb-1 mb-2 border-b-2" style={{ borderColor: accentColor, color: accentColor }}>
-                      Key Strategic Initiatives &amp; Projects
-                    </h2>
-                    <div className="space-y-2">
-                      {projects.map((proj) => (
-                        <div key={proj.id} className="text-[13px]">
-                          <span className="font-bold text-slate-900">{proj.title}: </span>
-                          <span className="text-slate-700 font-serif">{proj.description}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* TEMPLATE VARIANT: TECH COMPACT (DENSE 1-PAGE) */}
-            {template === 'compact' && (
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b-2 pb-3 gap-1" style={{ borderColor: accentColor }}>
-                  <div>
-                    <div className="text-xl sm:text-2xl font-black tracking-tight text-slate-950">{fullName}</div>
-                    <div className="text-[13px] font-extrabold uppercase tracking-wider mt-0.5" style={{ color: accentColor }}>
-                      {jobTitle}
-                    </div>
-                  </div>
-                  <div className="text-[13px] text-slate-600 sm:text-right space-y-0.5 font-medium break-words">
-                    <div>{joinParts([email, phone])}</div>
-                    <div>{joinParts([location, linkedIn, github])}</div>
-                  </div>
-                </div>
-
-                {summary && (
-                  <p className="text-[13px] text-slate-700 leading-snug bg-slate-50 p-3 rounded-lg border border-slate-200/80">
-                    {summary}
-                  </p>
-                )}
-
-                <div>
-                  <h2 className="text-[13px] font-black uppercase tracking-widest pb-1 mb-1.5 border-b border-slate-200" style={{ color: accentColor }}>
-                    Technical Skills &amp; Core Stack
-                  </h2>
-                  <div className="flex flex-wrap gap-1">
-                    {skills.map((s) => (
-                      <span key={s} className="px-2 py-0.5 rounded bg-slate-100 text-[13px] font-bold text-slate-800">
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h2 className="text-[13px] font-black uppercase tracking-widest pb-1 mb-2 border-b border-slate-200" style={{ color: accentColor }}>
-                    Professional Experience
-                  </h2>
-                  <div className="space-y-3">
-                    {experiences.map((exp) => (
-                      <div key={exp.id} className="space-y-0.5">
-                        <div className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 text-[13px] font-extrabold text-slate-900">
-                          <span>{exp.position} &mdash; <span className="text-slate-600 font-bold">{exp.company} ({exp.location})</span></span>
-                          <span className="text-[13px] text-slate-500 font-semibold">{joinParts([exp.startDate, exp.endDate], ' \u2013 ')}</span>
-                        </div>
-                        <ul className="list-disc list-outside pl-4 space-y-0.5 text-[13px] text-slate-700 leading-snug">
-                          {exp.bullets.map((b, i) => (
-                            <li key={i}>{b}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                  <div>
-                    <h2 className="text-[13px] font-black uppercase tracking-widest pb-1 mb-1.5 border-b border-slate-200" style={{ color: accentColor }}>
-                      Education
-                    </h2>
-                    {educations.map((edu) => (
-                      <div key={edu.id} className="text-[13px]">
-                        <div className="font-bold text-slate-900">{edu.degree}</div>
-                        <div className="text-slate-600 text-[13px]">{edu.institution} ({edu.year})</div>
-                      </div>
-                    ))}
-                  </div>
-                  {projects.length > 0 && (
-                    <div>
-                      <h2 className="text-[13px] font-black uppercase tracking-widest pb-1 mb-1.5 border-b border-slate-200" style={{ color: accentColor }}>
-                        Key Projects
-                      </h2>
-                      {projects.slice(0, 2).map((proj) => (
-                        <div key={proj.id} className="text-[13px] mb-1">
-                          <span className="font-bold text-slate-900">{proj.title}: </span>
-                          <span className="text-slate-600 text-[13px]">{proj.description}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* TEMPLATE VARIANT: CLASSIC SERIF (ACADEMIC / FINANCE / LEGAL) */}
-            {template === 'classic_serif' && (
-              <div className="space-y-5 font-serif">
-                <div className="text-center border-b-2 border-slate-900 pb-4">
-                  <div className="text-xl sm:text-3xl font-bold tracking-wide uppercase text-slate-950">
-                    {fullName}
-                  </div>
-                  <div className="text-[13px] italic text-slate-700 mt-1">{jobTitle}</div>
-                  <div className="text-[13px] text-slate-600 mt-1 break-words">
-                    {joinParts([location, phone, email, linkedIn, github])}
-                  </div>
-                </div>
-
-                {summary && (
-                  <div>
-                    <h2 className="text-[13px] font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-2 text-slate-900">
-                      Executive Profile
-                    </h2>
-                    <p className="text-[13px] text-slate-800 leading-relaxed">{summary}</p>
-                  </div>
-                )}
-
-                <div>
-                  <h2 className="text-[13px] font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-2.5 text-slate-900">
-                    Professional Experience
-                  </h2>
-                  <div className="space-y-4">
-                    {experiences.map((exp) => (
-                      <div key={exp.id} className="space-y-1">
-                        <div className="flex flex-wrap justify-between gap-x-2 gap-y-0.5 text-[13px] font-bold text-slate-950">
-                          <span>{exp.company}, {exp.location}</span>
-                          <span>{joinParts([exp.startDate, exp.endDate], ' \u2013 ')}</span>
-                        </div>
-                        <div className="text-[13px] italic text-slate-700">{exp.position}</div>
-                        <ul className="list-disc list-outside pl-4 space-y-1 text-[13px] text-slate-800">
-                          {exp.bullets.map((b, i) => (
-                            <li key={i}>{b}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h2 className="text-[13px] font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-2 text-slate-900">
-                    Education
-                  </h2>
-                  {educations.map((edu) => (
-                    <div key={edu.id} className="flex flex-wrap justify-between gap-x-2 text-[13px] mb-1">
-                      <span><strong>{edu.institution}</strong> &mdash; <em>{edu.degree}</em></span>
-                      <span>{edu.year}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div>
-                  <h2 className="text-[13px] font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-1.5 text-slate-900">
-                    Core Skills &amp; Expertise
-                  </h2>
-                  <p className="text-[13px] text-slate-800">{skills.join(', ')}</p>
-                </div>
-
-                {projects.length > 0 && (
-                  <div>
-                    <h2 className="text-[13px] font-bold uppercase tracking-widest border-b border-slate-400 pb-0.5 mb-2 text-slate-900">
-                      Key Projects &amp; Publications
-                    </h2>
-                    <div className="space-y-1.5">
-                      {projects.map((proj) => (
-                        <div key={proj.id} className="text-[13px]">
-                          <strong>{proj.title}:</strong> {proj.description}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+            <ResumePreview
+              layout={activeLayout}
+              accent={accentColor}
+              data={{ fullName, jobTitle, email, phone, location, linkedIn, github, summary, skills, experiences, educations, projects }}
+            />
           </div>
         </div>
 
@@ -2983,50 +2632,18 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
       )}
 
       <TemplateGalleryModal
+        mode="select"
         isOpen={isGalleryModalOpen}
         selectedTemplateId={activeBackendTemplateId}
-        onSelectTemplate={(tmpl: CVTemplate) => {
-          setActiveBackendTemplateId(tmpl.id);
-          if (tmpl.colors?.primary) {
-            setAccentColor(tmpl.colors.primary);
-          }
-          const mappedLayout: BuilderTemplateId =
-            tmpl.layout === 'compact_dense'
-              ? 'compact'
-              : tmpl.layout === 'single_column'
-              ? 'minimalist'
-              : tmpl.category.toLowerCase().includes('executive')
-              ? 'executive'
-              : tmpl.category.toLowerCase().includes('finance')
-              ? 'classic_serif'
-              : 'tech_two_column';
-          setTemplate(mappedLayout);
-        }}
-        onOpenInBuilder={(tmpl: CVTemplate) => {
-          setActiveBackendTemplateId(tmpl.id);
-          if (tmpl.colors?.primary) {
-            setAccentColor(tmpl.colors.primary);
-          }
-          const mappedLayout: BuilderTemplateId =
-            tmpl.layout === 'compact_dense'
-              ? 'compact'
-              : tmpl.layout === 'single_column'
-              ? 'minimalist'
-              : tmpl.category.toLowerCase().includes('executive')
-              ? 'executive'
-              : tmpl.category.toLowerCase().includes('finance')
-              ? 'classic_serif'
-              : 'tech_two_column';
-          setTemplate(mappedLayout);
+        onSelectTemplate={() => {}}
+        onUseTemplate={(tmpl: CVTemplate) => {
+          applyBackendTemplate(tmpl);
           setIsGalleryModalOpen(false);
-          showNotice(`Applied "${tmpl.name}" layout & color theme to Live Builder!`);
+          showNotice(`Using "${tmpl.name}". Edit your details here, then download from the toolbar.`);
         }}
         onClose={() => setIsGalleryModalOpen(false)}
-        onExport={(format, templateId) => triggerBuilderExport(format, templateId)}
-        isExporting={isDownloadingPdf}
         isAuthenticated={isAuthenticated}
         onAuthSuccess={() => setIsAuthenticated(true)}
-        exportError={galleryExportError}
       />
 
       <TemplateAuthModal
@@ -3039,19 +2656,19 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
         templateId={authModalTemplate?.id || 'tech_two_column'}
         templateName={authModalTemplate?.name || 'ATS-Optimized Template'}
         onSuccess={() => {
-          const targetTpl = authModalTemplate?.id || template;
           const shouldDownload = pendingDownloadAfterAuth;
           const shouldCopy = pendingCopyAfterAuth;
           setIsAuthenticated(true);
-          if (authModalTemplate) {
-            setTemplate(authModalTemplate.id);
+          if (authModalTemplate && !shouldDownload && !shouldCopy) {
+            if (authModalTemplate.catalog) applyBackendTemplate(authModalTemplate.catalog);
+            else applyQuickLayout(authModalTemplate.id);
           }
           setPendingDownloadAfterAuth(false);
           setPendingCopyAfterAuth(false);
           setAuthModalTemplate(null);
           if (shouldDownload) {
             showNotice(`Account verified! Downloading your ${shouldDownload.toUpperCase()} resume...`);
-            triggerBuilderExport(shouldDownload, backendTemplateMap[targetTpl], targetTpl);
+            triggerBuilderExport(shouldDownload);
           } else if (shouldCopy) {
             copyPlainTextNow();
           } else {
