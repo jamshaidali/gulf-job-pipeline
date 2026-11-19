@@ -1,5 +1,5 @@
 import type { CVTemplate } from '@/types';
-import type { PreviewData, PreviewLayout } from '@/components/builder/ResumePreview';
+import type { PreviewData, PreviewLayout, StyleSpec } from '@/components/builder/ResumePreview';
 
 /** Map a catalog layout name to the preview layout (unknown layouts fall back to the classic single column). */
 export const asPreviewLayout = (layout: string): PreviewLayout =>
@@ -55,8 +55,51 @@ export const templateAccent = (tmpl: CVTemplate): string => {
   return readableAccent(base || '#0369a1');
 };
 
+/** CSS font stack for a catalog font family (the Carlito / Caladea files are loaded from /fonts). */
 export const previewFontFamily = (fontFamily: string): string =>
-  fontFamily === 'Times-Roman' ? 'serif' : fontFamily === 'Courier' ? 'monospace' : 'sans-serif';
+  fontFamily === 'Times-Roman'
+    ? 'serif'
+    : fontFamily === 'Courier'
+    ? 'monospace'
+    : fontFamily === 'Carlito'
+    ? "'TR Carlito', Calibri, 'Segoe UI', sans-serif"
+    : fontFamily === 'Caladea'
+    ? "'TR Caladea', Cambria, Georgia, serif"
+    : 'sans-serif';
+
+export const isSerifFamily = (fontFamily: string): boolean => fontFamily === 'Times-Roman' || fontFamily === 'Caladea';
+
+/** The builder's font choices -> the CSS font stack (and the exporter's `font` value is the same key). */
+export type BuilderFont = 'sans' | 'serif' | 'mono' | 'modern' | 'book';
+export const BUILDER_FONT_CSS: Record<BuilderFont, string> = {
+  sans: 'sans-serif',
+  serif: 'serif',
+  mono: 'monospace',
+  modern: "'TR Carlito', Calibri, 'Segoe UI', sans-serif",
+  book: "'TR Caladea', Cambria, Georgia, serif",
+};
+export const builderFontFor = (fontFamily: string): BuilderFont =>
+  fontFamily === 'Times-Roman' ? 'serif' : fontFamily === 'Courier' ? 'mono' : fontFamily === 'Carlito' ? 'modern' : fontFamily === 'Caladea' ? 'book' : 'sans';
+
+/** Design choices of a template, or null for the original templates (their look follows layout and font). */
+export const templateStyle = (tmpl: CVTemplate): Partial<StyleSpec> | null =>
+  tmpl.custom_style && tmpl.style ? (tmpl.style as unknown as Partial<StyleSpec>) : null;
+
+const HEADER_LABEL: Record<string, string> = { left: 'Left header', centered: 'Centered header', split: 'Split header', banner: 'Banner header' };
+const HEADING_LABEL: Record<string, string> = {
+  rule: 'ruled headings',
+  band: 'tinted bands',
+  bar: 'accent bars',
+  underline: 'underlined headings',
+  plain: 'plain headings',
+};
+
+/** A short, honest description of how a template looks, e.g. "Centered header · tinted bands". */
+export const styleTagline = (tmpl: CVTemplate): string => {
+  const st = templateStyle(tmpl);
+  if (!st || isDesignerLayout(tmpl.layout)) return layoutLabel(tmpl.layout);
+  return `${HEADER_LABEL[String(st.header)] || 'Left header'} · ${HEADING_LABEL[String(st.heading)] || 'ruled headings'}`;
+};
 
 export const layoutLabel = (layout: string): string =>
   ({

@@ -137,6 +137,10 @@ export interface CVTemplate {
   /** Photo / sidebar layouts: striking, but some strict ATS software reads them poorly. */
   designer?: boolean;
   ats_note?: string;
+  /** Full set of design choices (header, headings, dates, skills, bullets, density, caps). */
+  style?: Record<string, string | boolean>;
+  /** True when the template carries its own style; original templates derive it from their layout. */
+  custom_style?: boolean;
 }
 
 export interface CVTemplatesResponse {

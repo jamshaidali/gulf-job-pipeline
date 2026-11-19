@@ -4,8 +4,9 @@ import React from 'react';
 
 /**
  * Live resume preview. It deliberately mirrors the PDF / Word exporter (src/cv_exporter.py):
- * same sections in the same order, same standard headings, same typographic scale and the same
- * rules for omitting empty sections, so what you see here is what you download.
+ * same sections in the same order, same standard headings, same typographic scale, the same design
+ * choices (header, heading style, dates, skills, bullets, density, name case) and the same rules for
+ * omitting empty sections, so what you see here is what you download.
  *
  * Sizes are expressed in points of a US Letter page (8.5in wide) and scaled with the width of the
  * surrounding container (`#resume-canvas` sets `container-type: inline-size`), with a small pixel
@@ -21,6 +22,37 @@ export type PreviewLayout =
   | 'sidebar_photo'
   | 'sidebar_light'
   | 'photo_banner';
+
+/** The design choices a template is made of (mirrors STYLE_DEFAULTS in src/cv_templates.py). */
+export interface StyleSpec {
+  header: 'left' | 'centered' | 'split' | 'banner';
+  heading: 'rule' | 'band' | 'bar' | 'underline' | 'plain';
+  skills: 'inline' | 'columns';
+  dates: 'inline' | 'right';
+  bullets: 'dot' | 'dash' | 'arrow';
+  density: 'standard' | 'compact' | 'airy';
+  caps: boolean;
+}
+
+export const DEFAULT_STYLE: StyleSpec = {
+  header: 'left',
+  heading: 'rule',
+  skills: 'inline',
+  dates: 'inline',
+  bullets: 'dot',
+  density: 'standard',
+  caps: false,
+};
+
+/** Style of the original templates, which only carry a layout (mirrors resolve_style in the backend). */
+export const legacyStyle = (layout: PreviewLayout, serifFont: boolean): StyleSpec => {
+  const style = { ...DEFAULT_STYLE };
+  if (layout === 'split_header' || layout === 'photo_banner') style.header = 'banner';
+  else if (layout === 'modern_accent') style.heading = 'band';
+  else if (layout === 'compact_dense') style.density = 'compact';
+  else if (layout === 'single_column') style.header = serifFont ? 'centered' : 'left';
+  return style;
+};
 
 interface PreviewExperience {
   id: string;
@@ -78,6 +110,15 @@ export const tint = (hex: string, strength = 0.1): string => {
 
 const clean = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
+const GLYPH = { dot: '•', dash: '–', arrow: '›' } as const;
+
+// density -> [body pt, leading ratio, page margin %, name pt, space before section, before entry, after bullet]
+const METRICS = {
+  compact: [10, 12.4 / 10, 6.47, 20, 6, 2, 1.5],
+  standard: [10.5, 13.8 / 10.5, 8.82, 24, 10, 4, 2.5],
+  airy: [11, 15.2 / 11, 10, 26, 14, 6, 3.5],
+} as const;
+
 export default function ResumePreview({
   layout,
   accent,
@@ -85,26 +126,28 @@ export default function ResumePreview({
   fit = false,
   centered = false,
   photo = null,
+  style = null,
 }: {
   layout: PreviewLayout;
   accent: string;
   data: PreviewData;
-  /** Centre the header (the classic serif single-column style). Ignored for banner layouts. */
+  /** Centre the header of an original single-column template (serif font). Ignored when `style` is given. */
   centered?: boolean;
   /** Thumbnail mode: keep exact page proportions at any width (text may become tiny). */
   fit?: boolean;
   /** Profile photo (data URL or image path) for the designer layouts. */
   photo?: string | null;
+  /** The template's design choices. Original templates omit it and derive them from `layout`. */
+  style?: Partial<StyleSpec> | null;
 }) {
   const pt = fit ? ptExact : ptReadable;
-  const compact = layout === 'compact_dense';
-  const modern = layout === 'modern_accent';
-  const photoBanner = layout === 'photo_banner';
-  const banner = layout === 'split_header' || photoBanner;
+  const spec: StyleSpec = { ...legacyStyle(layout, centered), ...(style || {}) };
   const sidebar = layout === 'sidebar_photo' || layout === 'sidebar_light';
-
-  const body = compact ? 10 : 10.5;
-  const lineHeight = compact ? 1.24 : 1.314;
+  const photoBanner = layout === 'photo_banner';
+  const banner = spec.header === 'banner' || photoBanner;
+  const [body, leadRatio, marginPct, namePt, secBefore, entryBefore, bulletAfter] = METRICS[spec.density];
+  const compact = spec.density === 'compact';
+  const glyph = GLYPH[spec.bullets];
 
   const name = clean(data.fullName);
   const headline = clean(data.jobTitle);
@@ -131,34 +174,39 @@ export default function ResumePreview({
     })
     .filter(Boolean);
 
-  const sectionHeading = (title: string) => (
-    <h2
-      style={{
-        color: accent,
-        fontSize: pt(compact ? 11 : 11.5),
-        fontWeight: 700,
-        lineHeight: 1.2,
-        textTransform: 'uppercase',
-        marginTop: pt((compact ? 6 : 10) + (modern ? 3 : 0)),
-        marginBottom: pt(3),
-        ...(modern
-          ? { background: tint(accent, 0.1), padding: `${pt(2)} ${pt(6)}` }
-          : { paddingBottom: pt(1.5), borderBottom: `1px solid ${RULE}` }),
-      }}
-    >
-      {title}
-    </h2>
-  );
+  const sectionHeading = (title: string) => {
+    const base: React.CSSProperties = {
+      color: spec.heading === 'band' ? accent : accent,
+      fontSize: pt(compact ? 11 : 11.5),
+      fontWeight: 700,
+      lineHeight: 1.2,
+      textTransform: 'uppercase',
+      marginTop: pt(secBefore + (spec.heading === 'band' ? 3 : 0)),
+      marginBottom: pt(3),
+    };
+    if (spec.heading === 'band') {
+      Object.assign(base, { background: tint(accent, 0.1), padding: `${pt(2.5)} ${pt(6)}` });
+    } else if (spec.heading === 'rule') {
+      Object.assign(base, { paddingBottom: pt(1.5), borderBottom: `1px solid ${RULE}` });
+    } else if (spec.heading === 'bar') {
+      Object.assign(base, { borderLeft: `${pt(3.2)} solid ${accent}`, paddingLeft: pt(6.8), paddingTop: pt(1.5), paddingBottom: pt(1.5) });
+    }
+    return (
+      <h2 style={base}>
+        {title}
+        {spec.heading === 'underline' && (
+          <span style={{ display: 'block', width: pt(30), height: pt(2.2), background: accent, marginTop: pt(2) }} />
+        )}
+      </h2>
+    );
+  };
 
   const bulletList = (items: string[]) => (
     <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
       {items.map((b, i) => (
-        <li
-          key={i}
-          style={{ position: 'relative', paddingLeft: pt(14), marginBottom: pt(compact ? 1.5 : 2.5) }}
-        >
+        <li key={i} style={{ position: 'relative', paddingLeft: pt(14), marginBottom: pt(bulletAfter) }}>
           <span aria-hidden="true" style={{ position: 'absolute', left: pt(3) }}>
-            {'•'}
+            {glyph}
           </span>
           {b}
         </li>
@@ -166,23 +214,37 @@ export default function ResumePreview({
     </ul>
   );
 
-  const entryHead = (strong: string, rest: string, meta: string) => (
-    <div style={{ marginTop: pt(compact ? 2 : 4), marginBottom: pt(1) }}>
-      {strong && <strong style={{ fontWeight: 700 }}>{strong}</strong>}
-      {rest && (
-        <span>
-          {strong ? ' – ' : ''}
-          {rest}
-        </span>
-      )}
-      {meta && (
-        <span style={{ color: MUTED }}>
-          {strong || rest ? ' | ' : ''}
-          {meta}
-        </span>
-      )}
-    </div>
-  );
+  const entryHead = (strong: string, rest: string, meta: string, date = '') => {
+    const left = (
+      <span>
+        {strong && <strong style={{ fontWeight: 700 }}>{strong}</strong>}
+        {rest && (
+          <span>
+            {strong ? ' – ' : ''}
+            {rest}
+          </span>
+        )}
+        {meta && (
+          <span style={{ color: MUTED }}>
+            {strong || rest ? ' | ' : ''}
+            {meta}
+          </span>
+        )}
+      </span>
+    );
+    return (
+      <div
+        style={{
+          marginTop: pt(entryBefore),
+          marginBottom: pt(1),
+          ...(date ? { display: 'flex', justifyContent: 'space-between', gap: pt(8) } : {}),
+        }}
+      >
+        {left}
+        {date && <span style={{ color: MUTED, whiteSpace: 'nowrap', textAlign: 'right' }}>{date}</span>}
+      </div>
+    );
+  };
 
   const mainSections = (
     <>
@@ -196,7 +258,15 @@ export default function ResumePreview({
       {!sidebar && skills.length > 0 && (
         <section>
           {sectionHeading('Skills')}
-          <p>{skills.join(', ')}</p>
+          {spec.skills === 'columns' && skills.length > 3 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', columnGap: pt(6), rowGap: pt(1.5) }}>
+              {skills.map((sk, i) => (
+                <div key={i}>{sk}</div>
+              ))}
+            </div>
+          ) : (
+            <p>{skills.join(', ')}</p>
+          )}
         </section>
       )}
 
@@ -205,7 +275,9 @@ export default function ResumePreview({
           {sectionHeading('Professional Experience')}
           {experiences.map((e, i) => (
             <div key={i}>
-              {entryHead(e.title, e.company, [e.location, e.period].filter(Boolean).join(' | '))}
+              {spec.dates === 'right' && e.period
+                ? entryHead(e.title, e.company, e.location, e.period)
+                : entryHead(e.title, e.company, [e.location, e.period].filter(Boolean).join(' | '))}
               {bulletList(e.bullets)}
             </div>
           ))}
@@ -236,6 +308,8 @@ export default function ResumePreview({
       )}
     </>
   );
+
+  const shownName = name ? (spec.caps ? name.toUpperCase() : name) : '';
 
   // ---- Designer: coloured sidebar (photo, contact, skills, education) + main column ----
   if (sidebar) {
@@ -276,8 +350,8 @@ export default function ResumePreview({
           display: 'grid',
           gridTemplateColumns: '31.05% 1fr',
           color: TEXT,
-          fontSize: pt(10.5),
-          lineHeight: 1.314,
+          fontSize: pt(body),
+          lineHeight: leadRatio,
           aspectRatio: '8.5 / 11',
           overflowWrap: 'anywhere',
         }}
@@ -341,8 +415,8 @@ export default function ResumePreview({
         </aside>
         <div style={{ padding: `${pt(38)} ${pt(34)} ${pt(44)} ${pt(26)}` }}>
           <div style={{ borderBottom: `1.6px solid ${accent}`, paddingBottom: pt(4) }}>
-            <div style={{ color: accent, fontSize: pt(24), fontWeight: 700, lineHeight: 1.2 }}>
-              {name || <span style={{ color: RULE }}>Your Full Name</span>}
+            <div style={{ color: accent, fontSize: pt(namePt), fontWeight: 700, lineHeight: 1.2 }}>
+              {shownName || <span style={{ color: RULE }}>Your Full Name</span>}
             </div>
             {headline && (
               <div style={{ color: MUTED, fontSize: pt(12), fontWeight: 700, marginTop: pt(2) }}>{headline}</div>
@@ -354,15 +428,19 @@ export default function ResumePreview({
     );
   }
 
+  const nameNode = shownName || <span style={{ color: RULE }}>Your Full Name</span>;
+  const headerRuleColor = spec.heading === 'band' ? accent : RULE;
+  const headerRuleWidth = spec.heading === 'band' ? 1.6 : 1.1;
+
   return (
     <div
       data-testid="resume-preview"
       data-layout={layout}
       style={{
-        padding: compact ? '6.47%' : '8.82%',
+        padding: `${marginPct}%`,
         color: TEXT,
         fontSize: pt(body),
-        lineHeight,
+        lineHeight: leadRatio,
         aspectRatio: '8.5 / 11',
         overflowWrap: 'anywhere',
       }}
@@ -383,7 +461,7 @@ export default function ResumePreview({
         >
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: pt(24), fontWeight: 700, lineHeight: 1.2 }}>
-              {name || <span style={{ opacity: 0.6 }}>Your Full Name</span>}
+              {shownName || <span style={{ opacity: 0.6 }}>Your Full Name</span>}
             </div>
             {headline && (
               <div style={{ color: '#E2E8F0', fontSize: pt(12), fontWeight: 700, marginTop: pt(2) }}>{headline}</div>
@@ -401,17 +479,31 @@ export default function ResumePreview({
             />
           )}
         </div>
+      ) : spec.header === 'split' ? (
+        <div style={{ borderBottom: `${headerRuleWidth}px solid ${headerRuleColor}`, paddingBottom: pt(4) }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: pt(12) }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ color: accent, fontSize: pt(namePt), fontWeight: 700, lineHeight: 1.2 }}>{nameNode}</div>
+              {headline && (
+                <div style={{ color: accent, fontSize: pt(12), fontWeight: 700, marginTop: pt(2) }}>{headline}</div>
+              )}
+            </div>
+            <div style={{ color: MUTED, fontSize: pt(10), textAlign: 'right', flexShrink: 0, maxWidth: '45%' }}>
+              {contact.map((c, i) => (
+                <div key={i}>{c}</div>
+              ))}
+            </div>
+          </div>
+        </div>
       ) : (
         <div
           style={{
-            borderBottom: `${modern ? 1.6 : 1.1}px solid ${modern ? accent : RULE}`,
+            borderBottom: `${headerRuleWidth}px solid ${headerRuleColor}`,
             paddingBottom: pt(4),
-            textAlign: centered ? 'center' : 'left',
+            textAlign: spec.header === 'centered' ? 'center' : 'left',
           }}
         >
-          <div style={{ color: accent, fontSize: pt(compact ? 20 : 24), fontWeight: 700, lineHeight: 1.2 }}>
-            {name || <span style={{ color: RULE }}>Your Full Name</span>}
-          </div>
+          <div style={{ color: accent, fontSize: pt(namePt), fontWeight: 700, lineHeight: 1.2 }}>{nameNode}</div>
           {headline && (
             <div style={{ color: accent, fontSize: pt(12), fontWeight: 700, marginTop: pt(2) }}>{headline}</div>
           )}

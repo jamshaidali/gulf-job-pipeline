@@ -14,7 +14,7 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     // CV-focused action buttons
     const builderBtn = page.getByRole('link', { name: /Build Your Resume|Launch Free Builder|Get Started/i }).first();
     const atsScannerBtn = page.getByRole('link', { name: /Get Your Resume Score|Free ATS Scanner|ATS Scanner/i }).first();
-    const templatesBtn = page.getByRole('link', { name: /105\+ Templates|Templates/i }).first();
+    const templatesBtn = page.getByRole('link', { name: /500\+ Templates|Templates/i }).first();
 
     await expect(builderBtn).toBeVisible();
     await expect(atsScannerBtn).toBeVisible();
@@ -102,7 +102,7 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     await page.goto('/templates');
 
     // Check heading
-    await expect(page.locator('h1')).toContainText(/ATS-Optimized Resume Templates/i);
+    await expect(page.locator('h1')).toContainText(/Resume Templates/i);
 
     // Filter by Executive: real catalog templates are listed, each shown as the actual rendered resume
     await page.getByRole('button', { name: 'Executive & Leadership' }).click();
@@ -303,7 +303,7 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     await expect(page.locator('textarea').first()).not.toHaveValue('');
     await page.getByRole('button', { name: /Scan Resume Against Job Description/i }).click();
 
-    const exportModalBtn = page.getByRole('button', { name: /Export Tailored CV \(105\+ Designs\)/i });
+    const exportModalBtn = page.getByRole('button', { name: /Export Tailored CV \(500\+ Designs\)/i });
     await expect(exportModalBtn).toBeVisible({ timeout: 15000 });
     await exportModalBtn.click();
 
@@ -327,7 +327,7 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     expect(download.suggestedFilename()).toContain('.pdf');
   });
 
-  test('10. Full Phase 1 Button & Feature Flow Audit: all tabs, Projects/Education CRUD, AI helpers, Autosave, Font/Color switchers, 105+ Modal, DOCX/PDF export, and Guides', async ({ page }) => {
+  test('10. Full Phase 1 Button & Feature Flow Audit: all tabs, Projects/Education CRUD, AI helpers, Autosave, Font/Color switchers, 500+ Modal, DOCX/PDF export, and Guides', async ({ page }) => {
     // 1. Test /login and /register password visibility toggle
     await page.goto('/login');
     const loginPassInput = page.locator('input[placeholder*="••"]');
@@ -429,8 +429,8 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     await expect(canvas).toHaveCSS('font-family', /monospace/i);
     await page.getByRole('button', { name: 'Sans', exact: true }).click();
 
-    // 11. Test "Browse All 105+ ->" & "105+ Designs" modal inside /builder
-    await editorPanel.getByRole('button', { name: /Browse All 105\+/i }).click();
+    // 11. Test "Browse All 500+ ->" & "500+ Designs" modal inside /builder
+    await editorPanel.getByRole('button', { name: /Browse All 500\+/i }).click();
     // In the builder the gallery only CHOOSES a template; downloading happens from the builder toolbar.
     await expect(page.getByText('Choose Your Resume Template')).toBeVisible();
     await expect(page.getByTestId('modal-download-pdf-btn')).toHaveCount(0);
@@ -551,5 +551,51 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     await page.getByRole('button', { name: 'Modern Tech', exact: true }).first().click();
     await expect(canvas).toHaveAttribute('data-layout', 'modern_accent');
     await expect(page.locator('#builder-editor-panel').getByText('Active', { exact: true })).toHaveCount(1);
+  });
+
+  test('14. 500+ templates: listed in pages, new styles apply in the builder, and the download uses that template', async ({ page }) => {
+    await page.goto('/templates');
+    await expect(page.getByText(/Showing \d+ Templates/)).toBeVisible();
+    const total = Number((await page.getByText(/Showing \d+ Templates/).innerText()).match(/\d+/)![0]);
+    expect(total).toBeGreaterThanOrEqual(500);
+
+    // Rendered a page at a time, then more on request
+    const thumbs = page.getByTestId('template-thumbnail');
+    await expect(thumbs.first()).toBeVisible();
+    const first = await thumbs.count();
+    expect(first).toBeLessThan(total);
+    await page.getByTestId('load-more-templates').click();
+    await expect.poll(async () => thumbs.count()).toBeGreaterThan(first);
+
+    // Styles are described honestly on the cards
+    await expect(page.getByText(/header · /).first()).toBeVisible();
+
+    // A new-style template applies its own design choices in the builder, and the export uses it
+    await page.goto('/builder');
+    await page.evaluate(() => {
+      localStorage.setItem('tr_auth_user', JSON.stringify({ username: 'alex_global', full_name: 'Alex Global' }));
+      localStorage.removeItem('tr_builder_look');
+    });
+    const catalog = await (await page.request.get('/api/cv/templates')).json();
+    const pick = catalog.templates.find((t: any) => t.custom_style && !t.designer && t.style.caps === true);
+    expect(pick).toBeTruthy();
+    await page.goto(`/builder?template=${pick.id}`);
+    const canvas = page.locator('#resume-canvas');
+    await expect(canvas).toHaveAttribute('data-template', pick.id);
+    await expect(canvas).toContainText(/ALEXANDER CHEN/); // this style sets the name in capitals
+    const exportRequest = page.waitForRequest((r) => r.url().includes('/api/ats/export-cv'));
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: /Download PDF/i }).click();
+    const body = JSON.parse((await exportRequest).postData() || '{}');
+    expect(body.template_id).toBe(pick.id);
+    expect((await download).suggestedFilename()).toContain(pick.id);
+
+    // The new Calibri- and Cambria-style fonts are selectable and reach the export
+    await page.getByRole('button', { name: 'Modern', exact: true }).click();
+    const exportRequest2 = page.waitForRequest((r) => r.url().includes('/api/ats/export-cv'));
+    const download2 = page.waitForEvent('download');
+    await page.getByRole('button', { name: /Download PDF/i }).click();
+    expect(JSON.parse((await exportRequest2).postData() || '{}').font).toBe('modern');
+    await download2;
   });
 });

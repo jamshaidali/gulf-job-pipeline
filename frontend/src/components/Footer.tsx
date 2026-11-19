@@ -16,11 +16,11 @@ export default function Footer() {
               <span className="text-xl font-extrabold text-white tracking-tight">TalentRadar</span>
             </div>
             <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
-              Autonomous AI resume builder and ATS diagnostic copilot. Craft striking, recruiter-approved CVs engineered to pass enterprise ATS filters and win interviews.
+              AI resume builder and ATS scanner. Craft clear, well-structured CVs with templates from ATS-safe single column to designer styles.
             </p>
             <div className="flex items-center gap-2 pt-2 text-xs font-semibold text-slate-300">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Free to use &bull; Create a free account to unlock all 105+ templates</span>
+              <span>Free to use &bull; Create a free account to unlock all 500+ templates</span>
             </div>
           </div>
 
@@ -30,7 +30,7 @@ export default function Footer() {
             <ul className="space-y-2 text-xs">
               <li><Link href="/builder" className="hover:text-white transition">Live AI Resume Builder</Link></li>
               <li><Link href="/ats-scanner" className="hover:text-white transition">Free ATS Resume Scanner</Link></li>
-              <li><Link href="/templates" className="hover:text-white transition">105+ Resume Templates</Link></li>
+              <li><Link href="/templates" className="hover:text-white transition">500+ Resume Templates</Link></li>
               <li><Link href="/#pricing" className="hover:text-white transition">Launch Offer ($0 Free)</Link></li>
             </ul>
           </div>

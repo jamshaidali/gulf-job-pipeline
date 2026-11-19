@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Free AI Resume Builder & Live Visual CV Editor | TalentRadar',
     description:
-      'Create an interview-winning, ATS-verified resume in minutes with live visual editing and AI impact bullets.',
+      'Create an interview-winning, ATS-friendly resume in minutes with live visual editing and AI impact bullets.',
   },
 };
 

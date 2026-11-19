@@ -8,8 +8,17 @@ import TemplateAuthModal from '@/components/TemplateAuthModal';
 import TemplateGalleryModal from '@/components/dashboard/TemplateGalleryModal';
 import { CVTemplate } from '@/types';
 import { fetchCurrentUser, fetchCVTemplates, importCvToBuilder, exportCustomAtsCv, ImportedStructuredResume } from '@/lib/api';
-import ResumePreview, { PreviewLayout } from '@/components/builder/ResumePreview';
-import { asPreviewLayout, DESIGNER_NOTE, isDesignerLayout, readableAccent } from '@/lib/templatePreview';
+import ResumePreview, { PreviewLayout, StyleSpec } from '@/components/builder/ResumePreview';
+import {
+  asPreviewLayout,
+  BUILDER_FONT_CSS,
+  BuilderFont,
+  builderFontFor,
+  DESIGNER_NOTE,
+  isDesignerLayout,
+  readableAccent,
+  templateStyle,
+} from '@/lib/templatePreview';
 import { 
   Sparkles, 
   Download, 
@@ -187,8 +196,10 @@ interface SavedLook {
   layout: PreviewLayout;
   label: string | null;
   template: BuilderTemplateId;
-  font: 'sans' | 'serif' | 'mono';
+  font: BuilderFont;
   accent: string;
+  /** Design choices of the chosen catalog template (null for the original templates). */
+  style?: Partial<StyleSpec> | null;
 }
 const LAYOUTS: PreviewLayout[] = ['single_column', 'split_header', 'modern_accent', 'compact_dense', 'sidebar_photo', 'sidebar_light', 'photo_banner'];
 const readSavedLook = (): SavedLook | null => {
@@ -198,11 +209,15 @@ const readSavedLook = (): SavedLook | null => {
       raw &&
       typeof raw.backendId === 'string' &&
       LAYOUTS.includes(raw.layout) &&
-      ['sans', 'serif', 'mono'].includes(raw.font) &&
+      ['sans', 'serif', 'mono', 'modern', 'book'].includes(raw.font) &&
       /^#[0-9a-fA-F]{6}$/.test(raw.accent) &&
       Object.prototype.hasOwnProperty.call(QUICK_LAYOUTS, raw.template)
     ) {
-      return { ...raw, label: typeof raw.label === 'string' ? raw.label : null };
+      return {
+        ...raw,
+        label: typeof raw.label === 'string' ? raw.label : null,
+        style: raw.style && typeof raw.style === 'object' ? raw.style : null,
+      };
     }
   } catch {
     // Missing or corrupt: fall back to the defaults.
@@ -400,7 +415,7 @@ export default function ResumeBuilderPage() {
   // Design System States
   const [template, setTemplate] = useState<BuilderTemplateId>('tech_two_column');
   const [accentColor, setAccentColor] = useState<string>('#0369a1'); // Sky blue (AA contrast on white)
-  const [fontFamily, setFontFamily] = useState<'sans' | 'serif' | 'mono'>('sans');
+  const [fontFamily, setFontFamily] = useState<BuilderFont>('sans');
   const [copiedNotification, setCopiedNotification] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [authUsername, setAuthUsername] = useState<string | null>(null);
@@ -427,6 +442,8 @@ export default function ResumeBuilderPage() {
   const [activeBackendTemplateId, setActiveBackendTemplateId] = useState<string>(QUICK_LAYOUTS.tech_two_column.backendId);
   const [activeLayout, setActiveLayout] = useState<PreviewLayout>('modern_accent');
   const [activeTemplateLabel, setActiveTemplateLabel] = useState<string | null>(null);
+  // Design choices of the chosen catalog template (header, headings, dates...). Null = original template look.
+  const [activeStyle, setActiveStyle] = useState<Partial<StyleSpec> | null>(null);
 
   // Optional profile photo for the designer layouts (kept in this browser only, until you download).
   const [photo, setPhoto] = useState<string | null>(null);
@@ -469,8 +486,9 @@ export default function ResumeBuilderPage() {
     setActiveBackendTemplateId(tmpl.id);
     setActiveLayout(asPreviewLayout(tmpl.layout));
     setActiveTemplateLabel(tmpl.name);
+    setActiveStyle(templateStyle(tmpl));
     setTemplate(quickIdFor(tmpl.layout, tmpl.font_family));
-    setFontFamily(tmpl.font_family === 'Times-Roman' ? 'serif' : 'sans');
+    setFontFamily(builderFontFor(tmpl.font_family));
     const base = tmpl.layout === 'modern_accent' ? tmpl.colors?.secondary : tmpl.colors?.primary;
     if (base) setAccentColor(readableAccent(base));
   };
@@ -482,8 +500,9 @@ export default function ResumeBuilderPage() {
     setActiveBackendTemplateId(quick.backendId);
     setActiveLayout(quick.layout);
     setActiveTemplateLabel(null);
+    setActiveStyle(null);
     if (quick.font) setFontFamily(quick.font);
-    else if (fontFamily === 'serif') setFontFamily('sans');
+    else if (fontFamily === 'serif' || fontFamily === 'book') setFontFamily('sans');
   };
 
   // Remember the chosen look. Restored once on load, then saved on every change.
@@ -498,12 +517,13 @@ export default function ResumeBuilderPage() {
         template,
         font: fontFamily,
         accent: accentColor,
+        style: activeStyle,
       };
       localStorage.setItem(LOOK_KEY, JSON.stringify(look));
     } catch {
       // Storage unavailable: the choice is simply not remembered.
     }
-  }, [lookReady, activeBackendTemplateId, activeLayout, activeTemplateLabel, template, fontFamily, accentColor]);
+  }, [lookReady, activeBackendTemplateId, activeLayout, activeTemplateLabel, activeStyle, template, fontFamily, accentColor]);
 
   const [savedCvs, setSavedCvs] = useState<SavedCv[]>([]);
   const [activeCvId, setActiveCvId] = useState<string | null>(null);
@@ -617,6 +637,7 @@ export default function ResumeBuilderPage() {
           setActiveTemplateLabel(savedLook.label);
           setTemplate(savedLook.template);
           setFontFamily(savedLook.font);
+          setActiveStyle(savedLook.style ?? null);
           setAccentColor(savedLook.accent);
         }
         const accentParam = params.get('accent');
@@ -1352,6 +1373,8 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 { id: 'sans', label: 'Sans' },
                 { id: 'serif', label: 'Serif' },
                 { id: 'mono', label: 'Mono' },
+                { id: 'modern', label: 'Modern' },
+                { id: 'book', label: 'Book' },
               ] as const
             ).map((f) => (
               <button
@@ -1450,7 +1473,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
               onClick={() =>
                 setAuthModalTemplate({
                   id: 'minimalist',
-                  name: 'All 105+ ATS Resume Templates',
+                  name: 'All 500+ ATS Resume Templates',
                 })
               }
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-cyan-800 hover:bg-cyan-50 font-semibold transition cursor-pointer underline-offset-2 hover:underline"
@@ -2454,12 +2477,12 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                   <div className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
                     <span>Choose Resume Template</span>
                     <span className="px-1.5 py-0.5 rounded-full bg-cyan-100 text-cyan-800 text-[9px] font-black uppercase">
-                      5 Live Layouts &bull; 105+ Designs
+                      5 Live Layouts &bull; 500+ Designs
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-500 leading-snug">
                     {isAuthenticated
-                      ? 'All ATS-verified resume templates are unlocked on your account.'
+                      ? 'All templates are unlocked on your account.'
                       : 'Select any template below — creating a free account is required to apply templates.'}
                   </p>
                 </div>
@@ -2473,7 +2496,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 }}
                 className="text-[11px] font-extrabold text-cyan-700 hover:text-cyan-900 flex items-center gap-1 cursor-pointer"
               >
-                <span>Browse All 105+ &rarr;</span>
+                <span>Browse All 500+ &rarr;</span>
               </button>
             </div>
 
@@ -2560,7 +2583,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 );
               })}
 
-              {/* 6th Card: Browse All 105+ Designs */}
+              {/* 6th Card: Browse All 500+ Designs */}
               <button
                 type="button"
                 onClick={() => {
@@ -2576,7 +2599,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 <div>
                   <div className="flex items-center justify-between gap-1">
                     <span className="text-[11px] font-extrabold text-cyan-950 truncate">
-                      105+ Templates
+                      500+ Templates
                     </span>
                     {!isAuthenticated && (
                       <Lock className="w-3 h-3 text-amber-600 shrink-0" />
@@ -2650,7 +2673,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-[13px] font-semibold transition cursor-pointer"
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span>Browse 105+ templates</span>
+                <span>Browse 500+ templates</span>
               </button>
             </div>
           </div>
@@ -2662,13 +2685,14 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
             data-template={activeBackendTemplateId}
             style={{
               containerType: 'inline-size',
-              fontFamily: fontFamily === 'serif' ? 'serif' : fontFamily === 'mono' ? 'monospace' : 'sans-serif'
+              fontFamily: BUILDER_FONT_CSS[fontFamily]
             } as React.CSSProperties}
           >
             <ResumePreview
               layout={activeLayout}
               photo={photo}
-              centered={activeLayout === 'single_column' && fontFamily === 'serif'}
+              centered={activeLayout === 'single_column' && (fontFamily === 'serif' || fontFamily === 'book')}
+              style={activeStyle}
               accent={accentColor}
               data={{ fullName, jobTitle, email, phone, location, linkedIn, github, summary, skills, experiences, educations, projects }}
             />

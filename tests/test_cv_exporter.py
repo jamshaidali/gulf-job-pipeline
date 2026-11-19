@@ -59,7 +59,7 @@ def test_catalog_is_consistent():
     assert len(TEMPLATES_CATALOG) >= 100
     for t in TEMPLATES_CATALOG:
         assert t["palette"] in PALETTES, t["id"]
-        assert t["font_family"] in ("Helvetica", "Times-Roman"), t["id"]
+        assert t["font_family"] in ("Helvetica", "Times-Roman", "Carlito", "Caladea"), t["id"]
         assert t["layout"] in (
             "single_column", "split_header", "modern_accent", "compact_dense",
             "sidebar_photo", "sidebar_light", "photo_banner",
@@ -85,10 +85,10 @@ def test_pdf_text_is_ats_parseable_for_every_layout_and_font():
         designer = t["layout"] in DESIGNER_LAYOUTS
 
         assert "(cid:" not in text, key
-        assert "•" in text or "•" in text, f"bullet glyph missing from extracted text for {key}"
+        assert any(g in text for g in ("\u2022", "\u2013", "\u203a")), f"bullet glyph missing from extracted text for {key}"
         for heading in STANDARD_HEADINGS:
             assert heading in text, (key, heading)
-        assert "José Müller-Åkesson" in text, key           # accents survive
+        assert "josé müller-åkesson" in text.lower(), key  # accents survive (the name may be upper-cased by the style)
         assert "R&D for <payments> & \"fintech\"" in text, key  # markup characters are escaped, not parsed
         if not designer:
             # Standard templates read top to bottom in the order ATS parsers expect. Designer sidebars put
@@ -256,3 +256,105 @@ def test_designer_long_resume_flows_to_a_second_page_with_the_sidebar_kept():
     reader = PdfReader(io.BytesIO(pdf))
     assert len(reader.pages) >= 2
     assert "José Müller-Åkesson - Page 2" in reader.pages[1].extract_text()
+
+
+# ---------------------------------------------------------------------------
+# Extended catalogue (500+ templates built from real design choices)
+# ---------------------------------------------------------------------------
+def _spec(t):
+    return (t["layout"], t["font_family"], t["palette"], tuple(sorted(t["style"].items())))
+
+
+def test_catalogue_has_500_plus_unique_templates():
+    listed = list_templates()
+    assert len(listed) >= 500
+    assert len({t["id"] for t in listed}) == len(listed)
+    assert len({t["name"] for t in listed}) == len(listed)
+    extended = [t for t in listed if t["custom_style"]]
+    assert len(extended) >= 400
+    # every extended template is a genuinely different combination of design choices
+    assert len({_spec(t) for t in extended}) == len(extended)
+    # ... and none duplicates one of the original templates
+    originals = {_spec(t) for t in listed if not t["custom_style"]}
+    assert not originals & {_spec(t) for t in extended}
+    # variety, not 400 near-copies
+    looks = {(t["layout"], t["style"]["header"], t["style"]["heading"], t["style"]["dates"], t["style"]["skills"]) for t in extended}
+    assert len(looks) >= 60
+    assert len({t["palette"] for t in extended}) >= 30
+    assert len({t["font_family"] for t in extended}) == 4
+
+
+def test_every_palette_stays_readable_at_render_time():
+    for name, pal in PALETTES.items():
+        assert contrast_ratio(readable_color(pal["primary"], minimum=7.0)) >= 7.0, name
+        assert contrast_ratio(readable_color(pal["secondary"])) >= 4.5, name
+
+
+def test_gallery_order_mixes_looks_on_the_first_page():
+    first = list_templates()[:36]
+    assert len({t["style"]["header"] for t in first}) >= 4
+    assert len({t["style"]["heading"] for t in first}) >= 4
+    assert any(t["designer"] for t in first) and any(not t["custom_style"] for t in first)
+    assert len({t["font_family"] for t in first}) >= 3
+
+
+def _extended(**wanted):
+    for t in list_templates():
+        if t["custom_style"] and not t["designer"] and all(t["style"].get(k) == v for k, v in wanted.items()):
+            return t
+    raise AssertionError(f"no template with {wanted}")
+
+
+def test_design_choices_really_change_the_pdf():
+    # name in capitals
+    caps = _extended(caps=True)
+    text, _s, _p = _text_and_sizes(_pdf(caps["id"]))
+    assert "JOSÉ MÜLLER-ÅKESSON" in text
+    plain = _extended(caps=False)
+    text, _s, _p = _text_and_sizes(_pdf(plain["id"]))
+    assert "José Müller-Åkesson" in text
+
+    # bullet glyph follows the style
+    for bullets, glyph in (("dash", "–"), ("arrow", "›"), ("dot", "•")):
+        t = _extended(bullets=bullets)
+        text, _s, _p = _text_and_sizes(_pdf(t["id"]))
+        bullet_lines = [ln for ln in text.splitlines() if "Reduced p99 latency" in ln]
+        assert bullet_lines and glyph in bullet_lines[0], (bullets, bullet_lines)
+
+    # dates aligned right still sit on the same line as the role title, so parsers keep the pairing
+    import pdfplumber
+
+    right = _extended(dates="right")
+    with pdfplumber.open(io.BytesIO(_pdf(right["id"]))) as pdf:   # position-based reading, like most parsers
+        role_line = next(ln for ln in pdf.pages[0].extract_text().splitlines() if "Senior Engineer" in ln)
+    assert "2021" in role_line and "Present" in role_line
+
+    # the same words, laid out in columns instead of a comma list
+    cols = _extended(skills="columns")
+    inline = _extended(skills="inline")
+    assert "Python, Django, PostgreSQL" in _text_and_sizes(_pdf(inline["id"]))[0]
+    six = {**RESUME, "skills": ["Python", "Django", "PostgreSQL", "Docker", "AWS", "Redis"]}
+    cols_text = _text_and_sizes(_pdf(cols["id"], resume=six))[0]
+    assert "Python, Django, PostgreSQL" not in cols_text and all(w in cols_text for w in six["skills"])
+
+
+def test_calibri_and_cambria_style_fonts_are_embedded():
+    import pdfplumber
+
+    for family, needle in (("Carlito", "Carlito"), ("Caladea", "Caladea")):
+        t = next(t for t in list_templates() if t["custom_style"] and not t["designer"] and t["font_family"] == family)
+        with pdfplumber.open(io.BytesIO(_pdf(t["id"]))) as pdf:
+            fonts = {ch["fontname"] for ch in pdf.pages[0].chars}
+        assert any(needle in f for f in fonts), (family, fonts)
+    # the same fonts are available as Word fonts
+    from docx import Document
+
+    t = next(t for t in list_templates() if t["custom_style"] and t["font_family"] == "Carlito" and not t["designer"])
+    doc = Document(io.BytesIO(generate_tailored_docx(JOB, PROFILE, {}, template_id=t["id"], parsed_resume=RESUME)))
+    assert doc.styles["Normal"].font.name == "Calibri"
+
+
+def test_font_override_accepts_the_two_new_choices():
+    for choice in ("modern", "book"):
+        pdf = generate_tailored_pdf(JOB, PROFILE, {}, template_id="abu_dhabi_executive", parsed_resume=RESUME, font=choice)
+        assert pdf.startswith(b"%PDF")

@@ -8,7 +8,7 @@ import Footer from '@/components/Footer';
 import TemplateAuthModal from '@/components/TemplateAuthModal';
 import TemplateThumbnail from '@/components/builder/TemplateThumbnail';
 import { fetchCurrentUser, fetchCVTemplates } from '@/lib/api';
-import { DESIGNER_NOTE, layoutLabel } from '@/lib/templatePreview';
+import { DESIGNER_NOTE, styleTagline } from '@/lib/templatePreview';
 import type { CVTemplate } from '@/types';
 import { Sparkles, ArrowRight, ShieldCheck, Search, Eye, Lock, Loader2, X } from 'lucide-react';
 
@@ -27,7 +27,16 @@ const FALLBACK_CATEGORIES = [
   'Enterprise & Global',
 ];
 
-const fontLabel = (fontFamily: string) => (fontFamily === 'Times-Roman' ? 'Serif font' : 'Sans-serif font');
+const FONT_LABELS: Record<string, string> = {
+  Helvetica: 'Arial-style sans',
+  'Times-Roman': 'Times-style serif',
+  Carlito: 'Calibri-style sans',
+  Caladea: 'Cambria-style serif',
+};
+const fontLabel = (fontFamily: string) => FONT_LABELS[fontFamily] || 'Sans-serif';
+
+// Cards are rendered in pages: 500+ full previews at once would be slow, and nobody scrolls through them all.
+const PAGE_SIZE = 36;
 
 export default function TemplatesPage() {
   const router = useRouter();
@@ -41,6 +50,8 @@ export default function TemplatesPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [authModalTemplate, setAuthModalTemplate] = useState<{ id: string; name: string } | null>(null);
   const [reloadKey, setReloadKey] = useState<number>(0);
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
+  const loadMoreRef = React.useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -96,6 +107,22 @@ export default function TemplatesPage() {
     }
   };
 
+  // A new search or filter starts again from the first page
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [selectedCategory, searchQuery]);
+
+  // Load the next page automatically when the "show more" area scrolls into view
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) setVisibleCount((n) => n + PAGE_SIZE);
+    }, { rootMargin: '600px 0px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [visibleCount, loading, selectedCategory, searchQuery]);
+
   const filterPills = ['All', FILTER_DESIGNER, FILTER_ATS_SAFE, ...categories.filter((c) => c !== 'All')];
 
   const query = searchQuery.toLowerCase().trim();
@@ -110,7 +137,8 @@ export default function TemplatesPage() {
       item.name.toLowerCase().includes(query) ||
       item.description.toLowerCase().includes(query) ||
       item.category.toLowerCase().includes(query) ||
-      layoutLabel(item.layout).toLowerCase().includes(query);
+      styleTagline(item).toLowerCase().includes(query) ||
+      fontLabel(item.font_family).toLowerCase().includes(query);
     return matchesCategory && matchesSearch;
   });
 
@@ -118,7 +146,7 @@ export default function TemplatesPage() {
     <div className="min-h-screen bg-[#FAFAFA] text-slate-800 flex flex-col font-sans">
       {/* Announcement Ribbon */}
       <div className="bg-slate-900 text-white py-2 px-4 text-center text-xs font-semibold">
-        <span className="text-cyan-400 font-bold">✨ 100% Free Public Launch:</span> All 105+ Resume Templates Unlocked with Zero Paywalls &bull;{' '}
+        <span className="text-cyan-400 font-bold">✨ 100% Free Public Launch:</span> All 500+ Resume Templates Unlocked with Zero Paywalls &bull;{' '}
         <Link href="/builder" className="text-cyan-300 underline font-bold hover:text-white transition">
           Open Live CV Builder &rarr;
         </Link>
@@ -136,9 +164,9 @@ export default function TemplatesPage() {
             </div>
 
             <h1 className="text-3xl sm:text-5xl font-black text-slate-950 tracking-tight leading-tight">
-              105+ Recruiter-Approved, <br />
+              500+ Resume Templates, <br />
               <span className="bg-gradient-to-r from-cyan-600 to-sky-600 bg-clip-text text-transparent">
-                ATS-Optimized Resume Templates
+                from ATS-safe to designer
               </span>
             </h1>
 
@@ -220,7 +248,7 @@ export default function TemplatesPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 mt-8">
-              {filteredTemplates.map((template) => (
+              {filteredTemplates.slice(0, visibleCount).map((template) => (
                 <div
                   key={template.id}
                   className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between group"
@@ -254,7 +282,7 @@ export default function TemplatesPage() {
                       <p className="text-xs text-slate-600 mt-1 leading-relaxed">{template.description}</p>
                       <div className="mt-3 flex flex-wrap gap-1.5">
                         <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold">
-                          {layoutLabel(template.layout)}
+                          {styleTagline(template)}
                         </span>
                         <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-semibold">
                           {fontLabel(template.font_family)}
@@ -288,6 +316,21 @@ export default function TemplatesPage() {
               ))}
             </div>
           )}
+          {!loading && !loadError && filteredTemplates.length > visibleCount && (
+            <div ref={loadMoreRef} className="mt-10 text-center space-y-2">
+              <p className="text-xs text-slate-500">
+                Showing {visibleCount} of {filteredTemplates.length}
+              </p>
+              <button
+                type="button"
+                data-testid="load-more-templates"
+                onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                className="px-6 py-2.5 rounded-full bg-slate-900 hover:bg-black text-white font-bold text-xs cursor-pointer"
+              >
+                Show more templates
+              </button>
+            </div>
+          )}
         </section>
 
         {/* QUICK PREVIEW: the real template at reading size */}
@@ -308,7 +351,7 @@ export default function TemplatesPage() {
                   <h3 className="text-xl font-black text-slate-900 mt-0.5">{previewTemplate.name}</h3>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
-                      {layoutLabel(previewTemplate.layout)}
+                      {styleTagline(previewTemplate)}
                     </span>
                     <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
                       {fontLabel(previewTemplate.font_family)}

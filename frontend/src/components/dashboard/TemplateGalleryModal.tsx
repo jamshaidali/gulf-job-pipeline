@@ -6,7 +6,9 @@ import { CVTemplate } from '@/types';
 import { fetchCVTemplates } from '@/lib/api';
 import TemplateAuthModal from '@/components/TemplateAuthModal';
 import TemplateThumbnail from '@/components/builder/TemplateThumbnail';
-import { DESIGNER_NOTE } from '@/lib/templatePreview';
+import { DESIGNER_NOTE, styleTagline } from '@/lib/templatePreview';
+
+const PAGE_SIZE = 30;
 import { 
   X, 
   Search, 
@@ -65,6 +67,8 @@ export default function TemplateGalleryModal({
   const [authed, setAuthed] = useState<boolean>(Boolean(isAuthenticated));
   // select mode: the highlighted card is only a pending choice until "Use this template" is pressed
   const [chosenId, setChosenId] = useState<string>(selectedTemplateId);
+  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
+  const moreRef = React.useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (isOpen) setChosenId(selectedTemplateId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -98,6 +102,21 @@ export default function TemplateGalleryModal({
         .finally(() => setLoading(false));
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [selectedCategory, searchQuery, isOpen]);
+
+  // Render more cards automatically as the end of the list scrolls into view
+  useEffect(() => {
+    const el = moreRef.current;
+    if (!isOpen || !el || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) setVisibleCount((n) => n + PAGE_SIZE);
+    }, { rootMargin: '500px 0px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isOpen, loading, visibleCount, selectedCategory, searchQuery]);
 
   if (!isOpen) return null;
 
@@ -200,7 +219,7 @@ export default function TemplateGalleryModal({
               <div className="flex flex-wrap items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-950 text-cyan-300 border border-cyan-800 flex items-center gap-1">
                   <Sparkles className="w-3 h-3 text-cyan-400" />
-                  <span>105+ Professional CV Designs</span>
+                  <span>500+ Professional CV Designs</span>
                 </span>
                 <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-emerald-950 text-emerald-300 border border-emerald-800">
                   100% ATS Ready
@@ -223,7 +242,7 @@ export default function TemplateGalleryModal({
               <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
                 {isSelectMode
                   ? 'Pick a layout and color style. It opens in the builder, where you edit your details and then download as an ATS-friendly PDF or Word (.docx).'
-                  : 'Choose from 105+ proven layouts and download your tailored resume as an ATS-friendly PDF or Word (.docx).'}
+                  : 'Choose from 500+ proven layouts and download your tailored resume as an ATS-friendly PDF or Word (.docx).'}
               </p>
             </div>
 
@@ -253,7 +272,7 @@ export default function TemplateGalleryModal({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search 105+ templates by role, style, or industry (e.g. Backend, Minimalist, Executive)..."
+                placeholder="Search 500+ templates by role, style, or industry (e.g. Backend, Minimalist, Executive)..."
                 className="w-full pl-10 pr-14 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-indigo-600 shadow-2xs"
               />
               {searchQuery && (
@@ -291,7 +310,7 @@ export default function TemplateGalleryModal({
             {loading ? (
               <div className="flex flex-col items-center justify-center h-64 gap-2 text-indigo-600 font-bold text-xs">
                 <Loader2 className="w-6 h-6 animate-spin" />
-                <span>Rendering 105+ templates…</span>
+                <span>Rendering 500+ templates…</span>
               </div>
             ) : filteredTemplates.length === 0 ? (
               <div className="text-center py-16 space-y-2">
@@ -308,7 +327,7 @@ export default function TemplateGalleryModal({
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {filteredTemplates.map((tmpl) => {
+                {filteredTemplates.slice(0, visibleCount).map((tmpl) => {
                   const isSelected = tmpl.id === currentTemplate.id;
                   return (
                     <div
@@ -407,6 +426,17 @@ export default function TemplateGalleryModal({
                     </div>
                   );
                 })}
+              </div>
+            )}
+            {!loading && filteredTemplates.length > visibleCount && (
+              <div ref={moreRef} className="py-6 text-center">
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                  className="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold cursor-pointer"
+                >
+                  Show more templates ({visibleCount} of {filteredTemplates.length})
+                </button>
               </div>
             )}
           </div>

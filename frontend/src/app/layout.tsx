@@ -16,7 +16,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: 'TalentRadar • AI Resume Builder & ATS Resume Checker',
-  description: 'Create an ATS-friendly resume in minutes with our AI Resume Writer, Instant ATS Score Checker, 105+ Templates, and One-Click Job Tailoring.',
+  description: 'Create an ATS-friendly resume in minutes with our AI Resume Writer, Instant ATS Score Checker, 500+ Templates, and One-Click Job Tailoring.',
   keywords: ['AI Resume Builder', 'ATS Resume Checker', 'CV Templates', 'Resume Tailoring', 'ATS Resume Matcher', 'Career Copilot'],
   authors: [{ name: 'TalentRadar Team' }],
   metadataBase: new URL('https://gulf-job-pipeline.vercel.app'),
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'TalentRadar • AI Resume Builder & Instant ATS Checker',
-    description: 'Build an interview-winning resume with 105+ ATS-verified templates, real-time ATS scoring, and Google X-Y-Z impact bullets.',
+    description: 'Build an interview-winning resume with 500+ resume templates, real-time ATS scoring, and Google X-Y-Z impact bullets.',
     url: 'https://gulf-job-pipeline.vercel.app',
     siteName: 'TalentRadar',
     locale: 'en_US',
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'TalentRadar • AI Resume Builder & Instant ATS Checker',
-    description: 'Create an ATS-friendly resume in minutes with AI Resume Writer, ATS Check, and 105+ Templates.',
+    description: 'Create an ATS-friendly resume in minutes with AI Resume Writer, ATS Check, and 500+ Templates.',
   },
 };
 

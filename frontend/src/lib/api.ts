@@ -231,7 +231,7 @@ export async function exportCustomAtsCv(payload: {
   missing_keywords?: string[];
   /** Optional look overrides so the file matches the builder preview. */
   accent_color?: string;
-  font?: 'sans' | 'serif' | 'mono';
+  font?: 'sans' | 'serif' | 'mono' | 'modern' | 'book';
   /** Profile photo (data URL) for the designer layouts. */
   photo?: string;
 }): Promise<void> {

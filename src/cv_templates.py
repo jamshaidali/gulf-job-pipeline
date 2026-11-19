@@ -19,6 +19,14 @@ PALETTES = {
 }
 
 CATEGORIES = [
+    # Style-based groups (the extended catalogue) first, then the original role-flavoured groups
+    "Classic",
+    "Modern",
+    "Minimal",
+    "Bold",
+    "Elegant",
+    "Compact",
+    "Designer",
     "Tech & Software",
     "Executive & Leadership",
     "Minimalist ATS",
@@ -1210,6 +1218,43 @@ DESIGNER_NOTE = (
 )
 
 
+# Font families that are serif (their single-column headers are centred by default)
+SERIF_FAMILIES = ("Times-Roman", "Caladea")
+
+STYLE_DEFAULTS: Dict[str, Any] = {
+    "header": "left",       # left | centered | split | banner
+    "heading": "rule",      # rule | band | bar | underline | plain
+    "skills": "inline",     # inline | columns
+    "dates": "inline",      # inline | right
+    "bullets": "dot",       # dot | dash | arrow
+    "density": "standard",  # standard | compact | airy
+    "caps": False,          # name in capitals
+}
+
+
+def resolve_style(template: Dict[str, Any]) -> Dict[str, Any]:
+    """The full set of design choices for a template.
+
+    The original 105 templates only carry a `layout`; their look is derived from it here. Extended
+    templates carry an explicit `style`, which wins.
+    """
+    style = dict(STYLE_DEFAULTS)
+    layout = template.get("layout", "single_column")
+    serif = template.get("font_family") in SERIF_FAMILIES
+    if layout == "split_header":
+        style["header"] = "banner"
+    elif layout == "modern_accent":
+        style["heading"] = "band"
+    elif layout == "compact_dense":
+        style["density"] = "compact"
+    elif layout == "single_column":
+        style["header"] = "centered" if serif else "left"
+    elif layout == "photo_banner":
+        style["header"] = "banner"
+    style.update(template.get("style") or {})
+    return style
+
+
 def get_template(template_id: Optional[str] = None) -> Dict[str, Any]:
     """Retrieves a specific template by ID or returns the default."""
     if not template_id:
@@ -1227,10 +1272,26 @@ def get_palette(palette_name: str) -> Dict[str, str]:
     return PALETTES.get(palette_name, PALETTES["slate_navy"])
 
 
+def _display_order(catalog: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Gallery order: the extended templates with the original ones woven in (about 1 in 5), so the first
+    page already shows the full range of looks instead of 105 originals followed by everything else."""
+    extended = [t for t in catalog if t.get("style")]
+    original = [t for t in catalog if not t.get("style")]
+    out: List[Dict[str, Any]] = []
+    oi = 0
+    for i, t in enumerate(extended):
+        out.append(t)
+        if i % 4 == 3 and oi < len(original):
+            out.append(original[oi])
+            oi += 1
+    out.extend(original[oi:])
+    return out
+
+
 def list_templates(category: Optional[str] = None) -> List[Dict[str, Any]]:
     """Returns all templates, optionally filtered by category, with resolved hex colors."""
     results = []
-    for t in TEMPLATES_CATALOG:
+    for t in _display_order(TEMPLATES_CATALOG):
         if category and category.lower() != "all" and t["category"].lower() != category.lower():
             continue
         p = get_palette(t["palette"])
@@ -1238,7 +1299,18 @@ def list_templates(category: Optional[str] = None) -> List[Dict[str, Any]]:
         results.append({
             **t,
             "colors": p,
+            "style": resolve_style(t),
+            "custom_style": bool(t.get("style")),
             "designer": designer,
             "ats_note": DESIGNER_NOTE if designer else "",
         })
     return results
+
+
+# ---- Extended catalogue -----------------------------------------------------------------------
+# 24 more colour palettes and 420 more templates, generated deterministically from real design choices
+# (see template_factory.py). Appended last so the ids and order of the original 105 never change.
+from src.template_factory import build_palettes, build_templates  # noqa: E402
+
+PALETTES.update(build_palettes())
+TEMPLATES_CATALOG.extend(build_templates(list(PALETTES)))

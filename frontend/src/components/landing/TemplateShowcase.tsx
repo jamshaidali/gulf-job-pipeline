@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import TemplateThumbnail from '@/components/builder/TemplateThumbnail';
 import { fetchCVTemplates } from '@/lib/api';
-import { layoutLabel } from '@/lib/templatePreview';
+import { styleTagline } from '@/lib/templatePreview';
 import type { CVTemplate } from '@/types';
 
 const VISIBLE = 3;
@@ -137,7 +137,7 @@ export default function TemplateShowcase({
                       )}
                     </div>
                     <h3 className="text-sm font-extrabold text-slate-900 mt-0.5">{tpl.name}</h3>
-                    <p className="text-xs text-slate-600 mt-0.5">{layoutLabel(tpl.layout)}</p>
+                    <p className="text-xs text-slate-600 mt-0.5">{styleTagline(tpl)}</p>
                   </div>
                   <button
                     type="button"

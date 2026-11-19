@@ -95,7 +95,7 @@ export default function HomePage() {
 
   // Plain facts about what you get (each is verified by the exporter's tests).
   const resumeFacts = [
-    { icon: Layers, label: '105 templates', detail: 'real layouts, not mock-ups' },
+    { icon: Layers, label: '500+ templates', detail: 'real layouts, not mock-ups' },
     { icon: ShieldCheck, label: 'ATS-safe single-column styles', detail: 'standard headings, real selectable text' },
     { icon: Palette, label: 'Designer styles with a photo', detail: 'colored sidebars and banners to share directly' },
     { icon: Download, label: 'PDF and Word export', detail: 'what you see is what you download' },
@@ -112,7 +112,7 @@ export default function HomePage() {
     },
     {
       q: "Is TalentRadar really completely 100% free?",
-      a: "Yes! As part of our public launch celebration, all core features—including the Live Visual CV Builder, ATS Resume Scanner, 105+ Resume Templates, and AI Google X-Y-Z Bullet Generator—are 100% free with no credit card required."
+      a: "Yes! As part of our public launch celebration, all core features—including the Live Visual CV Builder, ATS Resume Scanner, 500+ Resume Templates, and AI Google X-Y-Z Bullet Generator—are 100% free with no credit card required."
     },
     {
       q: "Can I use the ATS scanner without signing up?",
@@ -136,7 +136,7 @@ export default function HomePage() {
         name: 'TalentRadar',
         url: 'https://gulf-job-pipeline.vercel.app',
         description:
-          'Create an ATS-friendly resume in minutes with our AI Resume Writer, Instant ATS Score Checker, 105+ Templates, and One-Click Job Tailoring.',
+          'Create an ATS-friendly resume in minutes with our AI Resume Writer, Instant ATS Score Checker, 500+ Templates, and One-Click Job Tailoring.',
       },
       {
         '@type': 'SoftwareApplication',
@@ -185,7 +185,7 @@ export default function HomePage() {
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
             <span className="font-bold text-emerald-400">🎉 PUBLIC LAUNCH SPECIAL:</span>
           </span>
-          <span>All 105+ Templates &amp; AI Builder 100% Free &bull; No Credit Card Required</span>
+          <span>All 500+ Templates &amp; AI Builder 100% Free &bull; No Credit Card Required</span>
           <span className="text-emerald-400 font-bold inline-flex items-center gap-1">
             Build Resume Free &rarr;
           </span>
@@ -270,10 +270,10 @@ export default function HomePage() {
 
                 {/* ATS Compatibility Badges */}
                 <div className="animate-fade-up delay-500 pt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500 font-medium">
-                  <span className="text-slate-400 font-bold">ATS Verified For:</span>
-                  <span className="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700 font-semibold shadow-2xs">✓ Workday &amp; Taleo</span>
-                  <span className="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700 font-semibold shadow-2xs">✓ Greenhouse &amp; Lever</span>
-                  <span className="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700 font-semibold shadow-2xs">✓ iCIMS &amp; SuccessFactors</span>
+                  <span className="text-slate-500 font-bold">Every template:</span>
+                  <span className="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700 font-semibold shadow-2xs">✓ Real, selectable text</span>
+                  <span className="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700 font-semibold shadow-2xs">✓ PDF &amp; Word export</span>
+                  <span className="px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-700 font-semibold shadow-2xs">✓ Free to start</span>
                 </div>
               </div>
 
@@ -460,7 +460,7 @@ export default function HomePage() {
                 href="/templates" 
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-900 transition underline underline-offset-4"
               >
-                <span>Browse All 105+ Resume Templates</span>
+                <span>Browse All 500+ Resume Templates</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -670,7 +670,7 @@ export default function HomePage() {
                 <div className="grid grid-cols-2 gap-6 pt-4 border-t border-emerald-800/60">
                   <div>
                     <div className="text-3xl font-black text-white">
-                      <CountUp end={105} duration={1500} suffix="+" />
+                      <CountUp end={500} duration={1500} suffix="+" />
                     </div>
                     <div className="text-xs text-emerald-300/80 mt-0.5">ATS-Proof Templates</div>
                   </div>
@@ -890,7 +890,7 @@ export default function HomePage() {
               One place to build, check, and tailor your resume
             </h2>
             <p className="text-slate-600 text-sm sm:text-base max-w-xl mx-auto">
-              Most people stitch together three or four disconnected tools. TalentRadar puts live building, ATS checking, and 105+ templates under one roof.
+              Most people stitch together three or four disconnected tools. TalentRadar puts live building, ATS checking, and 500+ templates under one roof.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto mt-12 text-left">
@@ -1059,7 +1059,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong>All 105+ ATS-Optimized CV Templates</strong> unlocked</span>
+                  <span><strong>All 500+ ATS-Optimized CV Templates</strong> unlocked</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
@@ -1154,7 +1154,7 @@ export default function HomePage() {
                 href="/templates"
                 className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 font-bold text-sm transition cursor-pointer border border-slate-800"
               >
-                <span>105+ Templates</span>
+                <span>500+ Templates</span>
               </Link>
             </div>
           </div>

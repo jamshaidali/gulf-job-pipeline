@@ -5,10 +5,12 @@ import ResumePreview from '@/components/builder/ResumePreview';
 import {
   asPreviewLayout,
   isDesignerLayout,
+  isSerifFamily,
   previewFontFamily,
   SAMPLE_PREVIEW_DATA,
   samplePhotoFor,
   templateAccent,
+  templateStyle,
 } from '@/lib/templatePreview';
 import type { CVTemplate } from '@/types';
 
@@ -39,7 +41,8 @@ export default function TemplateThumbnail({
       <ResumePreview
         fit={fit}
         layout={layout}
-        centered={layout === 'single_column' && template.font_family === 'Times-Roman'}
+        centered={layout === 'single_column' && isSerifFamily(template.font_family)}
+        style={templateStyle(template)}
         accent={templateAccent(template)}
         photo={isDesignerLayout(template.layout) ? samplePhotoFor(template.id) : null}
         data={SAMPLE_PREVIEW_DATA}

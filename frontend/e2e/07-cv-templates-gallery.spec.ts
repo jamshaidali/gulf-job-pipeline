@@ -28,7 +28,7 @@ test.describe('100+ CV Templates Gallery & Multi-Format Exporter', () => {
 
     // Verify gallery modal opens
     await expect(page.locator('text=Select Your Tailored CV Template')).toBeVisible();
-    await expect(page.locator('text=105+ Professional CV Designs')).toBeVisible();
+    await expect(page.locator('text=500+ Professional CV Designs')).toBeVisible();
   });
 
   test('should filter templates by category tabs and search query', async ({ page }) => {

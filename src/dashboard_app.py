@@ -1234,7 +1234,7 @@ class CustomCVExportRequest(BaseModel):
     missing_keywords: Optional[List[str]] = None
     # Optional look overrides so the file matches the builder preview exactly.
     accent_color: Optional[str] = Field(default=None, pattern=r"^#[0-9A-Fa-f]{6}$")
-    font: Optional[str] = Field(default=None, pattern=r"^(sans|serif|mono)$")
+    font: Optional[str] = Field(default=None, pattern=r"^(sans|serif|mono|modern|book)$")
     # Optional profile photo (data URL) for the designer layouts; validated and re-encoded server-side.
     photo: Optional[str] = Field(default=None, max_length=1_500_000)
 

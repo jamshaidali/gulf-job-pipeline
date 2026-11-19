@@ -83,7 +83,7 @@ test.describe('ATS Resume Scanner & Job Description Fit Engine', () => {
     await copyBtn.click();
     await expect(page.getByText(/Copied!/i)).toBeVisible();
 
-    // Open 105+ Template Gallery
+    // Open 500+ Template Gallery
     const exportBtn = page.getByRole('button', { name: /Export Tailored CV/i }).first();
     await expect(exportBtn).toBeVisible();
     await exportBtn.click();

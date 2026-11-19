@@ -718,7 +718,7 @@ export default function ATSScannerPage() {
                         className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <Download className="w-4 h-4 text-white" />
-                        <span>Export Tailored CV (105+ Designs)</span>
+                        <span>Export Tailored CV (500+ Designs)</span>
                       </button>
                       <button
                         type="button"
@@ -1263,7 +1263,7 @@ export default function ATSScannerPage() {
                   <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-950 text-white flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 shadow-sm">
                     <div className="space-y-1 text-center sm:text-left">
                       <h4 className="text-base font-black tracking-tight">
-                        Ready to apply? Export your tailored CV in 105+ designs
+                        Ready to apply? Export your tailored CV in 500+ designs
                       </h4>
                       <p className="text-xs text-slate-300">
                         Download an ATS-optimized, single-column PDF or Microsoft Word document formatted for enterprise ATS systems.
@@ -1314,7 +1314,7 @@ export default function ATSScannerPage() {
               </div>
               <h3 className="text-sm font-extrabold text-slate-900">Single-Column Formatting</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                Complex multi-column tables, graphics, and text boxes confuse ATS parsers. Our 105+ templates guarantee 100% readable text hierarchies.
+                Complex multi-column tables, graphics, and text boxes can confuse ATS parsers. Our ATS-safe templates use a single column, standard headings, and real, selectable text.
               </p>
             </div>
 
@@ -1334,7 +1334,7 @@ export default function ATSScannerPage() {
 
       <Footer />
 
-      {/* 105+ TEMPLATES EXPORT MODAL */}
+      {/* 500+ TEMPLATES EXPORT MODAL */}
       <TemplateGalleryModal
         isOpen={isExportModalOpen}
         selectedTemplateId={selectedTemplateId}
