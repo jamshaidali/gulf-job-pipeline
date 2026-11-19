@@ -104,14 +104,14 @@ export default function HomePage() {
   const faqs = [
     {
       q: "How does the AI match score calculate my fit for a job?",
-      a: "TalentRadar analyzes the official job requirements, technology stack, and seniority level against your uploaded CV and primary skills. It identifies exact matching competencies, penalizes mismatched experience, and extracts missing keywords needed to pass Applicant Tracking Systems (ATS)."
+      a: "RateYourCV analyzes the official job requirements, technology stack, and seniority level against your uploaded CV and primary skills. It identifies exact matching competencies, penalizes mismatched experience, and extracts missing keywords needed to pass Applicant Tracking Systems (ATS)."
     },
     {
       q: "What is the 1-Click Recruiter Outreach generator?",
-      a: "For every verified job, TalentRadar crafts a personalized 300-character LinkedIn connection note (strictly within LinkedIn's limit) and a complete cold email pitch targeting the hiring manager so you skip the application backlog."
+      a: "For every verified job, RateYourCV crafts a personalized 300-character LinkedIn connection note (strictly within LinkedIn's limit) and a complete cold email pitch targeting the hiring manager so you skip the application backlog."
     },
     {
-      q: "Is TalentRadar really completely 100% free?",
+      q: "Is RateYourCV really completely 100% free?",
       a: "Yes! As part of our public launch celebration, all core features—including the Live Visual CV Builder, ATS Resume Scanner, 500+ Resume Templates, and AI Google X-Y-Z Bullet Generator—are 100% free with no credit card required."
     },
     {
@@ -124,7 +124,7 @@ export default function HomePage() {
     },
     {
       q: "How do your templates beat Applicant Tracking Systems (ATS)?",
-      a: "Every TalentRadar template is engineered with a clean semantic text layer (no unreadable images or complex text boxes) tested against major ATS software like Taleo, Workday, Greenhouse, and Lever. Contact info sits in the main document body where parsers can read it cleanly."
+      a: "Every RateYourCV template is engineered with a clean semantic text layer (no unreadable images or complex text boxes) tested against major ATS software like Taleo, Workday, Greenhouse, and Lever. Contact info sits in the main document body where parsers can read it cleanly."
     }
   ];
 
@@ -133,17 +133,17 @@ export default function HomePage() {
     '@graph': [
       {
         '@type': 'WebSite',
-        name: 'TalentRadar',
-        url: 'https://gulf-job-pipeline.vercel.app',
+        name: 'RateYourCV',
+        url: 'https://rateyourcv.com',
         description:
           'Create an ATS-friendly resume in minutes with our AI Resume Writer, Instant ATS Score Checker, 500+ Templates, and One-Click Job Tailoring.',
       },
       {
         '@type': 'SoftwareApplication',
-        name: 'TalentRadar AI Resume Builder & ATS Checker',
+        name: 'RateYourCV AI Resume Builder & ATS Checker',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
-        url: 'https://gulf-job-pipeline.vercel.app',
+        url: 'https://rateyourcv.com',
         offers: {
           '@type': 'Offer',
           price: '0',
@@ -222,7 +222,7 @@ export default function HomePage() {
                 <h1 className="animate-fade-up delay-100 text-4xl sm:text-6xl lg:text-[64px] font-extrabold text-slate-950 tracking-tight leading-[1.06]">
                   Land more interviews with{' '}
                   <span className="text-gradient-animated">
-                    TalentRadar&apos;s
+                    RateYourCV&apos;s
                   </span>{' '}
                   Resume Builder
                 </h1>
@@ -505,7 +505,7 @@ export default function HomePage() {
               <div className="lg:col-span-8 space-y-4">
                 <div className="text-2xl text-emerald-600 font-serif">“</div>
                 <p className="text-lg sm:text-2xl font-medium text-slate-800 leading-snug">
-                  &quot;I can&apos;t afford to waste time applying for jobs that don&apos;t fit. So I stopped mass applying, and I started using TalentRadar to tailor my resume to the roles that actually make sense for me. Landed 3 executive interviews within 2 weeks.&quot;
+                  &quot;I can&apos;t afford to waste time applying for jobs that don&apos;t fit. So I stopped mass applying, and I started using RateYourCV to tailor my resume to the roles that actually make sense for me. Landed 3 executive interviews within 2 weeks.&quot;
                 </p>
                 <div className="pt-2 text-xs font-bold text-slate-500">
                   Gerald &bull; VP of Digital Product
@@ -694,10 +694,10 @@ export default function HomePage() {
                   Chosen by ambitious job applicants around the world
                 </h3>
                 <p>
-                  TalentRadar combines AI writing, instant ATS feedback, and one-click job tailoring in a single seamless tool. We help job seekers—especially experienced engineers, managers, and executives—lead with their experience and value at every step of the job search.
+                  RateYourCV combines AI writing, instant ATS feedback, and one-click job tailoring in a single seamless tool. We help job seekers—especially experienced engineers, managers, and executives—lead with their experience and value at every step of the job search.
                 </p>
                 <p className="text-emerald-200/90 text-xs sm:text-sm">
-                  At TalentRadar, we believe the best resumes feel human. We help you create your resume based on your authentic career accomplishments, so it stands out to hiring managers and earns more interviews.
+                  At RateYourCV, we believe the best resumes feel human. We help you create your resume based on your authentic career accomplishments, so it stands out to hiring managers and earns more interviews.
                 </p>
                 <div className="pt-2">
                   <Link
@@ -721,7 +721,7 @@ export default function HomePage() {
             <div className="text-center max-w-2xl mx-auto space-y-2">
               <span className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider">Intelligent Features</span>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950">
-                How TalentRadar helps the modern job seeker
+                How RateYourCV helps the modern job seeker
               </h2>
             </div>
 
@@ -782,7 +782,7 @@ export default function HomePage() {
                   Tailor your resume in one click
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Paste the job ad, and TalentRadar rewrites your resume to match, with every change highlighted so you stay in total control.
+                  Paste the job ad, and RateYourCV rewrites your resume to match, with every change highlighted so you stay in total control.
                 </p>
                 <ul className="space-y-2.5 text-xs text-slate-700 pt-2 font-medium">
                   <li className="flex items-start gap-2">
@@ -839,7 +839,7 @@ export default function HomePage() {
                   See your ATS job match score before you apply
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Paste the job ad, and TalentRadar scores your resume against it the way an applicant tracking system would. Every gap shows up right on your screen with the fix.
+                  Paste the job ad, and RateYourCV scores your resume against it the way an applicant tracking system would. Every gap shows up right on your screen with the fix.
                 </p>
                 <div className="pt-2">
                   <Link
@@ -890,7 +890,7 @@ export default function HomePage() {
               One place to build, check, and tailor your resume
             </h2>
             <p className="text-slate-600 text-sm sm:text-base max-w-xl mx-auto">
-              Most people stitch together three or four disconnected tools. TalentRadar puts live building, ATS checking, and 500+ templates under one roof.
+              Most people stitch together three or four disconnected tools. RateYourCV puts live building, ATS checking, and 500+ templates under one roof.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto mt-12 text-left">
@@ -946,7 +946,7 @@ export default function HomePage() {
               <div>
                 <span className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider">Original Research</span>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-950 mt-1">
-                  The TalentRadar Career Research Lab
+                  The RateYourCV Career Research Lab
                 </h2>
               </div>
               <Link href="/guides" className="text-xs font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1">
@@ -1098,7 +1098,7 @@ export default function HomePage() {
                 Frequently Asked Questions
               </span>
               <h2 className="text-3xl font-extrabold text-slate-950 mt-3">
-                Frequently asked questions about TalentRadar
+                Frequently asked questions about RateYourCV
               </h2>
             </div>
 

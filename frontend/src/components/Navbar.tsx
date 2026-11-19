@@ -112,13 +112,13 @@ export default function Navbar({ user }: NavbarProps) {
         }`}
       >
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group shrink-0" aria-label="TalentRadar home">
+        <Link href="/" className="flex items-center gap-2.5 group shrink-0" aria-label="RateYourCV home">
           <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-sm shadow-emerald-600/30 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
             <Zap className="w-5 h-5 fill-white" />
             <span className="absolute inset-0 rounded-xl ring-2 ring-emerald-400/0 group-hover:ring-emerald-400/40 transition" />
           </div>
           <span className="flex items-center gap-1.5 whitespace-nowrap">
-            <span className="text-xl font-extrabold text-slate-900 tracking-tight">TalentRadar</span>
+            <span className="text-xl font-extrabold text-slate-900 tracking-tight">RateYourCV</span>
             <span className="hidden sm:inline text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 leading-none">
               FREE
             </span>

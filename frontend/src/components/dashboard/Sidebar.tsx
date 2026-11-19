@@ -72,7 +72,7 @@ export default function Sidebar({
           </div>
           <div>
             <div className="text-sm font-extrabold text-white tracking-tight flex items-center gap-1.5">
-              <span>TalentRadar</span>
+              <span>RateYourCV</span>
               <span className="px-1.5 py-0.2 rounded-md text-[9px] font-black bg-cyan-950 text-cyan-300 border border-cyan-700/60 uppercase">PRO</span>
             </div>
             <div className="text-[11px] font-semibold text-slate-400 tracking-wide">
@@ -396,7 +396,7 @@ export default function Sidebar({
           </div>
           <button
             onClick={onLogout}
-            title="Sign out of TalentRadar"
+            title="Sign out of RateYourCV"
             className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-900 transition cursor-pointer"
           >
             <LogOut className="w-4 h-4" />

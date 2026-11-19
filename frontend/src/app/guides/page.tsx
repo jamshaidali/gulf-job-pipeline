@@ -8,7 +8,7 @@ import { BookOpen, Sparkles, ArrowRight, Clock, MapPin, CheckCircle, ShieldCheck
 import { careerGuides } from '@/data/careerGuides';
 
 export const metadata: Metadata = {
-  title: 'Career & ATS Resume Guides | TalentRadar AI',
+  title: 'Career & ATS Resume Guides | RateYourCV AI',
   description: 'Authoritative career guides, ATS resume optimization playbooks, and Google X-Y-Z bullet strategies for software engineers, product managers, and executives.',
   keywords: [
     'ATS resume optimization checklist',
@@ -21,10 +21,10 @@ export const metadata: Metadata = {
     canonical: '/guides',
   },
   openGraph: {
-    title: 'Career & ATS Resume Guides | TalentRadar AI',
+    title: 'Career & ATS Resume Guides | RateYourCV AI',
     description: 'Expert guides on crafting ATS-optimized resumes and landing high-paying tech & executive interviews.',
-    url: 'https://gulf-job-pipeline.vercel.app/guides',
-    siteName: 'TalentRadar',
+    url: 'https://rateyourcv.com/guides',
+    siteName: 'RateYourCV',
     type: 'website',
   }
 };
@@ -37,8 +37,8 @@ export default function GuidesPage() {
     description: 'Resume optimization and interview blueprints for modern professionals.',
     publisher: {
       '@type': 'Organization',
-      name: 'TalentRadar AI',
-      url: 'https://gulf-job-pipeline.vercel.app'
+      name: 'RateYourCV AI',
+      url: 'https://rateyourcv.com'
     }
   };
 

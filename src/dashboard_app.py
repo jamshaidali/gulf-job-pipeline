@@ -340,7 +340,7 @@ async def register_api(payload: RegisterPayload, request: Request, response: Res
         )
     return {
         "status": "success",
-        "message": "Account created successfully! Welcome to TalentRadar.",
+        "message": "Account created successfully! Welcome to RateYourCV.",
         "user": user
     }
 
@@ -536,7 +536,7 @@ async def get_jobs(
         if quota["searches_count"] >= quota["max_free_searches"]:
             raise HTTPException(
                 status_code=403,
-                detail=f"Free search limit reached ({quota['searches_count']}/{quota['max_free_searches']} searches used). Upgrade to TalentRadar Pro for unlimited searches and full direct access."
+                detail=f"Free search limit reached ({quota['searches_count']}/{quota['max_free_searches']} searches used). Upgrade to RateYourCV Pro for unlimited searches and full direct access."
             )
         db.increment_user_search_count(user_id)
 
@@ -780,7 +780,7 @@ async def trigger_scan(
         if quota["searches_count"] >= quota["max_free_searches"]:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Free search & scan quota reached ({quota['searches_count']}/{quota['max_free_searches']}). Upgrade to TalentRadar Pro for unlimited scans."
+                detail=f"Free search & scan quota reached ({quota['searches_count']}/{quota['max_free_searches']}). Upgrade to RateYourCV Pro for unlimited scans."
             )
         db.increment_user_search_count(user_id)
 
@@ -814,7 +814,7 @@ SAMPLE_ATS_JOB = {
     ),
     "sample_cv": (
         "Alexander Chen\n"
-        "alex.chen@talentradar.pro | +1 (555) 234-5678 | Open to Remote & Hybrid\n"
+        "alex.chen@rateyourcv.com | +1 (555) 234-5678 | Open to Remote & Hybrid\n"
         "linkedin.com/in/alexchen | github.com/alexchen\n\n"
         "PROFESSIONAL SUMMARY\n"
         "Accomplished Senior Backend Engineer with 6+ years of experience architecting resilient microservices and distributed backend systems using Python, FastAPI, and Django. Proven record of cutting API latency by 45% and scaling enterprise applications to support 2M+ active daily users.\n\n"
@@ -1111,7 +1111,7 @@ async def generate_cover_letter(job_id: str, user_profile: Dict[str, Any] = Depe
         if job_id not in top_ids:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="This opportunity is locked on the Free tier. Upgrade to TalentRadar Pro to unlock AI recruiter outreach and 1-click ATS kits."
+                detail="This opportunity is locked on the Free tier. Upgrade to RateYourCV Pro to unlock AI recruiter outreach and 1-click ATS kits."
             )
 
     job = db.get_job(job_id, user_id=user_id)
@@ -1159,7 +1159,7 @@ async def generate_recruiter_outreach(job_id: str, user_profile: Dict[str, Any] 
         if job_id not in top_ids:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="This opportunity is locked on the Free tier. Upgrade to TalentRadar Pro to unlock direct recruiter contact and cold outreach templates."
+                detail="This opportunity is locked on the Free tier. Upgrade to RateYourCV Pro to unlock direct recruiter contact and cold outreach templates."
             )
 
     job = db.get_job(job_id, user_id=user_id)
@@ -1340,7 +1340,7 @@ async def export_tailored_pdf(
             if top_ids and job_id not in top_ids:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="This opportunity is locked on the Free tier. Upgrade to TalentRadar Pro to download tailored ATS resumes for all results."
+                    detail="This opportunity is locked on the Free tier. Upgrade to RateYourCV Pro to download tailored ATS resumes for all results."
                 )
 
         job = db.get_job(job_id, user_id=user_id)
@@ -1392,7 +1392,7 @@ async def export_tailored_docx(
             if top_ids and job_id not in top_ids:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="This opportunity is locked on the Free tier. Upgrade to TalentRadar Pro to download tailored ATS resumes for all results."
+                    detail="This opportunity is locked on the Free tier. Upgrade to RateYourCV Pro to download tailored ATS resumes for all results."
                 )
 
         job = db.get_job(job_id, user_id=user_id)
@@ -1435,7 +1435,7 @@ async def upgrade_subscription(
     if not test_endpoints_enabled():
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Online upgrades are not available yet. Please contact support to activate TalentRadar Pro."
+            detail="Online upgrades are not available yet. Please contact support to activate RateYourCV Pro."
         )
     user_id = user_profile.get("id") or 1
     db.update_user_role(user_id, "pro")
@@ -1452,7 +1452,7 @@ async def upgrade_subscription(
         })
     return {
         "status": "success",
-        "message": "🎉 Welcome to TalentRadar Pro! Unlimited searches and all opportunities are now unlocked.",
+        "message": "🎉 Welcome to RateYourCV Pro! Unlimited searches and all opportunities are now unlocked.",
         "user": updated
     }
 

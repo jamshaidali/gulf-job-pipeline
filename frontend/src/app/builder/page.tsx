@@ -1390,7 +1390,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
             <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-sky-400 flex items-center justify-center text-white text-xs font-black shadow-xs shrink-0">
               TR
             </span>
-            <span className="truncate">TalentRadar</span>
+            <span className="truncate">RateYourCV</span>
             <span className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 shrink-0">
               LIVE BUILDER
             </span>

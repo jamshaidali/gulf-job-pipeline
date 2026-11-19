@@ -203,7 +203,7 @@ class AuthManager:
             try:
                 self.db.create_user(
                     username=seed_admin_username,
-                    email=f"{seed_admin_username}@talentradar.ai",
+                    email=f"{seed_admin_username}@rateyourcv.com",
                     password_hash=hash_password(self.password),
                     full_name="Administrator",
                     role="admin"
@@ -311,7 +311,7 @@ class AuthManager:
                 return {
                     "id": 1,
                     "username": self.username,
-                    "email": f"{self.username}@talentradar.ai",
+                    "email": f"{self.username}@rateyourcv.com",
                     "full_name": "Administrator",
                     "role": "admin"
                 }
@@ -338,7 +338,7 @@ class AuthManager:
             return {
                 "id": 1,
                 "username": self.username,
-                "email": f"{self.username}@talentradar.ai",
+                "email": f"{self.username}@rateyourcv.com",
                 "full_name": "Administrator",
                 "role": "admin"
             }

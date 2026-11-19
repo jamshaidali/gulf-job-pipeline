@@ -499,7 +499,7 @@ def _sidebar_pdf(
 
     buffer = io.BytesIO()
     doc = BaseDocTemplate(buffer, pagesize=letter, title=f"{title} - Resume", author=data["name"] or "",
-                          subject="Resume", creator="TalentRadar")
+                          subject="Resume", creator="RateYourCV")
     side_frame = Frame(0, 0, side_w, height, leftPadding=20, rightPadding=16, topPadding=34, bottomPadding=30, id="side")
     main_frame = Frame(side_w, 0, width - side_w, height, leftPadding=26, rightPadding=34, topPadding=38, bottomPadding=44, id="main")
     later_frame = Frame(side_w, 0, width - side_w, height, leftPadding=26, rightPadding=34, topPadding=38, bottomPadding=44, id="main2")
@@ -642,7 +642,7 @@ def generate_tailored_pdf(
         title=f"{page_name} - Resume",
         author=data["name"] or "",
         subject="Resume",
-        creator="TalentRadar",
+        creator="RateYourCV",
     )
 
     styles = getSampleStyleSheet()
