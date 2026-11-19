@@ -598,4 +598,66 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     expect(JSON.parse((await exportRequest2).postData() || '{}').font).toBe('modern');
     await download2;
   });
+
+  test('15. ATS scan suggestions are prominent: panel, header pill, tab badges, apply one / apply all / undo', async ({ page }) => {
+    await page.goto('/builder');
+    await page.evaluate(() => {
+      const payload = {
+        filename: 'Scanned_Resume.txt',
+        timestamp: Date.now(),
+        resume: {
+          fullName: 'Sam Scanner', jobTitle: 'Engineer', email: 'sam@x.test', phone: '', location: '', linkedIn: '', github: '',
+          summary: 'Old summary.', skills: ['Python'],
+          experiences: [{ id: '1', company: 'Acme', position: 'Developer', location: '', startDate: '2020', endDate: 'Present', bullets: ['Built things.'] }],
+          educations: [], projects: [],
+        },
+        atsContext: {
+          overallScore: 77,
+          missingHardSkills: ['Golang', 'GCP', 'Terraform'],
+          missingSoftSkills: [],
+          tailoredHeadline: 'Senior Backend Engineer',
+          tailoredSummary: 'ZZSUMMARY tailored for the role.',
+          tailoredBullets: [{ focus: 'impact', bullet: 'ZZBULLET cut latency by 40%.' }],
+          targetJobTitle: 'Senior Backend Engineer',
+          targetCompany: 'Stripe',
+        },
+      };
+      localStorage.setItem('tr_builder_imported_cv', JSON.stringify(payload));
+      sessionStorage.setItem('tr_builder_imported_cv', JSON.stringify(payload));
+    });
+    await page.goto('/builder?from=ats-scanner');
+
+    // It is the first thing in the editor, says how much is waiting, and is also flagged in the header and on the tabs
+    const panel = page.getByTestId('ats-suggestions');
+    await expect(panel).toBeVisible();
+    await expect(panel).toContainText('Synced from ATS Scanner (77% Match)');
+    await expect(panel).toContainText('4 suggested improvements ready');
+    await expect(panel).toContainText('Tailored for Senior Backend Engineer at Stripe');
+    await expect(page.getByTestId('ats-suggestions-pill')).toContainText('4 suggestions');
+    const canvas = page.locator('#resume-canvas');
+    await expect(canvas).not.toContainText('ZZSUMMARY');
+
+    // Apply one suggestion: the CV changes, the row says so, the counts drop
+    await panel.getByRole('button', { name: /Apply ATS-Tailored Summary/i }).click();
+    await expect(canvas).toContainText('ZZSUMMARY');
+    await expect(page.getByTestId('ats-suggestion-summary')).toHaveAttribute('data-applied', 'true');
+    await expect(panel).toContainText('1 of 4 applied');
+    await expect(page.getByTestId('ats-suggestions-pill')).toContainText('3 suggestions');
+
+    // Undo restores the previous text
+    await page.getByTestId('ats-suggestion-summary').getByRole('button', { name: /Undo/i }).click();
+    await expect(canvas).not.toContainText('ZZSUMMARY');
+    await expect(canvas).toContainText('Old summary.');
+    await expect(page.getByTestId('ats-suggestion-summary')).toHaveAttribute('data-applied', 'false');
+
+    // Apply everything in one click
+    await page.getByTestId('ats-apply-all').click();
+    await expect(panel).toContainText('All suggestions applied');
+    await expect(panel).toContainText('4 of 4 applied');
+    await expect(canvas).toContainText('ZZSUMMARY');
+    await expect(canvas).toContainText('ZZBULLET');
+    await expect(canvas).toContainText('Golang');
+    await expect(canvas).toContainText('Senior Backend Engineer');
+    await expect(page.getByTestId('ats-suggestions-pill')).toHaveCount(0);
+  });
 });

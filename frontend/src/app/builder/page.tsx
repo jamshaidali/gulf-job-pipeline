@@ -9,6 +9,7 @@ import TemplateGalleryModal from '@/components/dashboard/TemplateGalleryModal';
 import { CVTemplate } from '@/types';
 import { fetchCurrentUser, fetchCVTemplates, importCvToBuilder, exportCustomAtsCv, ImportedStructuredResume } from '@/lib/api';
 import ResumePreview, { PreviewLayout, StyleSpec } from '@/components/builder/ResumePreview';
+import AtsSuggestionsPanel, { AtsContext, buildSuggestions, SuggestionKey } from '@/components/builder/AtsSuggestionsPanel';
 import {
   asPreviewLayout,
   BUILDER_FONT_CSS,
@@ -917,6 +918,72 @@ export default function ResumeBuilderPage() {
 
   const [collapsedRoles, setCollapsedRoles] = useState<Set<string>>(new Set());
 
+  // ---- Suggestions from an ATS scan: apply one / all, undo ----
+  const suggestionUndo = useRef<Partial<Record<SuggestionKey, () => void>>>({});
+  const suggestions = atsScanContext
+    ? buildSuggestions(atsScanContext as AtsContext, {
+        jobTitle,
+        summary,
+        skills,
+        firstRoleBullets: experiences[0]?.bullets ?? [],
+      })
+    : [];
+  const pendingSuggestions = suggestions.filter((sug) => !sug.applied);
+  const pendingByTab = pendingSuggestions.reduce<Record<string, number>>((acc, sug) => {
+    acc[sug.tab] = (acc[sug.tab] || 0) + 1;
+    return acc;
+  }, {});
+
+  const applySuggestion = (key: SuggestionKey, quiet = false) => {
+    const ctx = atsScanContext;
+    if (!ctx) return;
+    setHasManualEdits(true);
+    if (key === 'headline' && ctx.tailoredHeadline) {
+      const prev = jobTitle;
+      setJobTitle(ctx.tailoredHeadline);
+      suggestionUndo.current.headline = () => setJobTitle(prev);
+      if (!quiet) showNotice('Applied the tailored headline.');
+    } else if (key === 'summary' && ctx.tailoredSummary) {
+      const prev = summary;
+      setSummary(ctx.tailoredSummary);
+      suggestionUndo.current.summary = () => setSummary(prev);
+      if (!quiet) showNotice('Applied the ATS-tailored summary.');
+    } else if (key === 'skills') {
+      const prev = skills;
+      const lower = new Set(skills.map((x) => x.trim().toLowerCase()));
+      const merged = [...skills, ...ctx.missingHardSkills.filter((x) => x.trim() && !lower.has(x.trim().toLowerCase()))];
+      setSkills(merged);
+      suggestionUndo.current.skills = () => setSkills(prev);
+      if (!quiet) showNotice(`Added ${merged.length - prev.length} missing skill${merged.length - prev.length === 1 ? '' : 's'} to your CV.`);
+    } else if (key === 'bullets') {
+      const incoming = ctx.tailoredBullets.map((b) => (b.bullet || '').trim()).filter(Boolean);
+      if (experiences.length === 0 || incoming.length === 0) return;
+      const prevBullets = experiences[0].bullets;
+      const existing = new Set(prevBullets.map((x) => x.trim().toLowerCase()));
+      const fresh = incoming.filter((x) => !existing.has(x.toLowerCase()));
+      const updated = [...experiences];
+      updated[0] = { ...updated[0], bullets: [...fresh, ...prevBullets] };
+      setExperiences(updated);
+      suggestionUndo.current.bullets = () =>
+        setExperiences((cur) => (cur.length ? [{ ...cur[0], bullets: prevBullets }, ...cur.slice(1)] : cur));
+      if (!quiet) showNotice(`Inserted ${fresh.length} AI-tailored bullet${fresh.length === 1 ? '' : 's'} into your most recent role.`);
+    }
+  };
+
+  const undoSuggestion = (key: SuggestionKey) => {
+    const undo = suggestionUndo.current[key];
+    if (!undo) return;
+    undo();
+    delete suggestionUndo.current[key];
+    showNotice('Change undone.');
+  };
+
+  const applyAllSuggestions = () => {
+    // Each change touches a different part of the CV, so they can be applied together.
+    pendingSuggestions.forEach((sug) => applySuggestion(sug.key, true));
+    showNotice(`Applied ${pendingSuggestions.length} improvements. You can undo any of them.`);
+  };
+
   const handleSwitchToSavedCv = (id: string) => {
     const target = savedCvs.find((c) => c.id === id);
     if (!target) return;
@@ -1329,6 +1396,20 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
             </span>
           </Link>
 
+          {pendingSuggestions.length > 0 && (
+            <button
+              type="button"
+              data-testid="ats-suggestions-pill"
+              onClick={() => document.getElementById('ats-suggestions')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md animate-pulse hover:animate-none transition cursor-pointer shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>
+                {pendingSuggestions.length} suggestion{pendingSuggestions.length === 1 ? '' : 's'}
+              </span>
+            </button>
+          )}
+
           <span className="text-slate-300 hidden sm:inline">|</span>
 
           {/* Real-Time ATS Score Pill */}
@@ -1549,6 +1630,23 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
             </div>
           </div>
 
+          {/* ATS SCANNER SUGGESTIONS: the most important thing on the page when you arrive from a scan */}
+          {atsScanContext && (
+            <AtsSuggestionsPanel
+              context={atsScanContext as AtsContext}
+              cv={{ jobTitle, summary, skills, firstRoleBullets: experiences[0]?.bullets ?? [] }}
+              canUndo={(key) => Boolean(suggestionUndo.current[key])}
+              onApply={applySuggestion}
+              onUndo={undoSuggestion}
+              onApplyAll={applyAllSuggestions}
+              onDismiss={() => {
+                if (pendingSuggestions.length > 0 && !window.confirm(`Hide the ${pendingSuggestions.length} remaining suggestion${pendingSuggestions.length === 1 ? '' : 's'}?`)) return;
+                setAtsScanContext(null);
+              }}
+              onGoToTab={(tab) => setActiveTab(tab)}
+            />
+          )}
+
           {/* IMPORT EXISTING RESUME BANNER (PDF / DOCX / TXT AUTO-FILL) */}
           <div className={`rounded-2xl border border-slate-200 bg-slate-50/80 ${lastImportedFile ? "p-3" : "p-4"} space-y-3`}>
             <div className="flex items-start justify-between gap-3">
@@ -1701,106 +1799,6 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
             </div>
           )}
 
-          {/* ATS SCANNER SYNC BANNER (When opened via "Edit in Live Visual Builder" from /ats-scanner) */}
-          {atsScanContext && (
-            <div className="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200 space-y-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-xs font-extrabold text-indigo-950">
-                  <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
-                  <span>
-                    Synced from ATS Scanner
-                    {typeof atsScanContext.overallScore === 'number'
-                      ? ` (${atsScanContext.overallScore}% Match)`
-                      : ''}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setAtsScanContext(null)}
-                  className="text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
-                  title="Dismiss"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                {atsScanContext.missingHardSkills && atsScanContext.missingHardSkills.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const merged = [...skills];
-                      let added = 0;
-                      for (const sk of atsScanContext.missingHardSkills) {
-                        if (!merged.includes(sk)) {
-                          merged.push(sk);
-                          added++;
-                        }
-                      }
-                      setSkills(merged);
-                      showNotice(
-                        added > 0
-                          ? `Added ${added} missing JD skills (${atsScanContext.missingHardSkills.slice(0, 3).join(', ')}) to your Resume!`
-                          : 'All missing JD skills are already in your Skills section!'
-                      );
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold transition cursor-pointer flex items-center gap-1 shadow-2xs"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>
-                      Add {atsScanContext.missingHardSkills.length} Missing JD Skills (
-                      {atsScanContext.missingHardSkills.slice(0, 3).join(', ')}
-                      {atsScanContext.missingHardSkills.length > 3 ? '...' : ''})
-                    </span>
-                  </button>
-                )}
-
-                {atsScanContext.tailoredSummary && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setHasManualEdits(true);
-                      setSummary(atsScanContext.tailoredSummary);
-                      showNotice('Applied ATS-tailored executive summary to your resume!');
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-white hover:bg-indigo-100/60 text-indigo-900 border border-indigo-200 text-[11px] font-bold transition cursor-pointer"
-                  >
-                    Apply ATS-Tailored Summary
-                  </button>
-                )}
-
-                {atsScanContext.tailoredBullets && atsScanContext.tailoredBullets.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setHasManualEdits(true);
-                      const updated = [...experiences];
-                      const bulletTexts = atsScanContext.tailoredBullets.map((b) => b.bullet).filter(Boolean);
-                      if (updated.length > 0) {
-                        const existing = new Set(updated[0].bullets);
-                        const newBullets = bulletTexts.filter((b) => !existing.has(b));
-                        updated[0] = {
-                          ...updated[0],
-                          bullets: [...newBullets, ...updated[0].bullets],
-                        };
-                        setExperiences(updated);
-                        showNotice(
-                          newBullets.length > 0
-                            ? `Inserted ${newBullets.length} AI-tailored Google X-Y-Z bullets into Role #1!`
-                            : 'AI-tailored bullets are already in Role #1!'
-                        );
-                      }
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition cursor-pointer flex items-center gap-1 shadow-2xs"
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    <span>+ Insert {atsScanContext.tailoredBullets.length} AI-Tailored Bullets</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* Section Navigation Tabs */}
           <div className="flex flex-wrap gap-1.5 bg-slate-50 p-1.5 rounded-2xl border border-slate-200 text-xs font-bold">
             <button
@@ -1808,32 +1806,60 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
               className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
                 activeTab === 'basics' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
               }`}
-            >
+            aria-label="Contact"
+              title={pendingByTab.basics ? `${pendingByTab.basics} suggestion${pendingByTab.basics === 1 ? '' : 's'} waiting` : undefined}
+              >
               Contact
+                            {pendingByTab.basics ? (
+                <span aria-hidden="true" className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-indigo-600 text-white text-[10px] font-black">
+                  {pendingByTab.basics}
+                </span>
+              ) : null}
             </button>
             <button
               onClick={() => setActiveTab('summary')}
               className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
                 activeTab === 'summary' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
               }`}
-            >
+            aria-label="Summary"
+              title={pendingByTab.summary ? `${pendingByTab.summary} suggestion${pendingByTab.summary === 1 ? '' : 's'} waiting` : undefined}
+              >
               Summary
+                            {pendingByTab.summary ? (
+                <span aria-hidden="true" className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-indigo-600 text-white text-[10px] font-black">
+                  {pendingByTab.summary}
+                </span>
+              ) : null}
             </button>
             <button
               onClick={() => setActiveTab('experience')}
               className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
                 activeTab === 'experience' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
               }`}
-            >
+            aria-label="Experience"
+              title={pendingByTab.experience ? `${pendingByTab.experience} suggestion${pendingByTab.experience === 1 ? '' : 's'} waiting` : undefined}
+              >
               Experience
+                            {pendingByTab.experience ? (
+                <span aria-hidden="true" className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-indigo-600 text-white text-[10px] font-black">
+                  {pendingByTab.experience}
+                </span>
+              ) : null}
             </button>
             <button
               onClick={() => setActiveTab('skills')}
               className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
                 activeTab === 'skills' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
               }`}
-            >
+            aria-label="Skills"
+              title={pendingByTab.skills ? `${pendingByTab.skills} suggestion${pendingByTab.skills === 1 ? '' : 's'} waiting` : undefined}
+              >
               Skills
+                            {pendingByTab.skills ? (
+                <span aria-hidden="true" className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-indigo-600 text-white text-[10px] font-black">
+                  {pendingByTab.skills}
+                </span>
+              ) : null}
             </button>
             <button
               onClick={() => setActiveTab('education')}
