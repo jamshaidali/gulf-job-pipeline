@@ -208,12 +208,12 @@ export default function TemplatesPage() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 mt-8">
               {filteredTemplates.map((template) => (
                 <div
                   key={template.id}
                   className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between group"
-                  style={{ contentVisibility: 'auto', containIntrinsicSize: '420px 640px' }}
+                  style={{ contentVisibility: 'auto', containIntrinsicSize: '440px 700px' }}
                 >
                   {/* The actual template, rendered with sample content */}
                   <div className="p-4 bg-slate-100 border-b border-slate-200 relative">
@@ -223,7 +223,7 @@ export default function TemplatesPage() {
                       data-layout={template.layout}
                       aria-label={`${template.name} preview`}
                     >
-                      <TemplateThumbnail template={template} />
+                      <TemplateThumbnail template={template} crop />
                     </div>
                     <button
                       type="button"

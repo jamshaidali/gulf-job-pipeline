@@ -2474,6 +2474,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
           >
             <ResumePreview
               layout={activeLayout}
+              centered={activeLayout === 'single_column' && fontFamily === 'serif'}
               accent={accentColor}
               data={{ fullName, jobTitle, email, phone, location, linkedIn, github, summary, skills, experiences, educations, projects }}
             />

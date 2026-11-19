@@ -145,6 +145,13 @@ def _valid_hex(value: Optional[str]) -> Optional[str]:
     return None
 
 
+def tint(hex_code: str, strength: float = 0.10) -> str:
+    """Very light tint of a colour (mix with white). Used for heading bands; the builder preview uses the same formula."""
+    r, g, b = _hex_to_rgb(hex_code)
+    mix = lambda c: round(255 - (255 - c) * strength)  # noqa: E731
+    return f"#{mix(r):02X}{mix(g):02X}{mix(b):02X}"
+
+
 def _esc(val: Any) -> str:
     """Safely escapes text for ReportLab XML Paragraph parser."""
     if val is None:
@@ -295,10 +302,14 @@ def generate_tailored_pdf(
     tmpl = get_template(template_id or "gulf_dubai_sapphire")
     pal = get_palette(tmpl.get("palette", "slate_navy"))
     layout = tmpl.get("layout", "single_column")
-    fonts = _font_set(FONT_CHOICES.get((font or "").lower(), tmpl.get("font_family", "Helvetica")))
+    family = FONT_CHOICES.get((font or "").lower(), tmpl.get("font_family", "Helvetica"))
+    fonts = _font_set(family)
     override = _valid_hex(accent_color)
+    # The classic serif single-column style centres its header (a familiar academic / executive look).
+    centered = layout == "single_column" and family == "Times-Roman"
 
     is_compact = layout == "compact_dense"
+    modern = layout == "modern_accent"
     margin = (0.55 if is_compact else 0.75) * inch
     body_size = 10 if is_compact else 10.5
     body_leading = 12.4 if is_compact else 13.8
@@ -340,18 +351,25 @@ def generate_tailored_pdf(
     def style(name: str, **kw: Any) -> ParagraphStyle:
         return ParagraphStyle(f"{name}_{sid}", parent=styles["Normal"], **kw)
 
-    name_style = style("Name", fontName=fonts["bold"], fontSize=18 if is_compact else 20, leading=22 if is_compact else 24,
-                       textColor=primary, spaceAfter=2)
-    headline_style = style("Headline", fontName=fonts["bold"], fontSize=11.5, leading=14, textColor=accent, spaceAfter=3)
-    contact_style = style("Contact", fontName=fonts["regular"], fontSize=10, leading=13, textColor=colors.HexColor(MUTED_TEXT), spaceAfter=4)
+    align = 1 if centered else 0
+    name_style = style("Name", fontName=fonts["bold"], fontSize=20 if is_compact else 24, leading=24 if is_compact else 28,
+                       textColor=primary, spaceAfter=2, alignment=align)
+    headline_style = style("Headline", fontName=fonts["bold"], fontSize=12, leading=15, textColor=accent, spaceAfter=3, alignment=align)
+    contact_style = style("Contact", fontName=fonts["regular"], fontSize=10, leading=13, textColor=colors.HexColor(MUTED_TEXT),
+                          spaceAfter=4, alignment=align)
 
-    banner_name = style("BannerName", fontName=fonts["bold"], fontSize=20, leading=24, textColor=colors.white)
-    banner_headline = style("BannerHeadline", fontName=fonts["bold"], fontSize=11.5, leading=14, textColor=colors.HexColor("#E2E8F0"))
+    banner_name = style("BannerName", fontName=fonts["bold"], fontSize=24, leading=28, textColor=colors.white)
+    banner_headline = style("BannerHeadline", fontName=fonts["bold"], fontSize=12, leading=15, textColor=colors.HexColor("#E2E8F0"))
     banner_contact = style("BannerContact", fontName=fonts["regular"], fontSize=10, leading=13, textColor=colors.HexColor("#E2E8F0"))
 
     heading_color = accent if layout == "modern_accent" else primary
+    heading_kwargs: Dict[str, Any] = {}
+    if modern:
+        # Tinted band behind the heading text (still plain text for parsers).
+        heading_kwargs = dict(backColor=colors.HexColor(tint(accent, 0.10)), borderPadding=(2, 6, 2, 6), leftIndent=6, rightIndent=6)
     heading_style = style("Section", fontName=fonts["bold"], fontSize=11 if is_compact else 11.5, leading=14,
-                          textColor=heading_color, spaceBefore=6 if is_compact else 10, spaceAfter=1, keepWithNext=True)
+                          textColor=heading_color, spaceBefore=(6 if is_compact else 10) + (3 if modern else 0),
+                          spaceAfter=3 if modern else 1, keepWithNext=True, **heading_kwargs)
     body_style = style("Body", fontName=fonts["regular"], fontSize=body_size, leading=body_leading,
                        textColor=colors.HexColor(text_hex), spaceAfter=2 if is_compact else 3)
     entry_style = style("Entry", fontName=fonts["regular"], fontSize=body_size, leading=body_leading,
@@ -398,6 +416,8 @@ def generate_tailored_pdf(
 
     def section(title: str) -> None:
         story.append(Paragraph(title, heading_style))
+        if modern:
+            return  # the tinted band is the heading's visual separator
         story.append(HRFlowable(
             width="100%",
             thickness=1.0 if layout == "modern_accent" else 0.6,

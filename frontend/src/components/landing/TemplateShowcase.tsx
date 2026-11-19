@@ -7,7 +7,7 @@ import { fetchCVTemplates } from '@/lib/api';
 import { layoutLabel } from '@/lib/templatePreview';
 import type { CVTemplate } from '@/types';
 
-const VISIBLE = 4;
+const VISIBLE = 3;
 const FEATURED = 8;
 
 /** One template per distinct look first (layout + font), then fill with the rest, so the carousel shows variety. */
@@ -88,10 +88,10 @@ export default function TemplateShowcase({
         </>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-7 max-w-[1320px] mx-auto px-2 sm:px-10 text-left items-stretch">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-[1100px] mx-auto px-2 sm:px-10 text-left items-stretch">
         {templates.length === 0
           ? Array.from({ length: VISIBLE }, (_, i) => (
-              <div key={i} className="rounded-2xl bg-white/70 border border-slate-200 aspect-[8.5/11] animate-pulse" />
+              <div key={i} className="rounded-2xl bg-white/70 border border-slate-200 aspect-[8.5/10] animate-pulse" />
             ))
           : visible.map((tpl) => (
               <div
@@ -105,7 +105,7 @@ export default function TemplateShowcase({
                     data-template={tpl.id}
                     data-layout={tpl.layout}
                   >
-                    <TemplateThumbnail template={tpl} />
+                    <TemplateThumbnail template={tpl} crop />
                   </div>
                 </div>
                 <div className="p-4 flex-1 flex flex-col justify-between gap-3">

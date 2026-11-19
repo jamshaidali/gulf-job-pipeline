@@ -45,7 +45,7 @@ export const layoutLabel = (layout: string): string =>
     single_column: 'Classic single column',
   })[layout] || 'Classic single column';
 
-/** Realistic sample content used to show what a template looks like. */
+/** Realistic, full-page sample content used to show what a template looks like. */
 export const SAMPLE_PREVIEW_DATA: PreviewData = {
   fullName: 'Alexander Chen',
   jobTitle: 'Senior Cloud & Backend Architect',
@@ -53,10 +53,25 @@ export const SAMPLE_PREVIEW_DATA: PreviewData = {
   phone: '+1 (555) 234-5678',
   location: 'Austin, TX',
   linkedIn: 'linkedin.com/in/alexchen',
-  github: '',
+  github: 'github.com/alexchen',
   summary:
-    'Cloud and backend architect with 7+ years of experience designing high-concurrency microservices and real-time data pipelines on AWS and Kubernetes.',
-  skills: ['Python', 'FastAPI', 'PostgreSQL', 'System Design', 'Kubernetes', 'AWS', 'Docker', 'Redis', 'CI/CD'],
+    'Cloud and backend architect with 8+ years of experience designing high-concurrency microservices and real-time data pipelines on AWS and Kubernetes. Known for cutting latency and cloud costs while mentoring teams and shipping reliable systems at scale.',
+  skills: [
+    'Python',
+    'Go',
+    'FastAPI',
+    'PostgreSQL',
+    'Redis',
+    'Kafka',
+    'System Design',
+    'AWS',
+    'Kubernetes',
+    'Docker',
+    'Terraform',
+    'CI/CD',
+    'Observability',
+    'Technical Leadership',
+  ],
   experiences: [
     {
       id: '1',
@@ -68,7 +83,7 @@ export const SAMPLE_PREVIEW_DATA: PreviewData = {
       bullets: [
         'Architected payment routing APIs in FastAPI and PostgreSQL, cutting p99 latency by 42% across 2.4M daily transactions.',
         'Migrated a monolith to Kubernetes microservices on AWS EKS, saving $140k a year in compute costs.',
-        'Mentored 5 engineers and led weekly architecture reviews.',
+        'Led weekly architecture reviews and mentored 5 engineers, two of whom were promoted to senior.',
       ],
     },
     {
@@ -80,7 +95,20 @@ export const SAMPLE_PREVIEW_DATA: PreviewData = {
       endDate: '2022',
       bullets: [
         'Built a real-time catalog search service processing 10k+ updates per minute at 99.98% uptime.',
-        'Introduced Kafka-based event processing that removed nightly batch jobs.',
+        'Introduced Kafka-based event processing that removed nightly batch jobs and reduced data delays from hours to seconds.',
+        'Created shared service templates adopted by 14 teams, cutting new-service setup from two weeks to two days.',
+      ],
+    },
+    {
+      id: '3',
+      company: 'Atlassian',
+      position: 'Software Engineer',
+      location: 'Austin, TX',
+      startDate: '2016',
+      endDate: '2019',
+      bullets: [
+        'Developed REST APIs and background workers in Python serving 1.2M monthly active users.',
+        'Raised automated test coverage from 48% to 91%, reducing production incidents by a third.',
       ],
     },
   ],
@@ -89,16 +117,29 @@ export const SAMPLE_PREVIEW_DATA: PreviewData = {
       id: '1',
       institution: 'Institute of Technology',
       degree: 'B.S. in Computer Science',
-      year: '2019',
+      year: '2016',
       honors: 'First Class Honors',
+    },
+    {
+      id: '2',
+      institution: 'Cloud Engineering Council',
+      degree: 'AWS Certified Solutions Architect, Professional',
+      year: '2021',
+      honors: '',
     },
   ],
   projects: [
     {
       id: '1',
       title: 'Event Ingestion Engine',
-      description: 'Open-source pipeline processing 25,000 events per second with Go and Apache Kafka.',
+      description: 'Open-source pipeline processing 25,000 events per second with Go and Apache Kafka; 1.8k GitHub stars.',
       techStack: 'Go, Kafka, Redis',
+    },
+    {
+      id: '2',
+      title: 'Cost Radar',
+      description: 'CLI that flags idle cloud resources and saved teams an average of 18% on monthly AWS bills.',
+      techStack: 'Python, AWS, Terraform',
     },
   ],
 };

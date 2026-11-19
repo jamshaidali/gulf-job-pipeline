@@ -61,6 +61,13 @@ const ptReadable = (n: number) => `max(${(n * (96 / 72) * 0.8).toFixed(2)}px, ${
 /** Exact proportions at any size (no pixel floor): used for thumbnails of the whole page. */
 const ptExact = (n: number) => `${((n / 612) * 100).toFixed(3)}cqw`;
 
+/** Very light tint of a colour (mix with white): identical formula to the exporter's heading band. */
+export const tint = (hex: string, strength = 0.1): string => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const mix = (c: number) => Math.round(255 - (255 - c) * strength);
+  return `#${[r, g, b].map((c) => mix(c).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+};
+
 const clean = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
 export default function ResumePreview({
@@ -68,10 +75,13 @@ export default function ResumePreview({
   accent,
   data,
   fit = false,
+  centered = false,
 }: {
   layout: PreviewLayout;
   accent: string;
   data: PreviewData;
+  /** Centre the header (the classic serif single-column style). Ignored for banner layouts. */
+  centered?: boolean;
   /** Thumbnail mode: keep exact page proportions at any width (text may become tiny). */
   fit?: boolean;
 }) {
@@ -116,10 +126,11 @@ export default function ResumePreview({
         fontWeight: 700,
         lineHeight: 1.2,
         textTransform: 'uppercase',
-        marginTop: pt(compact ? 6 : 10),
+        marginTop: pt((compact ? 6 : 10) + (modern ? 3 : 0)),
         marginBottom: pt(3),
-        paddingBottom: pt(1.5),
-        borderBottom: `${modern ? 1.3 : 1}px solid ${modern ? accent : RULE}`,
+        ...(modern
+          ? { background: tint(accent, 0.1), padding: `${pt(2)} ${pt(6)}` }
+          : { paddingBottom: pt(1.5), borderBottom: `1px solid ${RULE}` }),
       }}
     >
       {title}
@@ -176,23 +187,29 @@ export default function ResumePreview({
       {/* ---- Header ---- */}
       {banner ? (
         <div style={{ background: accent, color: '#fff', padding: `${pt(10)} ${pt(12)}`, marginBottom: pt(4) }}>
-          <div style={{ fontSize: pt(20), fontWeight: 700, lineHeight: 1.2 }}>
+          <div style={{ fontSize: pt(24), fontWeight: 700, lineHeight: 1.2 }}>
             {name || <span style={{ opacity: 0.6 }}>Your Full Name</span>}
           </div>
           {headline && (
-            <div style={{ color: '#E2E8F0', fontSize: pt(11.5), fontWeight: 700, marginTop: pt(2) }}>{headline}</div>
+            <div style={{ color: '#E2E8F0', fontSize: pt(12), fontWeight: 700, marginTop: pt(2) }}>{headline}</div>
           )}
           {contact.length > 0 && (
             <div style={{ color: '#E2E8F0', fontSize: pt(10), marginTop: pt(2) }}>{contact.join(' | ')}</div>
           )}
         </div>
       ) : (
-        <div style={{ borderBottom: `${modern ? 1.6 : 1.1}px solid ${modern ? accent : RULE}`, paddingBottom: pt(4) }}>
-          <div style={{ color: accent, fontSize: pt(compact ? 18 : 20), fontWeight: 700, lineHeight: 1.2 }}>
+        <div
+          style={{
+            borderBottom: `${modern ? 1.6 : 1.1}px solid ${modern ? accent : RULE}`,
+            paddingBottom: pt(4),
+            textAlign: centered ? 'center' : 'left',
+          }}
+        >
+          <div style={{ color: accent, fontSize: pt(compact ? 20 : 24), fontWeight: 700, lineHeight: 1.2 }}>
             {name || <span style={{ color: RULE }}>Your Full Name</span>}
           </div>
           {headline && (
-            <div style={{ color: accent, fontSize: pt(11.5), fontWeight: 700, marginTop: pt(2) }}>{headline}</div>
+            <div style={{ color: accent, fontSize: pt(12), fontWeight: 700, marginTop: pt(2) }}>{headline}</div>
           )}
           {contact.length > 0 && (
             <div style={{ color: MUTED, fontSize: pt(10), marginTop: pt(3) }}>{contact.join(' | ')}</div>
