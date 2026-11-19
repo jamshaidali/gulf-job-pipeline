@@ -491,7 +491,22 @@ export default function ResumeBuilderPage() {
         }
         const tplParam = params.get('template');
         if (tplParam) {
-          const quickId = (Object.keys(QUICK_LAYOUTS) as BuilderTemplateId[]).find((id) => id === tplParam);
+          // Ids used by older links (bookmarks, earlier landing / templates pages) map to the closest quick layout.
+          const LEGACY_IDS: Record<string, BuilderTemplateId> = {
+            contemporary: 'tech_two_column',
+            modern_tech: 'tech_two_column',
+            sapphire_modern_tech: 'tech_two_column',
+            emerald_growth_matrix: 'tech_two_column',
+            creative_accent_cyan: 'tech_two_column',
+            ats_minimalist_clean: 'minimalist',
+            quantum_cloud_architect: 'minimalist',
+            executive_pro: 'executive',
+            executive_leadership_pro: 'executive',
+            compact_direct_impact: 'compact',
+            monochrome_ivy_league: 'classic_serif',
+          };
+          const quickId =
+            (Object.keys(QUICK_LAYOUTS) as BuilderTemplateId[]).find((id) => id === tplParam) || LEGACY_IDS[tplParam];
           if (quickId) {
             if (authed) {
               applyQuickLayout(quickId);

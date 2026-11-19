@@ -459,4 +459,29 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     await expect(page).toHaveURL(/\/guides\/ats-resume-optimization-checklist-2026/);
     await expect(page.locator('h1')).toContainText(/ATS Resume Optimization Checklist/i);
   });
+
+  test('11. Landing page template carousel shows real templates and the chosen one is applied in the builder', async ({ page }) => {
+    await page.goto('/');
+    const showcase = page.getByTestId('template-showcase');
+    await showcase.scrollIntoViewIfNeeded();
+    const thumbs = page.getByTestId('showcase-thumbnail');
+    await expect(thumbs.first()).toBeVisible();
+    await expect(thumbs.first()).toContainText(/Professional Experience/i);
+
+    // Signed in: pick the 2nd card and land in the builder with exactly that template applied
+    await page.evaluate(() => {
+      localStorage.setItem('tr_auth_user', JSON.stringify({ username: 'alex_global', full_name: 'Alex Global' }));
+    });
+    await page.reload();
+    await showcase.scrollIntoViewIfNeeded();
+    const second = page.getByTestId('showcase-thumbnail').nth(1);
+    const expectedId = await second.getAttribute('data-template');
+    const expectedLayout = await second.getAttribute('data-layout');
+    await second.locator('xpath=ancestor::div[contains(@class,"group")]').getByRole('button', { name: /Use this template/i }).click();
+
+    await page.waitForURL(/\/builder\?template=/);
+    const canvas = page.locator('#resume-canvas');
+    await expect(canvas).toHaveAttribute('data-template', expectedId!);
+    await expect(canvas).toHaveAttribute('data-layout', expectedLayout!);
+  });
 });

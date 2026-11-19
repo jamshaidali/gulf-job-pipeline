@@ -6,15 +6,9 @@ import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import TemplateAuthModal from '@/components/TemplateAuthModal';
-import ResumePreview from '@/components/builder/ResumePreview';
+import TemplateThumbnail from '@/components/builder/TemplateThumbnail';
 import { fetchCurrentUser, fetchCVTemplates } from '@/lib/api';
-import {
-  asPreviewLayout,
-  layoutLabel,
-  previewFontFamily,
-  SAMPLE_PREVIEW_DATA,
-  templateAccent,
-} from '@/lib/templatePreview';
+import { layoutLabel } from '@/lib/templatePreview';
 import type { CVTemplate } from '@/types';
 import { Sparkles, ArrowRight, ShieldCheck, Search, Eye, Lock, Loader2, X } from 'lucide-react';
 
@@ -28,26 +22,6 @@ const FALLBACK_CATEGORIES = [
   'Creative & Remote',
   'Enterprise & Global',
 ];
-
-/** The real resume, rendered with sample content, in the template's own layout, font and colour. */
-function TemplatePage({ template, fit = true }: { template: CVTemplate; fit?: boolean }) {
-  return (
-    <div
-      className="bg-white overflow-hidden text-slate-900"
-      style={{
-        containerType: 'inline-size',
-        fontFamily: previewFontFamily(template.font_family),
-      } as React.CSSProperties}
-    >
-      <ResumePreview
-        fit={fit}
-        layout={asPreviewLayout(template.layout)}
-        accent={templateAccent(template)}
-        data={SAMPLE_PREVIEW_DATA}
-      />
-    </div>
-  );
-}
 
 const fontLabel = (fontFamily: string) => (fontFamily === 'Times-Roman' ? 'Serif font' : 'Sans-serif font');
 
@@ -249,7 +223,7 @@ export default function TemplatesPage() {
                       data-layout={template.layout}
                       aria-label={`${template.name} preview`}
                     >
-                      <TemplatePage template={template} />
+                      <TemplateThumbnail template={template} />
                     </div>
                     <button
                       type="button"
@@ -339,7 +313,7 @@ export default function TemplatesPage() {
                   data-testid="template-quick-preview"
                   data-layout={previewTemplate.layout}
                 >
-                  <TemplatePage template={previewTemplate} />
+                  <TemplateThumbnail template={previewTemplate} />
                 </div>
                 <p className="text-center text-xs text-slate-500 mt-3">
                   Sample content shown. Your own details fill this exact layout in the builder.
