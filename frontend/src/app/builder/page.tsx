@@ -506,6 +506,19 @@ export default function ResumeBuilderPage() {
     }
   };
 
+  // Measure the sticky header so each pane can fill exactly the remaining viewport height.
+  const headerRef = useRef<HTMLElement | null>(null);
+  const [headerHeight, setHeaderHeight] = useState<number>(80);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const update = () => setHeaderHeight(Math.ceil(el.getBoundingClientRect().height));
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const [collapsedRoles, setCollapsedRoles] = useState<Set<string>>(new Set());
 
   const handleStartFromScratch = () => {
@@ -864,7 +877,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
       `}</style>
 
       {/* Top Builder App Bar (No Print) */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex flex-wrap items-center justify-between gap-2.5 sm:gap-4 no-print shadow-xs">
+      <header ref={headerRef} className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5 flex flex-wrap items-center justify-between gap-2.5 sm:gap-4 no-print shadow-xs">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link href="/" className="font-extrabold text-slate-900 text-base sm:text-lg tracking-tight flex items-center gap-1.5 sm:gap-2 group shrink-0">
             <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-sky-400 flex items-center justify-center text-white text-xs font-black shadow-xs shrink-0">
@@ -1053,13 +1066,13 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
       )}
 
       {/* MAIN TWO-PANE WORKSPACE */}
-      <div className="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+      <div style={{ ['--builder-header-h' as string]: `${headerHeight}px` } as React.CSSProperties} className="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-6 lg:p-8 lg:pt-4 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
         
         {/* LEFT COLUMN: Section Editor Controls (Width 5 cols) */}
         <div
           id="builder-editor-panel"
           onChangeCapture={() => setHasManualEdits(true)}
-          className="lg:col-span-5 bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-6 space-y-5 sm:space-y-6 no-print min-w-0"
+          className="lg:col-span-5 bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm p-4 sm:p-6 space-y-5 sm:space-y-6 no-print min-w-0 lg:sticky lg:top-[calc(var(--builder-header-h)+1rem)] lg:max-h-[calc(100dvh-var(--builder-header-h)-2rem)] lg:overflow-y-auto"
         >
           <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-100">
             <div>
@@ -2046,7 +2059,7 @@ ${educations.map(ed => `${ed.degree} - ${ed.institution} (${ed.year})${ed.honors
         </div>
 
         {/* RIGHT COLUMN: Live Document Canvas (Width 7 cols) */}
-        <div className="lg:col-span-7 flex flex-col items-center lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto space-y-3 min-w-0 w-full">
+        <div className="lg:col-span-7 flex flex-col items-center lg:sticky lg:top-[calc(var(--builder-header-h)+1rem)] lg:max-h-[calc(100dvh-var(--builder-header-h)-2rem)] lg:overflow-y-auto space-y-3 min-w-0 w-full">
           {/* Quick Template Switcher Bar Above Live A4 Preview */}
           <div className="w-full max-w-[850px] bg-white rounded-2xl border border-slate-200 px-3 sm:px-4 py-2.5 shadow-2xs flex flex-wrap items-center justify-between gap-2 no-print">
             <div className="flex items-center justify-between w-full sm:w-auto gap-2 text-xs">
