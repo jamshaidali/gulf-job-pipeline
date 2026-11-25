@@ -149,13 +149,6 @@ export default function HomePage() {
           price: '0',
           priceCurrency: 'USD',
         },
-        aggregateRating: {
-          '@type': 'AggregateRating',
-          ratingValue: '4.9',
-          reviewCount: '5367',
-          bestRating: '5',
-          worstRating: '1',
-        },
       },
       {
         '@type': 'FAQPage',
