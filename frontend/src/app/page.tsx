@@ -1,5 +1,6 @@
 'use client';
 
+import { careerGuides } from '@/data/careerGuides';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -932,69 +933,36 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 8. TALENTRADAR RESEARCH LAB (Matches Enhancv Screenshot 13) */}
+        {/* 8. CAREER GUIDES (real guides, no invented studies) */}
         <section className="py-20 bg-white border-b border-slate-200/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 border-b border-slate-200">
               <div>
-                <span className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider">Original Research</span>
+                <span className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider">Free Guides</span>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-950 mt-1">
-                  The RateYourCV Career Research Lab
+                  Resume and CV guides
                 </h2>
               </div>
               <Link href="/guides" className="text-xs font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1">
-                <span>View All Career Studies &rarr;</span>
+                <span>View all guides &rarr;</span>
               </Link>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
-              <Link
-                href="/guides/ats-resume-optimization-checklist-2026"
-                className="group space-y-2 p-5 rounded-2xl border border-slate-200/80 hover:border-emerald-300 hover:shadow-md transition bg-slate-50/40 block"
-              >
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">
-                  Why 75% of Resumes Fail ATS Parsers: Data from 65,000 Submissions
-                </h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  We analyzed how Taleo, Workday, and Lever process two-column resumes, complex tables, and missing quantified metrics.
-                </p>
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 pt-1">
-                  <span>Read Full Study</span>
-                  <ArrowRight className="w-3 h-3" />
-                </span>
-              </Link>
-
-              <Link
-                href="/guides/executive-product-leadership-resume-blueprint"
-                className="group space-y-2 p-5 rounded-2xl border border-slate-200/80 hover:border-emerald-300 hover:shadow-md transition bg-slate-50/40 block"
-              >
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">
-                  The 37-Day Job Search Blueprint: Real Data from 1,890 Hired Candidates
-                </h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  The exact step-by-step resume tailoring and recruiter outreach strategy candidates used to land high-paying tech and leadership roles.
-                </p>
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 pt-1">
-                  <span>Read Full Study</span>
-                  <ArrowRight className="w-3 h-3" />
-                </span>
-              </Link>
-
-              <Link
-                href="/guides/software-ai-engineer-resume-guide"
-                className="group space-y-2 p-5 rounded-2xl border border-slate-200/80 hover:border-emerald-300 hover:shadow-md transition bg-slate-50/40 block"
-              >
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">
-                  The Google X-Y-Z Formula Study: How Quantified Bullets Boost Callbacks by 42%
-                </h4>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Our analysis of 18,400 software engineering and executive resumes reveals how concrete revenue and latency metrics transform interview rates.
-                </p>
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 pt-1">
-                  <span>Read Full Study</span>
-                  <ArrowRight className="w-3 h-3" />
-                </span>
-              </Link>
+              {careerGuides.slice(0, 3).map((g) => (
+                <Link
+                  key={g.slug}
+                  href={`/guides/${g.slug}`}
+                  className="group space-y-2 p-5 rounded-2xl border border-slate-200/80 hover:border-emerald-300 hover:shadow-md transition bg-slate-50/40 block"
+                >
+                  <h3 className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition">{g.title}</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">{g.excerpt}</p>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 pt-1">
+                    <span>Read guide &middot; {g.readingTime}</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </span>
+                </Link>
+              ))}
             </div>
           </div>
         </section>

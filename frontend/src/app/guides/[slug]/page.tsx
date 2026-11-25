@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
   if (!guide) return { title: 'Career Guide Not Found' };
 
   return {
-    title: `${guide.title} | RateYourCV Guides`,
+    title: `${guide.metaTitle} | RateYourCV`,
     description: guide.excerpt,
     alternates: {
       canonical: `/guides/${guide.slug}`,
@@ -32,8 +32,9 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
       description: guide.excerpt,
       url: `https://rateyourcv.com/guides/${guide.slug}`,
       siteName: 'RateYourCV',
+    images: ['/opengraph-image'],
       type: 'article',
-      publishedTime: '2026-10-01T00:00:00Z',
+      publishedTime: guide.publishedISO,
       authors: ['RateYourCV Career Editorial Team'],
     },
   };
@@ -52,7 +53,9 @@ export default async function SingleGuidePage({ params }: GuidePageProps) {
     '@type': 'Article',
     headline: guide.title,
     description: guide.excerpt,
-    datePublished: '2026-10-01T00:00:00Z',
+    datePublished: guide.publishedISO,
+    dateModified: guide.publishedISO,
+    mainEntityOfPage: `https://rateyourcv.com/guides/${guide.slug}`,
     author: {
       '@type': 'Organization',
       name: 'RateYourCV Career Editorial Team',
@@ -127,7 +130,7 @@ export default async function SingleGuidePage({ params }: GuidePageProps) {
         <div className="p-5 sm:p-6 bg-gradient-to-br from-indigo-50/80 via-sky-50/50 to-slate-50 rounded-2xl border border-indigo-100 mb-10 space-y-3">
           <div className="text-xs font-black uppercase tracking-wider text-indigo-950 flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-indigo-600" />
-            <span>Essential Executive Summary</span>
+            <span>Key takeaways</span>
           </div>
           <ul className="space-y-2 text-xs sm:text-sm text-slate-800 font-medium">
             {guide.highlights.map((item, idx) => (
@@ -139,156 +142,75 @@ export default async function SingleGuidePage({ params }: GuidePageProps) {
           </ul>
         </div>
 
-        {/* Dynamic Guide Content Body */}
-        <article className="prose prose-slate max-w-none space-y-6 text-sm sm:text-base text-slate-700 leading-relaxed">
-          
-          {guide.slug === 'software-ai-engineer-resume-guide' && (
-            <>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 pt-2">
-                1. Understanding the 2026 Engineering &amp; AI Hiring Landscape
-              </h2>
-              <p>
-                Modern technology organizations evaluate software, cloud, and AI engineers on measurable architectural impact and production reliability. Generic resumes listing programming languages without system scale are filtered out within seconds by automated ATS screening and engineering managers.
-              </p>
-              <p>
-                Enterprise engineering postings frequently receive 500+ applications within 48 hours. To stand out, your resume must surface distributed systems scale, cloud cost optimization, and latency improvements in the top third of page one.
-              </p>
-
+        {/* Guide content */}
+        <article className="space-y-5 text-sm sm:text-base text-slate-700 leading-relaxed">
+          {guide.sections.map((section, sIdx) => (
+            <section key={section.h} className="space-y-3">
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 pt-4">
-                2. Quantified Impact Benchmarks by Seniority Level
+                {sIdx + 1}. {section.h}
               </h2>
-              <div className="overflow-x-auto my-4">
-                <table className="w-full text-left border border-slate-200 rounded-xl overflow-hidden text-xs sm:text-sm">
-                  <thead className="bg-slate-100 text-slate-800 font-extrabold uppercase text-[11px]">
-                    <tr>
-                      <th className="p-3 border-b">Role Level</th>
-                      <th className="p-3 border-b">Experience</th>
-                      <th className="p-3 border-b">Primary Resume Focus</th>
-                      <th className="p-3 border-b">Target ATS Score</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 font-medium">
-                    <tr>
-                      <td className="p-3 font-bold text-slate-900">Junior / Associate</td>
-                      <td className="p-3 text-slate-600">1 - 3 Years</td>
-                      <td className="p-3 text-emerald-700 font-bold">Clean Code, CI/CD &amp; Test Coverage</td>
-                      <td className="p-3 text-slate-600">85%+</td>
-                    </tr>
-                    <tr>
-                      <td className="p-3 font-bold text-slate-900">Mid-Level Engineer</td>
-                      <td className="p-3 text-slate-600">3 - 6 Years</td>
-                      <td className="p-3 text-emerald-700 font-bold">API Latency, Microservices &amp; Throughput</td>
-                      <td className="p-3 text-slate-600">88%+</td>
-                    </tr>
-                    <tr>
-                      <td className="p-3 font-bold text-slate-900">Senior / Staff Engineer</td>
-                      <td className="p-3 text-slate-600">6 - 10 Years</td>
-                      <td className="p-3 text-emerald-700 font-bold">System Design, Cloud Savings &amp; Mentorship</td>
-                      <td className="p-3 text-slate-600">92%+</td>
-                    </tr>
-                    <tr>
-                      <td className="p-3 font-bold text-slate-900">Principal / VP Engineering</td>
-                      <td className="p-3 text-slate-600">10+ Years</td>
-                      <td className="p-3 text-emerald-700 font-bold">Org Scale, Multi-Region Architecture &amp; ROI</td>
-                      <td className="p-3 text-slate-600">95%+</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 pt-4">
-                3. Structuring Technical Skill Matrices for 6-Second Scans
-              </h2>
-              <p>
-                <strong>Group by Domain:</strong> Organize your technical stack into clear categories—<em>Languages</em>, <em>Frameworks &amp; APIs</em>, <em>Cloud &amp; DevOps</em>, and <em>Databases &amp; Streaming</em>—so both ATS parsers and technical leads can verify your stack immediately.
-              </p>
-
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 pt-4">
-                4. Actionable Next Steps
-              </h2>
-              <p>
-                Ensure your resume highlights quantifiable results rather than routine responsibilities. Instead of writing <em>&quot;Responsible for writing Python code&quot;</em>, write <em>&quot;Architected asynchronous microservices processing 450k transactions/day with 99.98% uptime.&quot;</em>
-              </p>
-            </>
-          )}
-
-          {guide.slug === 'executive-product-leadership-resume-blueprint' && (
-            <>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 pt-2">
-                1. What Executive &amp; Product Hiring Committees Look For
-              </h2>
-              <p>
-                When evaluating Directors, VPs, and Senior Product Leaders, executive search committees look beyond tactical feature delivery. Your resume must immediately communicate strategic vision, P&amp;L ownership, cross-functional org design, and measurable business growth.
-              </p>
-
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 pt-4">
-                2. The Top-Third Executive Summary Rule
-              </h2>
-              <p>
-                Your top summary and key achievements block should anchor your leadership scope in 30 seconds: team size managed, ARR/revenue influenced, retention lift, and market expansion outcomes.
-              </p>
-
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 pt-4">
-                3. Essential Leadership Metrics to Include
-              </h2>
-              <ul>
-                <li><strong>Revenue &amp; ARR Impact:</strong> New product revenue, expansion ARR, or conversion lift (%).</li>
-                <li><strong>Operational Efficiency:</strong> Cost reductions, cycle-time acceleration, and SLA improvements.</li>
-                <li><strong>Team Scale &amp; Retention:</strong> Squads hired, mentored, and retained across engineering, product, and design.</li>
-                <li><strong>Customer Retention:</strong> NPS improvements, churn reduction, and enterprise adoption rates.</li>
-              </ul>
-            </>
-          )}
-
-          {guide.slug === 'ats-resume-optimization-checklist-2026' && (
-            <>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 pt-2">
-                1. Why Standard Resumes Fail Enterprise ATS Screening
-              </h2>
-              <p>
-                Leading enterprises utilize applicant tracking systems such as Workday, Taleo, Greenhouse, Lever, and iCIMS. When a job posting receives 400+ applications, human recruiters focus on the top-scored candidates ranked by semantic and exact keyword alignment.
-              </p>
-
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 pt-4">
-                2. The 5 Cardinal Rules of ATS-Compliant Resumes
-              </h2>
-              <div className="space-y-3 my-4">
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                  <div className="font-extrabold text-slate-900 text-sm">Rule 1: Use Clean, Selectable Text Layers</div>
-                  <p className="text-xs text-slate-600 mt-1">
-                    Graphic-heavy resume templates exported as flattened images or floating text boxes confuse ATS parsers, resulting in unparsed work history.
-                  </p>
-                </div>
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                  <div className="font-extrabold text-slate-900 text-sm">Rule 2: Match Exact Keywords from the Job Description</div>
-                  <p className="text-xs text-slate-600 mt-1">
-                    If the JD requests <em>&quot;PostgreSQL&quot;</em> and your CV only says <em>&quot;SQL&quot;</em>, you lose match points. Always verify high-yield missing keywords.
-                  </p>
-                </div>
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                  <div className="font-extrabold text-slate-900 text-sm">Rule 3: Use Standard Headings</div>
-                  <p className="text-xs text-slate-600 mt-1">
-                    Stick to standard sections: <em>Professional Summary</em>, <em>Core Technical Competencies</em>, <em>Professional Experience</em>, and <em>Education</em>.
-                  </p>
-                </div>
-              </div>
-
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 pt-4">
-                3. The Google X-Y-Z Metric Formula for Bullets
-              </h2>
-              <p>
-                Every accomplishment bullet should answer: <strong>What was the action? What technology was used? What was the measured business result?</strong>
-              </p>
-              <p>
-                <strong>Before (Fails ATS):</strong> Worked on backend APIs and fixed database bugs.
-              </p>
-              <p>
-                <strong>After (92%+ Match):</strong> Re-engineered PostgreSQL query indexes and caching layers in FastAPI, reducing transaction latency by 42% and eliminating timeout bottlenecks.
-              </p>
-            </>
-          )}
-
+              {section.blocks.map((block, bIdx) => {
+                if (block.t === 'p') return <p key={bIdx}>{block.text}</p>;
+                if (block.t === 'ul')
+                  return (
+                    <ul key={bIdx} className="list-disc pl-5 space-y-1.5">
+                      {block.items.map((it) => (
+                        <li key={it}>{it}</li>
+                      ))}
+                    </ul>
+                  );
+                if (block.t === 'ol')
+                  return (
+                    <ol key={bIdx} className="list-decimal pl-5 space-y-1.5">
+                      {block.items.map((it) => (
+                        <li key={it}>{it}</li>
+                      ))}
+                    </ol>
+                  );
+                if (block.t === 'tip')
+                  return (
+                    <div key={bIdx} className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-950 text-sm">
+                      <strong>Tip: </strong>
+                      {block.text}
+                    </div>
+                  );
+                return (
+                  <div key={bIdx} className="grid gap-2 sm:grid-cols-2">
+                    <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-sm">
+                      <div className="text-[11px] font-black uppercase tracking-wider text-rose-700 mb-1">Before</div>
+                      {block.before}
+                    </div>
+                    <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-sm">
+                      <div className="text-[11px] font-black uppercase tracking-wider text-emerald-700 mb-1">After</div>
+                      {block.after}
+                    </div>
+                  </div>
+                );
+              })}
+            </section>
+          ))}
         </article>
+
+        {/* Related guides (internal links) */}
+        <nav aria-label="More guides" className="mt-12 space-y-3">
+          <h2 className="text-lg font-black text-slate-900">More guides</h2>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {careerGuides
+              .filter((g) => g.slug !== guide.slug)
+              .slice(0, 4)
+              .map((g) => (
+                <li key={g.slug}>
+                  <Link
+                    href={`/guides/${g.slug}`}
+                    className="block p-3 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 text-sm font-semibold text-slate-800 transition"
+                  >
+                    {g.metaTitle}
+                    <span className="block text-xs font-medium text-slate-500 mt-0.5">{g.readingTime}</span>
+                  </Link>
+                </li>
+              ))}
+          </ul>
+        </nav>
 
         {/* Call to Action Footer */}
         <div className="mt-12 p-8 bg-slate-900 text-white rounded-3xl border border-slate-800 shadow-xl space-y-4 text-center">

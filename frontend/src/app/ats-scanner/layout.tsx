@@ -20,10 +20,12 @@ export const metadata: Metadata = {
       'Upload your PDF/DOCX resume and paste any job description to get an instant ATS compatibility score, missing keyword checklist, and AI-tailored impact bullets.',
     url: 'https://rateyourcv.com/ats-scanner',
     siteName: 'RateYourCV',
+    images: ['/opengraph-image'],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
+    images: ['/opengraph-image'],
     title: 'Free ATS Resume Checker & Job Match Score Scanner | RateYourCV',
     description:
       'Test your resume against any job description in seconds with our 30-point ATS diagnostic scanner.',

@@ -25,6 +25,7 @@ export const metadata: Metadata = {
     description: 'Expert guides on crafting ATS-optimized resumes and landing high-paying tech & executive interviews.',
     url: 'https://rateyourcv.com/guides',
     siteName: 'RateYourCV',
+    images: ['/opengraph-image'],
     type: 'website',
   }
 };

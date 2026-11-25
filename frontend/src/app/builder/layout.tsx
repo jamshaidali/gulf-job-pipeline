@@ -21,10 +21,12 @@ export const metadata: Metadata = {
       'Import your PDF/DOCX resume or build from scratch with real-time ATS scoring, AI bullet quantification, and instant PDF export.',
     url: 'https://rateyourcv.com/builder',
     siteName: 'RateYourCV',
+    images: ['/opengraph-image'],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
+    images: ['/opengraph-image'],
     title: 'Free AI Resume Builder & Live Visual CV Editor | RateYourCV',
     description:
       'Create an interview-winning, ATS-friendly resume in minutes with live visual editing and AI impact bullets.',

@@ -414,6 +414,77 @@ export default function TemplatesPage() {
             </div>
           </div>
         )}
+        {/* Crawlable guidance text (server-rendered with the page) */}
+        <section aria-labelledby="choose-template" className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 space-y-8 text-sm text-slate-700 leading-relaxed">
+          <div className="space-y-3">
+            <h2 id="choose-template" className="text-2xl font-black text-slate-900">How to choose a resume template</h2>
+            <p>
+              A good resume template makes your experience easy to read. It does not need to be fancy. Recruiters skim, and applicant tracking systems (ATS) read your resume into fields, so the layout should be clean, with a clear name, headings that are easy to find and dates that line up.
+            </p>
+            <p>
+              Every template here is free to customize in the builder and download as a PDF or Word file. The text in the PDF is real, selectable text, not an image.
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="space-y-2">
+              <h3 className="text-lg font-extrabold text-slate-900">ATS-safe, single-column templates</h3>
+              <p>
+                These use one column, standard headings and common fonts. Choose one of these for online applications, where your file goes through employer software first. Most people should start here.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-extrabold text-slate-900">Designer templates with a photo or sidebar</h3>
+              <p>
+                These add a coloured sidebar or banner and an optional profile photo. They look striking when you send a resume directly to a person, but strict ATS software may read them poorly. Photos are expected in some countries and discouraged in others, so check local norms and the job posting.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-lg font-extrabold text-slate-900">Style choices that change the look</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Header: left-aligned, centered, split with contact details on the right, or a full-width banner</li>
+              <li>Headings: ruled lines, tinted bands, accent bars, short underlines or plain</li>
+              <li>Fonts: Arial-, Times-, Calibri- and Cambria-style families, with open-licensed equivalents embedded in the PDF</li>
+              <li>Spacing: compact, standard or airy, without shrinking text below 10 pt</li>
+              <li>Colour: 36 palettes checked for readable contrast on white</li>
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-lg font-extrabold text-slate-900">Tips for picking the right one</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>For most corporate, technical and public-sector jobs, use a single-column, mostly black-and-white layout with one accent colour.</li>
+              <li>For design, marketing and creative roles, a designer template can show personality.</li>
+              <li>If you have a lot of experience, choose a compact or standard spacing so it fits two pages comfortably.</li>
+              <li>Pick the template first, then edit the content. You can switch templates at any time and your text stays.</li>
+            </ul>
+            <p>
+              Not sure what to write? Read our guides on{' '}
+              <Link href="/guides/how-to-write-a-resume-summary" className="text-indigo-700 font-semibold hover:underline">writing a resume summary</Link>,{' '}
+              <Link href="/guides/resume-bullet-points-xyz-formula" className="text-indigo-700 font-semibold hover:underline">resume bullet points</Link> and the{' '}
+              <Link href="/guides/ats-resume-optimization-checklist-2026" className="text-indigo-700 font-semibold hover:underline">ATS resume checklist</Link>, or run your resume through the{' '}
+              <Link href="/ats-scanner" className="text-indigo-700 font-semibold hover:underline">free ATS Scanner</Link>.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <h3 className="text-lg font-extrabold text-slate-900">Frequently asked questions</h3>
+            <div>
+              <h4 className="font-bold text-slate-900">Are the templates free?</h4>
+              <p>You can browse all of them without an account. Sign up to use a template in the builder.</p>
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-900">Can I download my resume as a Word file?</h4>
+              <p>Yes. Every template exports to PDF and to an editable Word (.docx) file. Word styling is close to the PDF but not identical.</p>
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-900">Which template is best for applicant tracking systems?</h4>
+              <p>A single-column template with standard headings is the safest. No template can guarantee how a particular employer&apos;s software will read it.</p>
+            </div>
+          </div>
+        </section>
       </main>
 
       <TemplateAuthModal

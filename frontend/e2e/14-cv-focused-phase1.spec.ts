@@ -199,7 +199,7 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
 
       const canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
       expect(canonical).toBeTruthy();
-      expect(canonical).toContain(route === '/' ? 'https://gulf-job-pipeline.vercel.app' : route);
+      expect(canonical).toContain(route === '/' ? 'https://rateyourcv.com' : route);
 
       const h1Count = await page.locator('h1').count();
       expect(h1Count).toBe(1);
@@ -454,13 +454,13 @@ test.describe('Phase 1: Enhancv-Style CV/Resume Focused Suite (100% Global & Acc
     const docxDownload = await docxDownloadPromise;
     expect(docxDownload.suggestedFilename()).toContain('.docx');
 
-    // 13. Test Landing Page Research Lab study links -> /guides/[slug]
+    // 13. Test Landing page guide links -> /guides/[slug]
     await page.goto('/');
-    const studyLink = page.getByRole('link', { name: /Why 75% of Resumes Fail ATS Parsers/i });
+    const studyLink = page.getByRole('link', { name: /The 2026 ATS Resume Checklist/i });
     await expect(studyLink).toBeVisible();
     await studyLink.click();
     await expect(page).toHaveURL(/\/guides\/ats-resume-optimization-checklist-2026/);
-    await expect(page.locator('h1')).toContainText(/ATS Resume Optimization Checklist/i);
+    await expect(page.locator('h1')).toContainText(/ATS Resume Checklist/i);
   });
 
   test('11. Landing page template carousel shows real templates and the chosen one is applied in the builder', async ({ page }) => {

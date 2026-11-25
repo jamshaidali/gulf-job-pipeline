@@ -20,13 +20,15 @@ export const metadata: Metadata = {
       'Choose from 500+ resume templates with real, selectable text: ATS-safe single-column styles and designer layouts with a photo.',
     url: 'https://rateyourcv.com/templates',
     siteName: 'RateYourCV',
+    images: ['/opengraph-image'],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
+    images: ['/opengraph-image'],
     title: '500+ Free ATS-Friendly Resume Templates | RateYourCV',
     description:
-      'Recruiter-approved single-column and two-column resume templates verified for 100% ATS parsing.',
+      'Choose from 500+ resume templates: ATS-safe single-column styles and designer layouts with a photo. Free to customize, with PDF and Word download.',
   },
 };
 
