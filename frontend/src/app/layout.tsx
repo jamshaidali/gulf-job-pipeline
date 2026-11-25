@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
+import GoogleAnalytics from '@/components/GoogleAnalytics';
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -58,6 +59,7 @@ export default function RootLayout({
     <html lang="en" className={`${plusJakarta.variable} h-full antialiased overflow-x-clip`}>
       <body className="min-h-full flex flex-col font-sans overflow-x-clip selection:bg-indigo-600 selection:text-white">
         {children}
+        <GoogleAnalytics />
       </body>
     </html>
   );
