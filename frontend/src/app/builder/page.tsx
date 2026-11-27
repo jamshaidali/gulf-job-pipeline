@@ -78,7 +78,7 @@ const BUILDER_TEMPLATES: Array<{
     tag: '1-Column Standard',
     atsScore: '100% ATS',
     accent: '#0f172a',
-    description: 'Ultra-clean single-column hierarchy built for strict Workday & Taleo parsers.',
+    description: 'Plain single-column layout that is easy for ATS software to read.',
   },
   {
     id: 'executive',

@@ -1231,7 +1231,7 @@ export default function ATSScannerPage() {
                         <span>Google X-Y-Z Achievement Bullets</span>
                       </h4>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Incorporating missing keywords with quantified metrics to bypass ATS filters and impress human recruiters.
+                        Adding the posting's wording where it is true, with real results, so the resume reads well to people and to software.
                       </p>
                     </div>
                   </div>
@@ -1293,7 +1293,7 @@ export default function ATSScannerPage() {
               How ATS Scanners Work in 2026
             </h2>
             <p className="text-xs sm:text-sm text-slate-500">
-              Understanding how Applicant Tracking Systems like Workday, Taleo, Greenhouse, and Lever parse your resume.
+              What applicant tracking systems (ATS) generally do with your resume.
             </p>
           </div>
 
@@ -1304,7 +1304,7 @@ export default function ATSScannerPage() {
               </div>
               <h3 className="text-sm font-extrabold text-slate-900">Keyword Matching</h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                ATS engines like Workday, Taleo, and Greenhouse parse your resume looking for exact and semantic matches with the skills required in the job description.
+                Recruiters and ATS software often search and filter by the skills and terms in the job description, so using the posting's wording, where it is true, helps your resume turn up.
               </p>
             </div>
 

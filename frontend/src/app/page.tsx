@@ -125,7 +125,7 @@ export default function HomePage() {
     },
     {
       q: "How do your templates beat Applicant Tracking Systems (ATS)?",
-      a: "Every RateYourCV template is engineered with a clean semantic text layer (no unreadable images or complex text boxes) tested against major ATS software like Taleo, Workday, Greenhouse, and Lever. Contact info sits in the main document body where parsers can read it cleanly."
+      a: "Our single-column templates use real, selectable text, with no images or text boxes carrying content, and put contact details in the main body of the page where parsers can read them. No template can guarantee how a particular employer\'s software will read it, so the ATS Scanner lets you check your resume against a specific job posting. Designer templates with a sidebar or photo are better for sending directly to people."
     }
   ];
 
@@ -250,16 +250,16 @@ export default function HomePage() {
                   </Link>
                 </div>
 
-                {/* Social Proof */}
-                <div className="animate-fade-up delay-400 pt-3 flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-600 font-medium">
-                  <div className="flex text-emerald-600 font-bold">★★★★★</div>
-                  <span className="font-bold text-slate-900">Excellent</span>
-                  <span className="text-slate-500">5,367 reviews</span>
-                  <span className="text-slate-300">&bull;</span>
+                {/* Plain facts (no invented numbers) */}
+                <div className="animate-fade-up delay-400 pt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs sm:text-sm text-slate-600 font-medium">
                   <span className="text-slate-700 font-semibold flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <CountUp end={28452} duration={2200} /> users landed interviews last month
+                    Free during launch
                   </span>
+                  <span className="text-slate-300">&bull;</span>
+                  <span>500+ templates</span>
+                  <span className="text-slate-300">&bull;</span>
+                  <span>PDF and Word download</span>
                 </div>
 
                 {/* ATS Compatibility Badges */}
@@ -375,7 +375,7 @@ export default function HomePage() {
                     {/* Floating pill toolbar */}
                     <div className="pt-1 flex items-center justify-between text-[11px] text-slate-500">
                       <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">+ New Entry</span>
-                      <span className="text-[10px] text-slate-400 font-semibold">Taleo &amp; Workday Safe</span>
+                      <span className="text-[10px] text-slate-400 font-semibold">Single-column layout</span>
                     </div>
                   </div>
 
@@ -462,95 +462,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 3. TESTIMONIALS & SOCIAL PROOF (Matches Enhancv Screenshot 3 & 4) */}
-        <section className="py-20 bg-white border-b border-slate-200/80">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-12 border-b border-slate-100">
-              <div>
-                <span className="text-xs font-extrabold text-emerald-700 uppercase tracking-wider">Social Proof</span>
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-950 mt-1">
-                  Trusted by executives &amp; senior professionals
-                </h2>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-4xl font-black text-slate-950">4.9</div>
-                <div>
-                  <div className="flex text-emerald-600 text-sm">★★★★★</div>
-                  <div className="text-xs text-slate-500 font-medium">5,363 reviews on Reviews.io &amp; Trustpilot</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Featured Quote with Avatar */}
-            <div className="mt-12 bg-slate-50 rounded-3xl p-8 sm:p-12 border border-slate-200 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              <div className="lg:col-span-4 flex justify-center">
-                <div className="relative w-48 h-56 rounded-2xl overflow-hidden shadow-lg border border-slate-200">
-                  <img
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80"
-                    alt="Senior Executive"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-2 left-2 right-2 bg-slate-950/80 backdrop-blur-xs text-white text-[10px] p-2 rounded-xl text-center font-bold">
-                    Gerald &bull; Product Leader
-                  </div>
-                </div>
-              </div>
-
-              <div className="lg:col-span-8 space-y-4">
-                <div className="text-2xl text-emerald-600 font-serif">“</div>
-                <p className="text-lg sm:text-2xl font-medium text-slate-800 leading-snug">
-                  &quot;I can&apos;t afford to waste time applying for jobs that don&apos;t fit. So I stopped mass applying, and I started using RateYourCV to tailor my resume to the roles that actually make sense for me. Landed 3 executive interviews within 2 weeks.&quot;
-                </p>
-                <div className="pt-2 text-xs font-bold text-slate-500">
-                  Gerald &bull; VP of Digital Product
-                </div>
-              </div>
-            </div>
-
-            {/* 4 Review Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-              {[
-                {
-                  stars: "★★★★★",
-                  quote: "Great tool for improving your CV. Scored my resume against 4 target job descriptions and landed interviews at Stripe and Datadog.",
-                  author: "Mark D.",
-                  role: "Senior Software Engineer"
-                },
-                {
-                  stars: "★★★★★",
-                  quote: "Good AI for writing resumes that match the JD. Fast, accurate, and completely free. The Google X-Y-Z formula bullets are incredible.",
-                  author: "Carolyn W.",
-                  role: "Lead Product Manager"
-                },
-                {
-                  stars: "★★★★★",
-                  quote: "Really swift in all recommendations! The Taleo and Workday compliance check gave me the peace of mind I needed.",
-                  author: "Hamza M.",
-                  role: "Cloud Architect"
-                },
-                {
-                  stars: "★★★★★",
-                  quote: "Great platform that lets you modify or create your CV from scratch in minutes. Clean typography and easy PDF export.",
-                  author: "Rositsa K.",
-                  role: "Growth Marketing Lead"
-                }
-              ].map((rev, i) => (
-                <Reveal key={i} delay={i * 90}>
-                  <div className="lift h-full p-6 rounded-2xl bg-white border border-slate-200 shadow-2xs space-y-3">
-                    <div className="text-emerald-600 font-bold text-xs">{rev.stars}</div>
-                    <p className="text-xs text-slate-700 leading-relaxed">&quot;{rev.quote}&quot;</p>
-                    <div className="pt-2 border-t border-slate-100 text-[11px]">
-                      <div className="font-bold text-slate-900">{rev.author}</div>
-                      <div className="text-slate-400">{rev.role}</div>
-                    </div>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-
-          </div>
-        </section>
-
         {/* 4. RESUMES OPTIMIZED FOR APPLICANT TRACKING SYSTEMS (Matches Enhancv Screenshot 5) */}
         <section className="py-20 bg-slate-50 border-b border-slate-200/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -576,11 +487,11 @@ export default function HomePage() {
                     },
                     {
                       title: "Full experience section parsing",
-                      content: "Role titles, company names, start/end dates, and accomplishment bullets follow standard hierarchical parsing rules across Taleo, Workday, Greenhouse, and Lever."
+                      content: "Role titles, company names, dates and bullets follow a standard, consistent order, which is easier for parsers to read. Results still vary between employers' systems."
                     },
                     {
-                      title: "Guaranteed single-layer typography",
-                      content: "Zero complex text floating layers or graphic tables that cause older ATS software to scramble columns out of chronological order."
+                      title: "Single-layer typography",
+                      content: "Single-column templates avoid text boxes and graphic tables, which can scramble the reading order in some systems."
                     }
                   ].map((item, idx) => (
                     <div key={idx} className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50">
@@ -656,23 +567,21 @@ export default function HomePage() {
               <Reveal variant="left" className="lg:col-span-5 space-y-8">
                 <div>
                   <div className="text-5xl sm:text-7xl font-black text-white tracking-tight">
-                    <CountUp end={14} duration={1600} suffix="M+" />
+                    <CountUp end={500} duration={1600} suffix="+" />
                   </div>
-                  <div className="text-xs font-bold text-emerald-300 uppercase tracking-wider mt-1">Resumes created &amp; optimized</div>
+                  <div className="text-xs font-bold text-emerald-300 uppercase tracking-wider mt-1">Resume templates to choose from</div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6 pt-4 border-t border-emerald-800/60">
                   <div>
-                    <div className="text-3xl font-black text-white">
-                      <CountUp end={500} duration={1500} suffix="+" />
-                    </div>
-                    <div className="text-xs text-emerald-300/80 mt-0.5">ATS-Proof Templates</div>
+                    <div className="text-3xl font-black text-white">PDF + Word</div>
+                    <div className="text-xs text-emerald-300/80 mt-0.5">Download in either format</div>
                   </div>
                   <div>
                     <div className="text-3xl font-black text-white">
-                      <CountUp end={98} duration={1500} suffix="%" />
+                      <CountUp end={36} duration={1500} />
                     </div>
-                    <div className="text-xs text-emerald-300/80 mt-0.5">Taleo &amp; Workday Pass Rate</div>
+                    <div className="text-xs text-emerald-300/80 mt-0.5">Colour palettes</div>
                   </div>
                 </div>
 
@@ -685,13 +594,13 @@ export default function HomePage() {
               {/* Right Column: Mission & Editorial Copy */}
               <Reveal variant="right" delay={120} className="lg:col-span-7 space-y-6 text-emerald-100 text-sm sm:text-base leading-relaxed">
                 <h3 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                  Chosen by ambitious job applicants around the world
+                  A resume tool built around honest content
                 </h3>
                 <p>
                   RateYourCV combines AI writing, instant ATS feedback, and one-click job tailoring in a single seamless tool. We help job seekers—especially experienced engineers, managers, and executives—lead with their experience and value at every step of the job search.
                 </p>
                 <p className="text-emerald-200/90 text-xs sm:text-sm">
-                  At RateYourCV, we believe the best resumes feel human. We help you create your resume based on your authentic career accomplishments, so it stands out to hiring managers and earns more interviews.
+                  At RateYourCV, we believe the best resumes feel human. We help you create your resume based on your authentic career accomplishments, so it reads clearly to hiring managers.
                 </p>
                 <div className="pt-2">
                   <Link

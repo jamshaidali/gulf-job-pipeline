@@ -3,13 +3,12 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Free ATS Resume Checker & Job Match Score Scanner | RateYourCV',
   description:
-    'Scan your resume against any job description for free. Get an instant 0–100% ATS match score, uncover missing keywords, pass Workday & Taleo filters, and generate tailored bullets.',
+    'Paste a job description and your resume to see a keyword match estimate, the skills you are missing and formatting issues to fix. Free to use.',
   keywords: [
     'ATS Resume Checker',
     'Free ATS Resume Scanner',
     'Resume Keyword Matcher',
     'Job Description Resume Match',
-    'Workday Taleo Greenhouse ATS Test',
   ],
   alternates: {
     canonical: '/ats-scanner',

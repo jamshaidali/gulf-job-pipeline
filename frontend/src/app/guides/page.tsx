@@ -8,21 +8,21 @@ import { BookOpen, Sparkles, ArrowRight, Clock, MapPin, CheckCircle, ShieldCheck
 import { careerGuides } from '@/data/careerGuides';
 
 export const metadata: Metadata = {
-  title: 'Career & ATS Resume Guides | RateYourCV AI',
-  description: 'Authoritative career guides, ATS resume optimization playbooks, and Google X-Y-Z bullet strategies for software engineers, product managers, and executives.',
+  title: 'Resume & CV Guides | RateYourCV',
+  description: 'Practical guides to writing a resume or CV: ATS formatting, tailoring to a job, bullet points, summaries, and examples for different careers.',
   keywords: [
     'ATS resume optimization checklist',
     'Software engineer resume guide',
     'Executive resume blueprint',
     'Google XYZ resume formula',
-    'How to beat Workday and Taleo ATS'
+    'Tailor a resume to a job description'
   ],
   alternates: {
     canonical: '/guides',
   },
   openGraph: {
-    title: 'Career & ATS Resume Guides | RateYourCV AI',
-    description: 'Expert guides on crafting ATS-optimized resumes and landing high-paying tech & executive interviews.',
+    title: 'Resume & CV Guides | RateYourCV',
+    description: 'Practical guides to writing a resume or CV: ATS formatting, tailoring, bullet points and summaries.',
     url: 'https://rateyourcv.com/guides',
     siteName: 'RateYourCV',
     images: ['/opengraph-image'],
