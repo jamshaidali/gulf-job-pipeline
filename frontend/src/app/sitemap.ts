@@ -41,6 +41,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/guides`, lastModified: now, changeFrequency: 'weekly', priority: 0.85 },
     { url: `${BASE_URL}/register`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${BASE_URL}/login`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${BASE_URL}/privacy`, lastModified: new Date('2026-11-27'), changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${BASE_URL}/terms`, lastModified: new Date('2026-11-27'), changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${BASE_URL}/contact`, lastModified: new Date('2026-11-27'), changeFrequency: 'yearly', priority: 0.4 },
   ];
 
   const guideRoutes: MetadataRoute.Sitemap = careerGuides.map((guide) => ({

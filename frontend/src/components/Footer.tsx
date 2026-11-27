@@ -51,10 +51,11 @@ export default function Footer() {
           <div>
             &copy; 2026 RateYourCV AI. All rights reserved.
           </div>
-          <div className="flex items-center gap-6">
-            <span>Built with Next.js 16 &amp; FastAPI</span>
-            <span>GDPR &amp; Multi-Tenant Isolated</span>
-          </div>
+          <nav aria-label="Legal" className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            <Link href="/privacy" className="hover:text-white transition">Privacy</Link>
+            <Link href="/terms" className="hover:text-white transition">Terms</Link>
+            <Link href="/contact" className="hover:text-white transition">Contact</Link>
+          </nav>
         </div>
       </div>
     </footer>
