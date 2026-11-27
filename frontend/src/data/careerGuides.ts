@@ -634,6 +634,106 @@ const raw: GuideInput[] = [
       },
     ],
   },
+
+  /* ---------------------------------------------------------------- ATS score */
+  {
+    slug: 'what-is-an-ats-score-and-how-to-improve-it',
+    title: 'What Is an ATS Score? How It Works and How to Improve Yours',
+    metaTitle: 'What Is an ATS Score and How to Improve It',
+    excerpt:
+      'An ATS score is a match estimate between your resume and a job description. Learn what it measures, what it does not tell you, and the practical steps that raise it honestly.',
+    market: 'ATS Optimization',
+    category: 'ATS & CV Strategy',
+    ...NOV,
+    highlights: [
+      'What people mean by an "ATS score" and where the number comes from',
+      'What resume checkers usually measure, and how ours is calculated',
+      'Seven steps that improve the match without keyword stuffing',
+      'What a high score does not guarantee',
+    ],
+    sections: [
+      {
+        h: 'What an ATS score is',
+        blocks: [
+          p('An applicant tracking system (ATS) is software that employers use to collect applications and let recruiters search them. An "ATS score" is a number, often shown as a percentage, that tells you how closely your resume matches a particular job description.'),
+          p('The score is a convenient way to see where your resume is weak. It is not a pass mark. A higher number means your resume uses more of the job\'s language and is easier for software to read. It does not mean you will be hired, or even that a recruiter will see a score.'),
+        ],
+      },
+      {
+        h: 'Do employers really use a score?',
+        blocks: [
+          p('It depends on the employer and the software, and the vendors do not publish exact rules. What is generally reported:'),
+          ul(
+            'Many systems mainly store your application and let recruiters search and filter by keywords, job titles, skills and dates.',
+            'Some systems include a match or ranking feature that sorts applicants against the job requirements. Employers choose whether to use it.',
+            'Many recruiters still read the resume themselves, especially once it reaches a shortlist.'
+          ),
+          p('The scores you see on resume checkers, including the one in RateYourCV, are the checker\'s own estimate. They are not numbers copied from an employer\'s system, and different tools give different scores for the same resume. Use the number to compare versions of your own resume against one job, not as a prediction.'),
+        ],
+      },
+      {
+        h: 'What a resume checker usually measures',
+        blocks: [
+          p('Tools differ, but most look at the same few things:'),
+          ul(
+            'Skills and keywords: how many of the job\'s required skills and terms appear in your resume',
+            'Job title and experience: whether your titles and years of experience fit the role',
+            'Structure: standard section headings such as Summary, Skills, Experience and Education',
+            'Readability: plain text that can be read in the right order, without tables, text boxes or images carrying key information',
+            'Contact details: name, email and phone where a parser can find them'
+          ),
+          p('In the RateYourCV ATS Scanner, the match estimate combines five parts: hard skills (35%), keyword coverage (20%), soft skills (15%), experience level (15%) and formatting checks (15%). It is a transparent estimate for improving your resume, not an official score from any employer or ATS vendor.'),
+        ],
+      },
+      {
+        h: 'How to improve your score: 7 steps',
+        blocks: [
+          ol(
+            'Start from a real job description. A score only means something against one specific job, so paste the posting you are applying for.',
+            'List the missing skills. Look at the required skills and tools the checker says are missing. Mark the ones you genuinely have.',
+            'Add them where they belong. Put real skills in your Skills section and work them into bullet points that show how you used them.',
+            'Use the employer\'s wording. If the job says "stakeholder management" and your resume says "working with clients", use the job\'s phrase where it is accurate. Include both an acronym and its full name once, such as "Search Engine Optimization (SEO)".',
+            'Match your title and summary. Name the target role in your headline or summary, and keep your real job titles unchanged.',
+            'Fix the structure. Use a single-column layout, standard headings, consistent dates and real text. Avoid tables, icons, skill bars and text boxes.',
+            'Add numbers to your bullets where you honestly can: how many, how much, how fast. Replace vague duties with results.'
+          ),
+          ex('Helped customers with account problems.', 'Resolved 40+ account issues a week for enterprise customers, keeping response time under 2 hours by creating reusable reply templates.'),
+          tip('Re-run the check after each round of edits. Stop when the missing items that remain are skills you do not have. Adding those would raise the number but not your chances.'),
+        ],
+      },
+      {
+        h: 'What not to do',
+        blocks: [
+          ul(
+            'Do not paste the job description into your resume in white text or hide keywords. Parsers can expose hidden text, and recruiters who see it may reject you.',
+            'Do not list skills you do not have. You may pass a keyword search and then fail the interview, or lose the job later.',
+            'Do not repeat the same keyword many times to raise the count. It reads badly to a human and does not help a good system.',
+            'Do not chase 100%. A resume that matches every term is usually a sign of stuffing, and the last few points are rarely worth the effort.'
+          ),
+        ],
+      },
+      {
+        h: 'What a high score does not mean',
+        blocks: [
+          p('A good score does not tell you whether the employer will invite you to interview. It does not measure your seniority, the quality of your achievements, whether you meet the legal or visa requirements, or how many other people applied.'),
+          p('Think of it as a spell-check for relevance. It catches obvious gaps, such as a missing tool or a layout that scrambles when it is read by software. After that, what matters is whether a person reading your resume sees clear evidence that you can do the job.'),
+        ],
+      },
+      {
+        h: 'A quick routine you can repeat for every application',
+        blocks: [
+          ol(
+            'Paste the job description into the ATS Scanner with your current resume.',
+            'Read the missing skills and formatting notes.',
+            'Open the builder, apply the suggestions that are true for you, and add numbers to your bullets.',
+            'Run the scan again, then download the PDF.',
+            'Save that version with the job\'s name so you can reuse it for similar roles.'
+          ),
+          p('See the guide on how to tailor your resume to a job description for the full process, and the ATS resume checklist for formatting rules.'),
+        ],
+      },
+    ],
+  },
 ];
 
 export const careerGuides: CareerGuide[] = raw.map((g) => ({
