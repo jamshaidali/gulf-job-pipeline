@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
     images: ['/opengraph-image'],
       type: 'article',
       publishedTime: guide.publishedISO,
-      authors: ['RateYourCV Career Editorial Team'],
+      authors: ['RateYourCV Editorial'],
     },
   };
 }
@@ -58,7 +58,7 @@ export default async function SingleGuidePage({ params }: GuidePageProps) {
     mainEntityOfPage: `https://rateyourcv.com/guides/${guide.slug}`,
     author: {
       '@type': 'Organization',
-      name: 'RateYourCV Career Editorial Team',
+      name: 'RateYourCV Editorial',
       url: 'https://rateyourcv.com'
     },
     publisher: {
@@ -120,7 +120,7 @@ export default async function SingleGuidePage({ params }: GuidePageProps) {
               RC
             </div>
             <div>
-              <span className="font-bold text-slate-800">RateYourCV Research &amp; Advisory Team</span>
+              <span className="font-bold text-slate-800">RateYourCV Editorial</span>
               <span className="text-slate-400 ml-2">&bull; Published {guide.publishedAt}</span>
             </div>
           </div>
